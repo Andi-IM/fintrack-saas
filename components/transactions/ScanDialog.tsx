@@ -19,7 +19,17 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
-      setFileToScan(acceptedFiles[0])
+      const file = acceptedFiles[0]
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+      
+      if (isPdf && file.size > 1024 * 1024) {
+        setErrorMessage('File size exceeds the 1MB limit for PDFs.')
+        setScanStatus('error')
+        setFileToScan(null)
+        return
+      }
+
+      setFileToScan(file)
       setScanStatus('idle')
       setScanResult(null)
       setErrorMessage(null)
@@ -88,7 +98,8 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
         type: 'expense',
         note: `Receipt: ${scanResult.merchant}`,
         paymentMethod: 'Cash',
-        change: 0
+        change: 0,
+        items: scanResult.items
       })
     } else if (scanContext === 'BankStatement') {
       // Loop inserts for statement items
@@ -98,8 +109,8 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
           amount: item.amount,
           category: item.category || 'Other',
           type: item.type || 'expense',
-          note: `Statement: ${item.name}`,
-          paymentMethod: 'Transfer',
+          note: `[${item.bank || scanResult.bank || 'Bank'}] ${item.name}`,
+          paymentMethod: item.bank || scanResult.bank || 'Transfer',
           change: 0
         })
       }
@@ -142,7 +153,20 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
             <p className="text-sm font-bold tracking-tight text-indigo-950 mb-1">
               Drag & drop your {scanContext === 'Receipt' ? 'receipt image' : 'PDF statement'} here
             </p>
-            <p className="text-xs text-indigo-900/60 font-medium">or click to browse files</p>
+          </div>
+        )}
+
+        {!fileToScan && (
+          <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3.5 flex items-start gap-2.5 shadow-sm text-left">
+            <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+            <div className="text-xs text-amber-900 leading-relaxed font-semibold">
+              <p className="font-bold text-amber-950 mb-0.5">Info Unggah PDF (OCR.space API):</p>
+              <ul className="list-disc pl-4 space-y-0.5 text-amber-900/90 font-medium">
+                <li>Ukuran file maksimal: <strong>1MB</strong></li>
+                <li>Maksimal halaman: <strong>3 Halaman</strong></li>
+                <li>Jatah kuota bulanan: <strong>25.000 request</strong></li>
+              </ul>
+            </div>
           </div>
         )}
 
@@ -239,7 +263,9 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                       <div key={i} className="flex justify-between items-center border-b border-slate-200 border-dashed pb-2 last:border-0 last:pb-0">
                         <div>
                           <p className="font-bold text-slate-700">{item.name}</p>
-                          <p className="text-[10px] text-slate-500">{item.date} • {item.category}</p>
+                          <p className="text-[10px] text-slate-500">
+                            {item.date} • {item.category} • <span className="font-bold text-indigo-600">{item.bank || scanResult.bank || 'Bank'}</span>
+                          </p>
                         </div>
                         <span className={`font-bold font-mono ${item.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
                           {item.type === 'income' ? '+' : '-'}Rp {item.amount.toLocaleString('id-ID')}
