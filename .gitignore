@@ -6,3 +6,6 @@ coverage/
 .env*
 !.env.example
 logs/
+
+# Supabase
+supabase/.temp/

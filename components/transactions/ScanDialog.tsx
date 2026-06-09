@@ -135,6 +135,8 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
         await saveBankStatement({
           bankName: scanResult.bank || 'Unknown Bank',
           statementPeriod: scanResult.statementPeriod || 'Unknown Period',
+          openingBalance: scanResult.openingBalance,
+          closingBalance: scanResult.closingBalance,
           items: scanResult.items,
           file: fileToScan
         })

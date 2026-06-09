@@ -1,0 +1,3 @@
+ALTER TABLE public.bank_statement_items 
+ALTER COLUMN date TYPE TIMESTAMPTZ USING date::TIMESTAMPTZ;
+;

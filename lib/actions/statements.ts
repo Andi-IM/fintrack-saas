@@ -84,6 +84,8 @@ export async function deleteBankStatement(id: string, filePath: string) {
 interface SaveStatementInput {
   bankName: string
   statementPeriod: string
+  openingBalance?: number
+  closingBalance?: number
   items: Array<{
     date: string
     name: string
@@ -94,7 +96,14 @@ interface SaveStatementInput {
   file: File
 }
 
-export async function saveBankStatement({ bankName, statementPeriod, items, file }: SaveStatementInput) {
+export async function saveBankStatement({ 
+  bankName, 
+  statementPeriod, 
+  openingBalance,
+  closingBalance,
+  items, 
+  file 
+}: SaveStatementInput) {
   const supabase = await createClient()
 
   // 1. Upload file to Supabase Storage
@@ -126,6 +135,8 @@ export async function saveBankStatement({ bankName, statementPeriod, items, file
       statement_period: statementPeriod,
       file_path: filePath,
       total_items: items.length,
+      opening_balance: openingBalance || 0,
+      closing_balance: closingBalance || 0,
       metadata: {}
     })
     .select()

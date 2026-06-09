@@ -155,12 +155,16 @@ export function splitIntoLines(text: string): string[] {
 export function buildBankResult(
   items: BankTransaction[],
   bankName: string,
-  statementPeriod: string
+  statementPeriod: string,
+  openingBalance?: number,
+  closingBalance?: number
 ): OCRResult {
   return {
     statementPeriod,
     items,
     totalItems: items.length,
     bank: bankName,
+    openingBalance,
+    closingBalance
   }
 }

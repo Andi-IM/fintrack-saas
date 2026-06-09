@@ -6,6 +6,8 @@ export interface OCRResult {
   statementPeriod?: string
   totalItems?: number
   bank?: string
+  openingBalance?: number
+  closingBalance?: number
 }
 
 export interface ReceiptItem {

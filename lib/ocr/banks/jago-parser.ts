@@ -29,6 +29,8 @@ export class JagoParser implements IBankParser {
 
   parse(text: string, timezoneOffset?: string): OCRResult {
     const statementPeriod = parseStatementPeriod(text)
+    const saldoAwal = this.parseSaldoAwal(text)
+    const saldoAkhir = this.parseSaldoAkhir(text)
     const pages = splitIntoPages(text)
     const allItems: BankTransaction[] = []
 
@@ -37,7 +39,21 @@ export class JagoParser implements IBankParser {
       allItems.push(...items)
     }
 
-    return buildBankResult(allItems, this.bankName, statementPeriod)
+    return buildBankResult(allItems, this.bankName, statementPeriod, saldoAwal, saldoAkhir)
+  }
+
+  private parseSaldoAwal(text: string): number {
+    const match = text.match(/saldo awal\s*(?::|rp)?\s*([\d,.]+)/i)
+    if (!match) return 0
+    let clean = match[1].replace(/,00/g, '').replace(/\./g, '').replace(/,/g, '')
+    return parseInt(clean, 10) || 0
+  }
+
+  private parseSaldoAkhir(text: string): number {
+    const match = text.match(/saldo akhir\s*(?::|rp)?\s*([\d,.]+)/i)
+    if (!match) return 0
+    let clean = match[1].replace(/,00/g, '').replace(/\./g, '').replace(/,/g, '')
+    return parseInt(clean, 10) || 0
   }
 
   private parsePage(page: string, timezoneOffset?: string): BankTransaction[] {
