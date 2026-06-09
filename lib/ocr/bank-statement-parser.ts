@@ -2,6 +2,7 @@ import { OCRResult } from './types'
 import { IParser, IBankParser } from './interfaces'
 import { SeabankParser } from './banks/seabank-parser'
 import { JagoParser } from './banks/jago-parser'
+import { BniParser } from './banks/bni-parser'
 import { BsiParser } from './banks/bsi-parser'
 
 export class BankStatementParser implements IParser {
@@ -10,8 +11,9 @@ export class BankStatementParser implements IParser {
 
   constructor(bankParsers?: IBankParser[]) {
     this.bankParsers = bankParsers ?? [
-      new SeabankParser(),
+      new BniParser(),
       new JagoParser(),
+      new SeabankParser(),
       new BsiParser(),
     ]
   }

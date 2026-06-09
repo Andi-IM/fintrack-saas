@@ -32,7 +32,13 @@ export class SeabankParser implements IBankParser {
   bankName = 'SeaBank'
 
   identify(text: string): boolean {
-    return text.toLowerCase().includes('seabank')
+    const lower = text.toLowerCase()
+    // Require SeaBank-specific header context, not just any mention in transaction descriptions
+    return (
+      lower.includes('pt bank seabank') ||
+      lower.includes('seabank indonesia') ||
+      (lower.includes('seabank') && (lower.includes('laporan rekening seabank') || lower.includes('saldo seabank')))
+    )
   }
 
   parse(text: string, timezoneOffset?: string): OCRResult {

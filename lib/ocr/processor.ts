@@ -6,6 +6,7 @@ import { ReceiptParser } from './receipt-parser'
 import { BankStatementParser } from './bank-statement-parser'
 import { SeabankParser } from './banks/seabank-parser'
 import { JagoParser } from './banks/jago-parser'
+import { BniParser } from './banks/bni-parser'
 import { BsiParser } from './banks/bsi-parser'
 
 export class DocumentProcessor {
@@ -19,8 +20,9 @@ export class DocumentProcessor {
     
     this.registerParser(new ReceiptParser())
     this.registerParser(new BankStatementParser([
-      new SeabankParser(),
+      new BniParser(),
       new JagoParser(),
+      new SeabankParser(),
       new BsiParser(),
     ]))
   }

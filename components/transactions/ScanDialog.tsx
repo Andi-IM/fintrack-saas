@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useDropzone } from 'react-dropzone'
-import { UploadCloud, CheckCircle2, Loader2, Sparkles, AlertCircle } from 'lucide-react'
+import { UploadCloud, CheckCircle2, Loader2, Sparkles, AlertCircle, Trash2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { insertTransaction } from "@/lib/actions/transactions"
 import { useRouter } from 'next/navigation'
@@ -23,6 +23,13 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
     setScanResult((prev: any) => {
       const newItems = [...prev.items]
       newItems[index] = { ...newItems[index], [field]: value }
+      return { ...prev, items: newItems }
+    })
+  }
+
+  const handleDeleteItem = (index: number) => {
+    setScanResult((prev: any) => {
+      const newItems = prev.items.filter((_: any, i: number) => i !== index)
       return { ...prev, items: newItems }
     })
   }
@@ -289,6 +296,13 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                           onChange={(e) => handleUpdateItem(i, 'amount', parseFloat(e.target.value))}
                           className="h-7 text-[11px] w-24 text-right bg-transparent border-none focus-visible:ring-1 font-mono"
                         />
+                        <button
+                          onClick={() => handleDeleteItem(i)}
+                          className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded transition-colors"
+                          title="Hapus item ini"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -344,6 +358,13 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                             onChange={(e) => handleUpdateItem(i, 'amount', parseFloat(e.target.value))}
                             className="h-7 text-[11px] w-24 text-right font-mono font-bold"
                           />
+                          <button
+                            onClick={() => handleDeleteItem(i)}
+                            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded transition-colors"
+                            title="Hapus transaksi ini"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
                     ))}
