@@ -33,7 +33,8 @@
     "hooks/**/*.ts",
     "hooks/**/*.tsx",
     "lib/**/*.ts",
-    "lib/**/*.tsx"
+    "lib/**/*.tsx",
+    "middleware.ts"
   ],
   "exclude": [
     "node_modules",
