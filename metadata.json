@@ -1,0 +1,6 @@
+{
+  "name": "Finance Tracker",
+  "description": "A personal finance tracker with OCR and LLM simulation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
