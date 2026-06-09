@@ -9,12 +9,31 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UploadCloud, FileText, LockIcon, LogOut, CheckCircle2, Loader2, TrendingUp, TrendingDown, Image as ImageIcon, Banknote, Camera, Plus, LayoutDashboard, Edit2, Trash2, Calendar } from "lucide-react";
+import { UploadCloud, FileText, LockIcon, LogOut, CheckCircle2, Loader2, TrendingUp, TrendingDown, Image as ImageIcon, Banknote, Camera, Plus, LayoutDashboard, Edit2, Trash2, Calendar as CalendarIcon, ChevronDown, Check } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useDropzone } from "react-dropzone";
 import { supabase } from "@/lib/supabase";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 const AUTHORIZED_EMAIL = "andi.irhamm@gmail.com";
+
+const CATEGORIES = [
+  "Food & Beverage",
+  "Transportation",
+  "Shopping",
+  "Groceries",
+  "Entertainment",
+  "Utilities",
+  "Rent",
+  "Salary",
+  "Investment",
+  "Healthcare",
+  "Education",
+  "Others"
+];
 
 type TransactionContext = "Income" | "Expense" | "BankStatement" | "Receipt";
 
@@ -58,10 +77,10 @@ const supabaseQuery = {
     }
     return data as Transaction[];
   },
-  insertTransaction: async (data: Omit<Transaction, "id" | "date">): Promise<Transaction | null> => {
+  insertTransaction: async (data: Omit<Transaction, "id">): Promise<Transaction | null> => {
     const { data: insertedData, error } = await supabase
       .from('transactions')
-      .insert({ ...data, date: new Date().toISOString().split("T")[0] })
+      .insert({ ...data, date: data.date || new Date().toISOString().split("T")[0] })
       .select()
       .single();
     if (error) {
@@ -155,6 +174,8 @@ export default function FinanceTracker() {
   const [formPaymentMethod, setFormPaymentMethod] = useState("Debit");
   const [formCashPaid, setFormCashPaid] = useState("");
   const [formItems, setFormItems] = useState<LineItem[]>([]);
+  const [formDate, setFormDate] = useState<Date | undefined>(new Date());
+  const [openCategory, setOpenCategory] = useState(false);
 
   // Bank Statement Review Array
   const [bankStatementReview, setBankStatementReview] = useState<ReviewTransaction[] | null>(null);
@@ -347,6 +368,7 @@ export default function FinanceTracker() {
       type: formType,
       amount: calculatedAmount,
       category: formCategory,
+      date: formDate ? format(formDate, "yyyy-MM-dd") : new Date().toISOString().split("T")[0],
       note: formNote,
       change: calculatedChange,
       paymentMethod: formPaymentMethod,
@@ -621,19 +643,30 @@ export default function FinanceTracker() {
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                           <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} dx={-10} tickFormatter={(val) => "Rp" + val} />
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                        formatter={(value: any) => formatCurrency(Number(value))}
-                      />
-                      <Area type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorIncome)" />
-                      <Area type="monotone" dataKey="expense" stroke="#f43f5e" strokeWidth={2} fillOpacity={1} fill="url(#colorExpense)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-slate-400 text-sm">No data available</div>
-                )}
-              </CardContent>
+                          <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} dx={-10} tickFormatter={(val) => formatCurrency(val).replace(",00", "")} />
+                          <Tooltip 
+                            contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                            formatter={(value: any) => formatCurrency(Number(value))}
+                          />
+                          <Area type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorIncome)" />
+                          <Area type="monotone" dataKey="expense" stroke="#f43f5e" strokeWidth={2} fillOpacity={1} fill="url(#colorExpense)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex flex-col items-center justify-center text-slate-400 p-8 text-center space-y-4">
+                        <div className="bg-slate-100 p-4 rounded-full">
+                          <TrendingUp className="w-8 h-8 text-slate-300" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-600">No financial data yet</p>
+                          <p className="text-sm max-w-[240px] mt-1">Start by adding a manual transaction or scanning a receipt.</p>
+                        </div>
+                        <Button onClick={() => setActiveTab("add")} variant="outline" className="border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold h-9">
+                          Add Transaction
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
             </Card>
 
             <Card className="shadow-sm border-slate-200 rounded-xl bg-white relative">
@@ -661,22 +694,30 @@ export default function FinanceTracker() {
                     <TableBody className="divide-y divide-slate-100 text-sm">
                       {filteredTransactions.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center text-slate-500 h-24">No transactions found.</TableCell>
+                          <TableCell colSpan={4} className="text-center text-slate-500 h-32">
+                             <div className="flex flex-col items-center justify-center space-y-2">
+                               <FileText className="w-8 h-8 text-slate-200" />
+                               <p>No transactions found for this period.</p>
+                             </div>
+                          </TableCell>
                         </TableRow>
                       ) : (
                         filteredTransactions.map((tx) => (
                           <TableRow key={tx.id} className="hover:bg-slate-50 transition-colors group">
-                            <TableCell className="px-6 py-4 text-slate-500 whitespace-nowrap">{format(new Date(tx.date), "MMM dd, yyyy")}</TableCell>
-                            <TableCell className="px-6 py-4 font-medium text-slate-900 w-full">
-                              <span className="block mb-1 group-hover:text-indigo-600 transition-colors">{tx.note || "General Transaction"}</span>
-                              <span className="inline-block px-2 py-0.5 bg-slate-100 rounded text-[10px] text-slate-600 border border-slate-200 font-normal">{tx.category}</span>
-                              {tx.change !== undefined && <span className="block text-[10px] text-slate-400 font-normal mt-1 italic">Calculated change: {formatCurrency(tx.change)}</span>}
+                            <TableCell className="px-6 py-4 text-slate-500 whitespace-nowrap align-top">{format(new Date(tx.date), "MMM dd, yyyy")}</TableCell>
+                            <TableCell className="px-6 py-4 font-medium text-slate-900 min-w-[300px] max-w-md">
+                              <span className="block mb-1 group-hover:text-indigo-600 transition-colors break-words leading-relaxed">{tx.note || "General Transaction"}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="inline-block px-2 py-0.5 bg-slate-100 rounded text-[10px] text-slate-600 border border-slate-200 font-bold uppercase tracking-tight">{tx.category}</span>
+                                {tx.paymentMethod && <span className="text-[10px] text-slate-400 font-medium">{tx.paymentMethod}</span>}
+                              </div>
+                              {tx.change !== undefined && tx.change > 0 && <span className="block text-[10px] text-slate-400 font-normal mt-1 italic">Calculated change: {formatCurrency(tx.change)}</span>}
                             </TableCell>
-                            <TableCell className={["px-6 py-4 text-right font-bold whitespace-nowrap", tx.type === 'income' ? 'text-emerald-600' : 'text-rose-600'].join(" ")}>
-                              {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                            <TableCell className={cn("px-6 py-4 text-right font-bold whitespace-nowrap align-top", tx.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
+                              {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount).replace("Rp", "Rp ")}
                             </TableCell>
-                            <TableCell className="px-6 py-4 text-right whitespace-nowrap">
-                              <div className="flex items-center justify-end gap-1">
+                            <TableCell className="px-6 py-4 text-right whitespace-nowrap align-top">
+                              <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Button variant="ghost" size="icon" onClick={() => handleEdit(tx)} className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-slate-100">
                                   <Edit2 className="w-4 h-4" />
                                 </Button>
@@ -700,137 +741,238 @@ export default function FinanceTracker() {
             {activeTab === "add" && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between mb-2">
-                  <h1 className="text-2xl font-poppins font-bold tracking-tight text-slate-900">Transactions</h1>
+                  <h1 className="text-2xl font-poppins font-bold tracking-tight text-slate-900">
+                    {editingId ? "Edit Transaction" : "Transactions"}
+                  </h1>
+                  {uploadPreviews.length > 0 && scanContext === "Receipt" && (
+                    <Button variant="outline" size="sm" onClick={() => setUploadPreviews([])} className="text-xs text-slate-500 hover:text-rose-600 border-slate-200 h-8">
+                      <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Clear Scan
+                    </Button>
+                  )}
                 </div>
                 
-                <Card className="max-w-3xl shadow-lg border-slate-200 rounded-xl bg-white">
-                  <CardHeader className="border-b border-slate-100 pb-5 bg-slate-50/50 rounded-t-xl">
-                    <CardTitle className="text-lg font-bold tracking-tight text-slate-800">Add New Entry</CardTitle>
-                    <CardDescription className="text-slate-500">Manually record an income or expense.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <form onSubmit={handleManualAddSubmit} className="space-y-6">
-                      <div className="space-y-2">
-                        <Label className="text-slate-700 font-bold text-xs uppercase tracking-wider">Transaction Type</Label>
-                        <div className="flex bg-slate-200 p-1 rounded-xl max-w-sm">
-                          <Button 
-                            type="button" 
-                            variant="ghost"
-                            className={["flex-1 text-xs font-bold py-2 rounded-lg transition-all h-10", formType === 'expense' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'].join(" ")}
-                            onClick={() => setFormType('expense')}
-                          >
-                            Expense
-                          </Button>
-                          <Button 
-                            type="button" 
-                            variant="ghost"
-                            className={["flex-1 text-xs font-bold py-2 rounded-lg transition-all h-10", formType === 'income' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'].join(" ")}
-                            onClick={() => setFormType('income')}
-                          >
-                            Income
-                          </Button>
-                        </div>
-                      </div>
+                <div className={["grid gap-6", uploadPreviews.length > 0 && scanContext === "Receipt" ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"].join(" ")}>
+                  {/* Receipt Preview */}
+                  {uploadPreviews.length > 0 && scanContext === "Receipt" && (
+                    <Card className="shadow-lg border-slate-200 rounded-xl bg-white overflow-hidden flex flex-col h-fit lg:sticky lg:top-8">
+                       <CardHeader className="border-b border-slate-100 pb-3 pt-4 px-6 bg-slate-50/50">
+                         <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                           <ImageIcon className="w-4 h-4 text-indigo-600" /> Source Document
+                         </CardTitle>
+                       </CardHeader>
+                       <CardContent className="p-4 flex-1 bg-slate-100 flex items-center justify-center min-h-[400px]">
+                         <div className="relative w-full h-full min-h-[500px] bg-white rounded shadow-inner border border-slate-200">
+                           <NextImage 
+                             src={uploadPreviews[0].dataUrl} 
+                             alt="Receipt Source" 
+                             fill 
+                             className="object-contain p-2" 
+                             referrerPolicy="no-referrer"
+                           />
+                         </div>
+                       </CardContent>
+                       <CardFooter className="border-t border-slate-100 py-3 px-6 bg-slate-50/50">
+                          <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Compressed size: {uploadPreviews[0].sizeKb} KB</p>
+                       </CardFooter>
+                    </Card>
+                  )}
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card className={["shadow-lg border-slate-200 rounded-xl bg-white", uploadPreviews.length === 0 || scanContext !== "Receipt" ? "max-w-3xl" : ""].join(" ")}>
+                    <CardHeader className="border-b border-slate-100 pb-5 bg-slate-50/50 rounded-t-xl">
+                      <CardTitle className="text-lg font-bold tracking-tight text-slate-800">{editingId ? "Update Details" : "Add New Entry"}</CardTitle>
+                      <CardDescription className="text-slate-500">Manually record an income or expense.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                      <form onSubmit={handleManualAddSubmit} className="space-y-6">
                         <div className="space-y-2">
-                          <Label htmlFor="amount" className="text-slate-700 font-bold text-xs uppercase tracking-wider">Total Amount</Label>
-                          <div className="relative">
-                            <Banknote className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                            <Input id="amount" type="number" step="1" required={formItems.length === 0} disabled={formItems.length > 0} value={formItems.length > 0 ? formItems.reduce((acc, item) => acc + Number(item.amount), 0) : formAmount} onChange={e => setFormAmount(e.target.value)} className={["pl-9 h-11 border-slate-200 focus-visible:ring-indigo-500 font-medium text-lg rounded-lg shadow-sm focus-visible:border-indigo-500", formItems.length > 0 ? "bg-slate-100 text-slate-500" : "bg-slate-50"].join(" ")} placeholder="0" />
+                          <Label className="text-slate-700 font-bold text-xs uppercase tracking-wider">Transaction Type</Label>
+                          <div className="flex bg-slate-200 p-1 rounded-xl max-w-sm">
+                            <Button 
+                              type="button" 
+                              variant="ghost"
+                              className={["flex-1 text-xs font-bold py-2 rounded-lg transition-all h-10", formType === 'expense' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'].join(" ")}
+                              onClick={() => setFormType('expense')}
+                            >
+                              Expense
+                            </Button>
+                            <Button 
+                              type="button" 
+                              variant="ghost"
+                              className={["flex-1 text-xs font-bold py-2 rounded-lg transition-all h-10", formType === 'income' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'].join(" ")}
+                              onClick={() => setFormType('income')}
+                            >
+                              Income
+                            </Button>
                           </div>
-                          {formItems.length > 0 && <p className="text-[10px] text-slate-400 mt-1">Calculated from items.</p>}
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="category" className="text-slate-700 font-bold text-xs uppercase tracking-wider">Overall Category</Label>
-                          <Input id="category" required value={formCategory} onChange={e => setFormCategory(e.target.value)} className="h-11 bg-slate-50 border-slate-200 focus-visible:ring-indigo-500 focus-visible:border-indigo-500 font-medium rounded-lg shadow-sm" placeholder="e.g. Groceries, Salary..." />
-                        </div>
-                      </div>
 
-                      <div className="space-y-2 border border-slate-200 rounded-xl p-4 bg-slate-50/30">
-                        <div className="flex justify-between items-center mb-2">
-                           <Label className="text-slate-700 font-bold text-xs uppercase tracking-wider">Itemized Details</Label>
-                           <Button type="button" variant="ghost" size="sm" onClick={() => setFormItems([...formItems, { id: Math.random().toString(), description: "", category: "", amount: 0 }])} className="text-xs h-7 px-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-bold">
-                             + Add Item
-                           </Button>
+                        <div className="space-y-2">
+                          <Label className="text-slate-700 font-bold text-xs uppercase tracking-wider">Transaction Date</Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full justify-start text-left font-medium h-11 border-slate-200 bg-slate-50 rounded-lg shadow-sm focus:ring-indigo-500",
+                                  !formDate && "text-slate-500"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
+                                {formDate ? format(formDate, "PPP") : <span>Pick a date</span>}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 bg-white border border-slate-200 shadow-xl" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={formDate}
+                                onSelect={setFormDate}
+                                className="rounded-md border-0"
+                              />
+                            </PopoverContent>
+                          </Popover>
                         </div>
-                        {formItems.length > 0 ? (
-                           <div className="space-y-2">
-                             {formItems.map((item, index) => (
-                               <div key={item.id || index} className="flex gap-2 items-center">
-                                 <Input placeholder="Item Description" value={item.description} onChange={(e) => {
-                                    const newItems = [...formItems];
-                                    newItems[index].description = e.target.value;
-                                    setFormItems(newItems);
-                                 }} className="h-9 text-sm" />
-                                 <Input placeholder="Category" value={item.category} onChange={(e) => {
-                                    const newItems = [...formItems];
-                                    newItems[index].category = e.target.value;
-                                    setFormItems(newItems);
-                                 }} className="h-9 text-sm w-1/3" />
-                                 <Input placeholder="Amount" type="number" value={item.amount || ""} onChange={(e) => {
-                                    const newItems = [...formItems];
-                                    newItems[index].amount = Number(e.target.value);
-                                    setFormItems(newItems);
-                                 }} className="h-9 text-sm w-1/4 text-right" />
-                                 <Button type="button" variant="ghost" size="icon" onClick={() => {
-                                    const newItems = [...formItems];
-                                    newItems.splice(index, 1);
-                                    setFormItems(newItems);
-                                 }} className="h-8 w-8 text-rose-500 hover:bg-rose-50 px-0">
-                                   <Trash2 className="w-4 h-4" />
-                                 </Button>
-                               </div>
-                             ))}
-                           </div>
-                        ) : (
-                          <div className="text-xs text-slate-400 italic">No line items. Add items if this receipt has multiple categories.</div>
-                        )}
-                      </div>
-                      
-                      {formType === 'expense' && (
-                        <div className="space-y-4 pt-4 border-t border-slate-100">
-                          <Label className="text-slate-700 font-bold text-xs uppercase tracking-wider">Payment Details</Label>
-                          <div className="flex gap-2">
-                             {["Debit", "Credit", "Cash", "QRIS", "Transfer"].map(method => (
-                               <Button key={method} type="button" variant="outline" onClick={() => setFormPaymentMethod(method)} className={["h-9 text-xs font-bold transition-all", formPaymentMethod === method ? "bg-indigo-50 border-indigo-200 text-indigo-700" : "text-slate-500 border-slate-200 hover:bg-slate-50"].join(" ")}>
-                                 {method}
-                               </Button>
-                             ))}
-                          </div>
-                          
-                          {formPaymentMethod === "Cash" && (
-                            <div className="flex gap-4 p-4 bg-emerald-50 border border-emerald-100 rounded-lg shadow-inner">
-                              <div className="flex-1 space-y-2">
-                                <Label htmlFor="cashPaid" className="text-emerald-800 font-bold text-xs uppercase">Cash Paid</Label>
-                                <div className="relative">
-                                  <Banknote className="absolute left-3 top-2.5 h-4 w-4 text-emerald-600/50" />
-                                  <Input id="cashPaid" type="number" step="1" value={formCashPaid} onChange={(e) => setFormCashPaid(e.target.value)} className="pl-9 h-10 bg-white border-emerald-200 focus-visible:ring-emerald-500 focus-visible:border-emerald-500" placeholder="0" />
-                                </div>
-                              </div>
-                              <div className="flex-1 space-y-2">
-                                <Label className="text-emerald-800 font-bold text-xs uppercase">Calculated Change</Label>
-                                <div className="relative">
-                                  <Banknote className="absolute left-3 top-2.5 h-4 w-4 text-emerald-600" />
-                                  <Input readOnly value={(formCashPaid ? Math.max(0, Number(formCashPaid) - (formItems.length > 0 ? formItems.reduce((acc, item) => acc + Number(item.amount), 0) : Number(formAmount))) : 0).toString()} className="pl-9 h-10 bg-emerald-100/50 border-emerald-200 text-emerald-900 shadow-none font-medium" />
-                                </div>
-                              </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <Label htmlFor="amount" className="text-slate-700 font-bold text-xs uppercase tracking-wider">Total Amount</Label>
+                            <div className="relative">
+                              <Banknote className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                              <Input id="amount" type="number" step="1" required={formItems.length === 0} disabled={formItems.length > 0} value={formItems.length > 0 ? formItems.reduce((acc, item) => acc + Number(item.amount), 0) : formAmount} onChange={e => setFormAmount(e.target.value)} className={cn("pl-9 h-11 border-slate-200 focus-visible:ring-indigo-500 font-medium text-lg rounded-lg shadow-sm focus-visible:border-indigo-500", formItems.length > 0 ? "bg-slate-100 text-slate-500" : "bg-slate-50")} placeholder="0" />
                             </div>
+                            {formItems.length > 0 && <p className="text-[10px] text-slate-400 mt-1">Calculated from items.</p>}
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="category" className="text-slate-700 font-bold text-xs uppercase tracking-wider">Overall Category</Label>
+                            <Popover open={openCategory} onOpenChange={setOpenCategory}>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  aria-expanded={openCategory}
+                                  className="w-full justify-between h-11 border-slate-200 bg-slate-50 font-medium rounded-lg shadow-sm hover:bg-slate-100 text-slate-700"
+                                >
+                                  {formCategory ? formCategory : "Select category..."}
+                                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-full p-0 bg-white border border-slate-200 shadow-xl" align="start">
+                                <Command className="rounded-lg">
+                                  <CommandInput placeholder="Search category..." className="h-9" />
+                                  <CommandList className="max-h-[200px]">
+                                    <CommandEmpty>No category found.</CommandEmpty>
+                                    <CommandGroup>
+                                      {CATEGORIES.map((cat) => (
+                                        <CommandItem
+                                          key={cat}
+                                          value={cat}
+                                          onSelect={(currentValue) => {
+                                            setFormCategory(currentValue === formCategory ? "" : cat);
+                                            setOpenCategory(false);
+                                          }}
+                                          className="flex items-center gap-2 px-4 py-2 text-sm cursor-pointer hover:bg-indigo-50"
+                                        >
+                                          <Check
+                                            className={cn(
+                                              "h-4 w-4 text-indigo-600",
+                                              formCategory === cat ? "opacity-100" : "opacity-0"
+                                            )}
+                                          />
+                                          {cat}
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 border border-slate-200 rounded-xl p-4 bg-slate-50/30">
+                          <div className="flex justify-between items-center mb-2">
+                             <Label className="text-slate-700 font-bold text-xs uppercase tracking-wider">Itemized Details</Label>
+                             <Button type="button" variant="ghost" size="sm" onClick={() => setFormItems([...formItems, { id: Math.random().toString(), description: "", category: "", amount: 0 }])} className="text-xs h-7 px-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-bold">
+                               + Add Item
+                             </Button>
+                          </div>
+                          {formItems.length > 0 ? (
+                             <div className="space-y-2">
+                               {formItems.map((item, index) => (
+                                 <div key={item.id || index} className="flex gap-2 items-center">
+                                   <Input placeholder="Item Description" value={item.description} onChange={(e) => {
+                                      const newItems = [...formItems];
+                                      newItems[index].description = e.target.value;
+                                      setFormItems(newItems);
+                                   }} className="h-9 text-sm" />
+                                   <Input placeholder="Category" value={item.category} onChange={(e) => {
+                                      const newItems = [...formItems];
+                                      newItems[index].category = e.target.value;
+                                      setFormItems(newItems);
+                                   }} className="h-9 text-sm w-1/3" />
+                                   <Input placeholder="Amount" type="number" value={item.amount || ""} onChange={(e) => {
+                                      const newItems = [...formItems];
+                                      newItems[index].amount = Number(e.target.value);
+                                      setFormItems(newItems);
+                                   }} className="h-9 text-sm w-1/4 text-right" />
+                                   <Button type="button" variant="ghost" size="icon" onClick={() => {
+                                      const newItems = [...formItems];
+                                      newItems.splice(index, 1);
+                                      setFormItems(newItems);
+                                   }} className="h-8 w-8 text-rose-500 hover:bg-rose-50 px-0">
+                                     <Trash2 className="w-4 h-4" />
+                                   </Button>
+                                 </div>
+                               ))}
+                             </div>
+                          ) : (
+                            <div className="text-xs text-slate-400 italic">No line items. Add items if this receipt has multiple categories.</div>
                           )}
                         </div>
-                      )}
+                        
+                        {formType === 'expense' && (
+                          <div className="space-y-4 pt-4 border-t border-slate-100">
+                            <Label className="text-slate-700 font-bold text-xs uppercase tracking-wider">Payment Details</Label>
+                            <div className="flex gap-2">
+                               {["Debit", "Credit", "Cash", "QRIS", "Transfer"].map(method => (
+                                 <Button key={method} type="button" variant="outline" onClick={() => setFormPaymentMethod(method)} className={["h-9 text-xs font-bold transition-all", formPaymentMethod === method ? "bg-indigo-50 border-indigo-200 text-indigo-700" : "text-slate-500 border-slate-200 hover:bg-slate-50"].join(" ")}>
+                                   {method}
+                                 </Button>
+                               ))}
+                            </div>
+                            
+                            {formPaymentMethod === "Cash" && (
+                              <div className="flex gap-4 p-4 bg-emerald-50 border border-emerald-100 rounded-lg shadow-inner">
+                                <div className="flex-1 space-y-2">
+                                  <Label htmlFor="cashPaid" className="text-emerald-800 font-bold text-xs uppercase">Cash Paid</Label>
+                                  <div className="relative">
+                                    <Banknote className="absolute left-3 top-2.5 h-4 w-4 text-emerald-600/50" />
+                                    <Input id="cashPaid" type="number" step="1" value={formCashPaid} onChange={(e) => setFormCashPaid(e.target.value)} className="pl-9 h-10 bg-white border-emerald-200 focus-visible:ring-emerald-500 focus-visible:border-emerald-500" placeholder="0" />
+                                  </div>
+                                </div>
+                                <div className="flex-1 space-y-2">
+                                  <Label className="text-emerald-800 font-bold text-xs uppercase">Calculated Change</Label>
+                                  <div className="relative">
+                                    <Banknote className="absolute left-3 top-2.5 h-4 w-4 text-emerald-600" />
+                                    <Input readOnly value={(formCashPaid ? Math.max(0, Number(formCashPaid) - (formItems.length > 0 ? formItems.reduce((acc, item) => acc + Number(item.amount), 0) : Number(formAmount))) : 0).toString()} className="pl-9 h-10 bg-emerald-100/50 border-emerald-200 text-emerald-900 shadow-none font-medium" />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
 
-                      <div className="space-y-2">
-                        <Label htmlFor="note" className="text-slate-700 font-bold text-xs uppercase tracking-wider">Description / Merchant (Optional)</Label>
-                        <Input id="note" value={formNote} onChange={e => setFormNote(e.target.value)} className="h-11 bg-slate-50 border-slate-200 focus-visible:ring-indigo-500 focus-visible:border-indigo-500 font-medium rounded-lg shadow-sm" placeholder="What was this for?" />
-                      </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="note" className="text-slate-700 font-bold text-xs uppercase tracking-wider">Description / Merchant (Optional)</Label>
+                          <Input id="note" value={formNote} onChange={e => setFormNote(e.target.value)} className="h-11 bg-slate-50 border-slate-200 focus-visible:ring-indigo-500 focus-visible:border-indigo-500 font-medium rounded-lg shadow-sm" placeholder="What was this for?" />
+                        </div>
 
-                      <div className="pt-2 border-t border-slate-100">
-                        <Button type="submit" className="w-full md:w-auto md:px-10 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg h-12 shadow-md shadow-indigo-200/50 transition-all">Save Transaction</Button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
+                        <div className="pt-2 border-t border-slate-100">
+                          <Button type="submit" className="w-full md:w-auto md:px-10 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg h-12 shadow-md shadow-indigo-200/50 transition-all">Save Transaction</Button>
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             )}
             {/* Bank Statement Review View */}
@@ -839,6 +981,24 @@ export default function FinanceTracker() {
                  <div className="flex items-center justify-between mb-2">
                    <h1 className="text-2xl font-poppins font-bold tracking-tight text-slate-900">Review Extracted Data</h1>
                  </div>
+
+                 {/* Document Previews for Bank Statement */}
+                 {uploadPreviews.length > 0 && scanContext === "BankStatement" && (
+                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                      {uploadPreviews.map((preview, index) => (
+                        <Card key={index} className="min-w-[200px] max-w-[200px] h-[280px] shadow-sm border-slate-200 rounded-xl bg-white overflow-hidden flex flex-col shrink-0 group hover:border-indigo-400 transition-all cursor-zoom-in" onClick={() => window.open(preview.dataUrl, '_blank')}>
+                           <div className="bg-slate-50 border-b border-slate-100 py-1.5 px-3 flex items-center justify-between">
+                              <span className="text-[10px] font-bold text-slate-500 uppercase">Page {index + 1}</span>
+                              <ImageIcon className="w-3 h-3 text-slate-400" />
+                           </div>
+                           <div className="flex-1 bg-slate-100 relative group-hover:bg-indigo-50/50 transition-colors">
+                              <NextImage src={preview.dataUrl} alt={`Doc ${index + 1}`} fill className="object-contain p-2" />
+                              <div className="absolute inset-0 bg-indigo-600/0 group-hover:bg-indigo-600/5 transition-all" />
+                           </div>
+                        </Card>
+                      ))}
+                    </div>
+                 )}
                  
                  <Card className="max-w-5xl shadow-lg border-slate-200 rounded-xl bg-white">
                    <CardHeader className="border-b border-slate-100 pb-5 bg-slate-50/50 rounded-t-xl flex flex-row items-center justify-between">

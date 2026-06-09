@@ -1,3 +1,16 @@
 {
-  "extends": "next"
+  "extends": "next/core-web-vitals",
+  "ignorePatterns": [
+    "/*",
+    "!/app",
+    "!/components",
+    "!/hooks",
+    "!/lib",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/__tests__/**",
+    "lib/database.types.ts"
+  ]
 }
