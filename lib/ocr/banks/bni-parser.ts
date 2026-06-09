@@ -43,7 +43,8 @@ export class BniParser implements IBankParser {
     if (text.includes('Laporan Mutasi Rekening') || text.includes('Tanggal & Waktu')) {
       const items = this.parseNewBniFormat(text, lines, timezoneOffset)
       const newPeriod = this.parseNewBniPeriod(text)
-      return buildBankResult(items, this.bankName, newPeriod, saldoAwal, saldoAkhir)
+      const balances = this.calculateBalances(items, saldoAwal, saldoAkhir, lines)
+      return buildBankResult(items, this.bankName, newPeriod, balances.saldoAwal, balances.saldoAkhir)
     }
 
     const statementPeriod = this.parseBniPeriod(text)
@@ -52,13 +53,15 @@ export class BniParser implements IBankParser {
     if (text.includes('|---|') || (text.includes('|') && text.toLowerCase().includes('tgl. trans'))) {
       const items = this.parseMarkdownTable(lines, timezoneOffset)
       if (items.length > 0) {
-        return buildBankResult(items, this.bankName, statementPeriod, saldoAwal, saldoAkhir)
+        const balances = this.calculateBalances(items, saldoAwal, saldoAkhir, lines)
+        return buildBankResult(items, this.bankName, statementPeriod, balances.saldoAwal, balances.saldoAkhir)
       }
     }
 
     // Otherwise, parse Vision layout (Google Vision vertical/column block format)
     const items = this.parseVisionLayout(text, lines, timezoneOffset)
-    return buildBankResult(items, this.bankName, statementPeriod, saldoAwal, saldoAkhir)
+    const balances = this.calculateBalances(items, saldoAwal, saldoAkhir, lines)
+    return buildBankResult(items, this.bankName, statementPeriod, balances.saldoAwal, balances.saldoAkhir)
   }
 
   private parseSaldoAwal(text: string): number {
@@ -216,6 +219,125 @@ export class BniParser implements IBankParser {
     return items
   }
 
+  private parseGlobalDescriptions(lines: string[]): string[] {
+    let startIdx = lines.findIndex(l => l.toLowerCase().includes('rincian transaksi'))
+    if (startIdx === -1) {
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].trim().match(/^(\d{1,2})\s+([a-zA-Z]{3,9})\s+(\d{2,4})$/)) {
+          startIdx = i
+          break
+        }
+      }
+    }
+    const slicedLines = startIdx !== -1 ? lines.slice(startIdx + 1) : lines
+
+    const skipPatterns = /^(?:\d+\.\s*)?(saldo awal|saldo akhir|nominal \(idr\)|saldo \(idr\)|total pemasukan|total pengeluaran|tanggal & waktu|rincian transaksi|laporan mutasi|informasi lainnya|kantor cabang|mata uang|periode|taplus|bni$|lembaga|penja|simp|pt bank|peserta penjaminan|apabila terdapat|seluruh data|bni dapat|dokumen ini|\d+ dari \d+)/i
+
+    const descList: string[] = []
+    let currentDesc = ''
+    for (const line of slicedLines) {
+      const trimmed = line.trim()
+      if (!trimmed) continue
+      if (skipPatterns.test(trimmed)) continue
+      if (/^(\d{1,2})\s+([a-zA-Z]{3,9})\s+(\d{2,4})$/.test(trimmed)) continue // date
+      if (/^(\d{2}:\d{2}(?::\d{2})?)(\s+WIB)?$/.test(trimmed)) continue  // time
+      if (/^[+-]\s*[\d,.]+$/.test(trimmed)) continue  // signed nominal
+      if (/^[\d,.]+$/.test(trimmed)) continue  // pure number (saldo)
+
+      const isStart = /^(tarik|dari|by|biaya|biaya\s+admin|biaya\s+adm|jasa\s+giro|transfer|setor|pembayaran|qris|bunga|interest|tax|adm)\b/i.test(trimmed)
+      if (isStart) {
+        if (currentDesc) {
+          descList.push(currentDesc)
+        }
+        currentDesc = trimmed
+      } else {
+        currentDesc = currentDesc ? `${currentDesc} ${trimmed}` : trimmed
+      }
+    }
+    if (currentDesc) {
+      descList.push(currentDesc)
+    }
+    return descList
+  }
+
+  private parseGlobalNominals(lines: string[], headerIdx: number): { amount: number; type: 'income' | 'expense' }[] {
+    const allNominals: { amount: number; type: 'income' | 'expense' }[] = []
+    const startIdx = headerIdx !== -1 ? headerIdx + 1 : 0
+    for (let i = startIdx; i < lines.length; i++) {
+      const line = lines[i].trim()
+      const match = line.match(/^([+-])\s*([\d,.]+)$/)
+      if (match) {
+        const amount = this.parseBniAmount(match[2])
+        if (amount !== null && amount > 0) {
+          allNominals.push({
+            amount: Math.abs(amount),
+            type: match[1] === '+' ? 'income' : 'expense'
+          })
+        }
+      }
+    }
+    return allNominals
+  }
+
+  private extractRunningBalances(lines: string[], headerIdx: number): number[] {
+    const balances: number[] = []
+    const startIdx = headerIdx !== -1 ? headerIdx + 1 : 0
+    for (let i = startIdx; i < lines.length; i++) {
+      const line = lines[i].trim()
+      
+      // Only allow characters that are digits, dot, comma, spaces, or case-insensitive rp, idr
+      if (!/^[0-9.,\s]*(?:rp|idr)?$/i.test(line)) continue
+      if (/^[+-]/.test(line)) continue
+      
+      // Skip date/time formats
+      if (line.match(/^\d{1,2}\s+[a-zA-Z]{3,9}\s+\d{2,4}$/)) continue
+      if (line.match(/^\d{2}:\d{2}/)) continue
+      
+      const amount = this.parseBniAmount(line)
+      if (amount !== null && amount > 100) {
+        balances.push(amount)
+      }
+    }
+    return balances
+  }
+
+  private calculateBalances(
+    items: BankTransaction[],
+    parsedSaldoAwal: number,
+    parsedSaldoAkhir: number,
+    lines: string[]
+  ): { saldoAwal: number; saldoAkhir: number } {
+    let saldoAwal = parsedSaldoAwal
+    let saldoAkhir = parsedSaldoAkhir
+
+    const headerIdx = lines.findIndex(
+      l => l.toLowerCase().includes('nominal (idr)') || l.toLowerCase().includes('saldo (idr)')
+    )
+    
+    let runningBalances: number[] = []
+    if (headerIdx !== -1) {
+      runningBalances = this.extractRunningBalances(lines, headerIdx)
+    }
+
+    if (saldoAwal === 0 && runningBalances.length > 0) {
+      saldoAwal = runningBalances[0]
+    }
+    if (saldoAkhir === 0 && runningBalances.length > 0) {
+      saldoAkhir = runningBalances[runningBalances.length - 1]
+    }
+
+    const totalIncome = items.filter(item => item.type === 'income').reduce((sum, item) => sum + item.amount, 0)
+    const totalExpense = items.filter(item => item.type === 'expense').reduce((sum, item) => sum + item.amount, 0)
+
+    if (saldoAwal === 0 && saldoAkhir > 0) {
+      saldoAwal = saldoAkhir - totalIncome + totalExpense
+    } else if (saldoAkhir === 0 && saldoAwal > 0) {
+      saldoAkhir = saldoAwal + totalIncome - totalExpense
+    }
+
+    return { saldoAwal, saldoAkhir }
+  }
+
   private parseNewBniRowLayout(lines: string[], headerIdx: number, timezoneOffset?: string): BankTransaction[] {
     interface DateEntry {
       day: string
@@ -237,24 +359,8 @@ export class BniParser implements IBankParser {
       }
     }
 
-    // Collect ALL signed nominals from the entire text after the header, in order.
-    // This handles cases where OCR places nominals after "Saldo Akhir" out of block position.
-    const allNominals: { amount: number; type: 'income' | 'expense' }[] = []
-    for (let i = headerIdx + 1; i < lines.length; i++) {
-      const line = lines[i].trim()
-      const nominalMatch = line.match(/^([+-])\s*([\d,.]+)$/)
-      if (nominalMatch) {
-        const sign = nominalMatch[1]
-        const rawAmount = nominalMatch[2]
-        const amount = this.parseBniAmount(rawAmount)
-        if (amount !== null && amount > 0) {
-          allNominals.push({
-            amount: Math.abs(amount),
-            type: sign === '+' ? 'income' : 'expense'
-          })
-        }
-      }
-    }
+    const allNominals = this.parseGlobalNominals(lines, headerIdx)
+    const descList = this.parseGlobalDescriptions(lines)
 
     const items: BankTransaction[] = []
     for (let k = 0; k < dateEntries.length; k++) {
@@ -267,31 +373,17 @@ export class BniParser implements IBankParser {
       const blockLines = lines.slice(startIndex, endIndex)
       
       let timeStr: string | undefined
-      const descLines: string[] = []
-      
       for (const line of blockLines) {
         const trimmed = line.trim()
-        const lower = trimmed.toLowerCase()
-        
-        if (lower.includes('saldo akhir') || lower.includes('informasi lainnya')) {
-          break
-        }
-        
         const timeMatch = trimmed.match(/^(\d{2}:\d{2}(?::\d{2})?)(\s+WIB)?$/)
         if (timeMatch) {
           timeStr = timeMatch[1]
-          continue
+          break
         }
-        
-        // Skip signed nominals and pure numbers — handled globally above
-        if (/^[+-]\s*[\d,.]+$/.test(trimmed) || /^[\d,.]+$/.test(trimmed)) {
-          continue
-        }
-        
-        descLines.push(trimmed)
       }
       
       const nominal = allNominals[k]
+      const desc = descList[k] || 'Transaksi BNI'
       const formattedDate = formatISO8601Date(
         entry.day,
         entry.monthStr,
@@ -300,8 +392,7 @@ export class BniParser implements IBankParser {
         timezoneOffset
       )
       
-      const rawDesc = descLines.join(' ')
-      const name = sanitizeTransactionName(rawDesc || 'Transaksi BNI')
+      const name = sanitizeTransactionName(desc)
       const category = classifyCategory(name)
       
       items.push({
@@ -318,7 +409,6 @@ export class BniParser implements IBankParser {
   }
 
   private parseNewBniColumnLayout(lines: string[], headerIdx: number, timezoneOffset?: string): BankTransaction[] {
-    // Collect ALL dates from the entire page (dates can appear before AND after the header in column OCR)
     interface DateEntry {
       day: string
       monthStr: string
@@ -351,50 +441,15 @@ export class BniParser implements IBankParser {
       }
     }
 
-    // Collect ALL signed nominals from after Nominal (IDR) header
-    const allNominals: { amount: number; type: 'income' | 'expense' }[] = []
-    if (headerIdx !== -1) {
-      for (let i = headerIdx + 1; i < lines.length; i++) {
-        const line = lines[i].trim()
-        const match = line.match(/^([+-])\s*([\d,.]+)$/)
-        if (match) {
-          const amount = this.parseBniAmount(match[2])
-          if (amount !== null && amount > 0) {
-            allNominals.push({
-              amount: Math.abs(amount),
-              type: match[1] === '+' ? 'income' : 'expense'
-            })
-          }
-        }
-      }
-    }
-
-    // Extract description for each date block
-    // Each block spans from (dateEntry.lineIndex + 1) to the next dateEntry.lineIndex
-    const skipPatterns = /^(?:\d+\.\s*)?(saldo awal|saldo akhir|nominal \(idr\)|saldo \(idr\)|total pemasukan|total pengeluaran|tanggal & waktu|rincian transaksi|laporan mutasi|informasi lainnya|kantor cabang|mata uang|periode|taplus|bni$|lembaga|penja|simp|pt bank|peserta penjaminan|apabila terdapat|seluruh data|bni dapat|dokumen ini|\d+ dari \d+)/i
+    const allNominals = this.parseGlobalNominals(lines, headerIdx)
+    const descList = this.parseGlobalDescriptions(lines)
 
     const items: BankTransaction[] = []
     for (let k = 0; k < dateEntries.length; k++) {
       const entry = dateEntries[k]
-      const startIndex = entry.lineIndex + 1
-      const endIndex = k + 1 < dateEntries.length ? dateEntries[k + 1].lineIndex : lines.length
-
-      const blockLines = lines.slice(startIndex, endIndex)
-      const descLines: string[] = []
-
-      for (const line of blockLines) {
-        const trimmed = line.trim()
-        if (!trimmed) continue
-        if (skipPatterns.test(trimmed)) continue
-        if (/^(\d{2}:\d{2}(?::\d{2})?)(\s+WIB)?$/.test(trimmed)) continue  // time
-        if (/^[+-]\s*[\d,.]+$/.test(trimmed)) continue  // signed nominal
-        if (/^[\d,.]+$/.test(trimmed)) continue  // pure number (saldo)
-        descLines.push(trimmed)
-      }
-
       const nominal = allNominals[k]
-      const rawDesc = descLines.join(' ')
-      const name = sanitizeTransactionName(rawDesc || 'Transaksi BNI')
+      const desc = descList[k] || 'Transaksi BNI'
+      const name = sanitizeTransactionName(desc)
       const category = classifyCategory(name)
 
       const formattedDate = formatISO8601Date(
