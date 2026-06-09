@@ -328,6 +328,24 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                         className="h-8 text-xs font-bold text-right"
                       />
                     </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Saldo Awal</p>
+                      <Input 
+                        type="number"
+                        value={scanResult.openingBalance ?? 0} 
+                        onChange={(e) => handleUpdateResult('openingBalance', parseFloat(e.target.value) || 0)}
+                        className="h-8 text-xs font-bold font-mono"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Saldo Akhir</p>
+                      <Input 
+                        type="number"
+                        value={scanResult.closingBalance ?? 0} 
+                        onChange={(e) => handleUpdateResult('closingBalance', parseFloat(e.target.value) || 0)}
+                        className="h-8 text-xs font-bold text-right font-mono text-indigo-600"
+                      />
+                    </div>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-2 space-y-2 border border-slate-100 max-h-[220px] overflow-y-auto shadow-inner">
                     {scanResult.items.map((item: any, i: number) => (
