@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import { insertTransaction } from "@/lib/actions/transactions"
 import { useRouter } from 'next/navigation'
 import { scanDocumentWithAI } from '@/lib/actions/ocr'
+import { saveBankStatement } from '@/lib/actions/statements'
+import { Input } from "@/components/ui/input"
 
 export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStatement' }) {
   const router = useRouter()
@@ -16,6 +18,18 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
   const [scanProgress, setScanProgress] = useState(0)
   const [scanResult, setScanResult] = useState<any>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const handleUpdateItem = (index: number, field: string, value: any) => {
+    setScanResult((prev: any) => {
+      const newItems = [...prev.items]
+      newItems[index] = { ...newItems[index], [field]: value }
+      return { ...prev, items: newItems }
+    })
+  }
+
+  const handleUpdateResult = (field: string, value: any) => {
+    setScanResult((prev: any) => ({ ...prev, [field]: value }))
+  }
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
@@ -67,6 +81,14 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
       formData.append('file', fileToScan)
       formData.append('context', scanContext)
       
+      // Get browser timezone offset in ISO8601 format (e.g. +07:00)
+      const offsetMinutes = new Date().getTimezoneOffset()
+      const absOffset = Math.abs(offsetMinutes)
+      const hours = String(Math.floor(absOffset / 60)).padStart(2, '0')
+      const mins = String(absOffset % 60).padStart(2, '0')
+      const offsetStr = `${offsetMinutes <= 0 ? '+' : '-'}${hours}:${mins}`
+      formData.append('timezoneOffset', offsetStr)
+      
       const result = await scanDocumentWithAI(formData)
       
       clearInterval(progressInterval)
@@ -87,39 +109,38 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
   }
 
   const handleSaveScannedItems = async () => {
-    if (!scanResult) return
+    if (!scanResult || !fileToScan) return
     setScanStatus('scanning') // Use scanning as loading state for save
     
-    if (scanContext === 'Receipt') {
-      await insertTransaction({
-        date: new Date().toISOString().split('T')[0],
-        amount: scanResult.total,
-        category: scanResult.category,
-        type: 'expense',
-        note: `Receipt: ${scanResult.merchant}`,
-        paymentMethod: 'Cash',
-        change: 0,
-        items: scanResult.items
-      })
-    } else if (scanContext === 'BankStatement') {
-      // Loop inserts for statement items
-      for (const item of scanResult.items) {
+    try {
+      if (scanContext === 'Receipt') {
         await insertTransaction({
-          date: item.date || new Date().toISOString().split('T')[0],
-          amount: item.amount,
-          category: item.category || 'Other',
-          type: item.type || 'expense',
-          note: `[${item.bank || scanResult.bank || 'Bank'}] ${item.name}`,
-          paymentMethod: item.bank || scanResult.bank || 'Transfer',
-          change: 0
+          date: new Date().toISOString().split('T')[0],
+          amount: scanResult.total,
+          category: scanResult.category,
+          type: 'expense',
+          note: `Receipt: ${scanResult.merchant}`,
+          paymentMethod: 'Cash',
+          change: 0,
+          items: scanResult.items
+        })
+      } else if (scanContext === 'BankStatement') {
+        await saveBankStatement({
+          bankName: scanResult.bank || 'Unknown Bank',
+          statementPeriod: scanResult.statementPeriod || 'Unknown Period',
+          items: scanResult.items,
+          file: fileToScan
         })
       }
+      
+      setScanStatus('idle')
+      setScanResult(null)
+      setFileToScan(null)
+      router.push('/')
+    } catch (err: any) {
+      setScanStatus('error')
+      setErrorMessage(err.message || 'Failed to save data.')
     }
-    
-    setScanStatus('idle')
-    setScanResult(null)
-    setFileToScan(null)
-    router.push('/')
   }
 
   return (
@@ -225,51 +246,105 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
 
         {scanStatus === 'success' && scanResult && (
           <div className="bg-white border border-emerald-100 rounded-xl p-0 overflow-hidden shadow-sm">
-            <div className="bg-emerald-50 px-4 py-3 border-b border-emerald-100 flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-              <p className="text-sm font-bold text-emerald-800">Extraction Successful</p>
+            <div className="bg-emerald-50 px-4 py-3 border-b border-emerald-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                <p className="text-sm font-bold text-emerald-800">Extraction Successful - Review & Edit</p>
+              </div>
             </div>
             <div className="p-4 space-y-4">
               {scanContext === 'Receipt' ? (
                 <>
-                  <div className="flex justify-between items-start">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Merchant</p>
-                      <p className="font-bold text-slate-800">{scanResult.merchant}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Merchant</p>
+                      <Input 
+                        value={scanResult.merchant} 
+                        onChange={(e) => handleUpdateResult('merchant', e.target.value)}
+                        className="h-8 text-sm font-bold"
+                      />
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Amount</p>
-                      <p className="font-bold text-indigo-600 text-lg">Rp {scanResult.total.toLocaleString('id-ID')}</p>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Total Amount</p>
+                      <Input 
+                        type="number"
+                        value={scanResult.total} 
+                        onChange={(e) => handleUpdateResult('total', parseFloat(e.target.value))}
+                        className="h-8 text-sm font-bold text-right text-indigo-600"
+                      />
                     </div>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-3 text-xs font-medium space-y-2 border border-slate-100">
+                  <div className="bg-slate-50 rounded-lg p-3 space-y-2 border border-slate-100">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Identified Items</p>
                     {scanResult.items.map((item: any, i: number) => (
-                      <div key={i} className="flex justify-between border-b border-slate-200 border-dashed pb-1 last:border-0 last:pb-0">
-                        <span className="text-slate-700">{item.name}</span>
-                        <span className="font-mono">Rp {item.amount.toLocaleString('id-ID')}</span>
+                      <div key={i} className="flex gap-2 items-center border-b border-slate-200 border-dashed pb-2 last:border-0 last:pb-0">
+                        <Input 
+                          value={item.name} 
+                          onChange={(e) => handleUpdateItem(i, 'name', e.target.value)}
+                          className="h-7 text-[11px] flex-1 bg-transparent border-none focus-visible:ring-1"
+                        />
+                        <Input 
+                          type="number"
+                          value={item.amount} 
+                          onChange={(e) => handleUpdateItem(i, 'amount', parseFloat(e.target.value))}
+                          className="h-7 text-[11px] w-24 text-right bg-transparent border-none focus-visible:ring-1 font-mono"
+                        />
                       </div>
                     ))}
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm font-medium text-slate-600">Found <span className="font-bold text-indigo-600">{scanResult.totalItems}</span> transactions</p>
-                    <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded border border-slate-200 uppercase tracking-wider">{scanResult.statementPeriod}</span>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Bank Name</p>
+                      <Input 
+                        value={scanResult.bank} 
+                        onChange={(e) => handleUpdateResult('bank', e.target.value)}
+                        className="h-8 text-xs font-bold"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Period</p>
+                      <Input 
+                        value={scanResult.statementPeriod} 
+                        onChange={(e) => handleUpdateResult('statementPeriod', e.target.value)}
+                        className="h-8 text-xs font-bold text-right"
+                      />
+                    </div>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-3 text-xs space-y-2 border border-slate-100 max-h-[160px] overflow-y-auto">
+                  <div className="bg-slate-50 rounded-lg p-2 space-y-2 border border-slate-100 max-h-[220px] overflow-y-auto shadow-inner">
                     {scanResult.items.map((item: any, i: number) => (
-                      <div key={i} className="flex justify-between items-center border-b border-slate-200 border-dashed pb-2 last:border-0 last:pb-0">
-                        <div>
-                          <p className="font-bold text-slate-700">{item.name}</p>
-                          <p className="text-[10px] text-slate-500">
-                            {item.date} • {item.category} • <span className="font-bold text-indigo-600">{item.bank || scanResult.bank || 'Bank'}</span>
-                          </p>
+                      <div key={i} className="bg-white p-2 rounded border border-slate-200 shadow-sm space-y-2 transition-all hover:border-indigo-200">
+                        <div className="flex gap-2 items-center">
+                          <Input 
+                            value={item.name} 
+                            onChange={(e) => handleUpdateItem(i, 'name', e.target.value)}
+                            className="h-7 text-[11px] font-bold flex-1"
+                          />
+                          <select 
+                            value={item.type} 
+                            onChange={(e) => handleUpdateItem(i, 'type', e.target.value)}
+                            className={`h-7 w-20 text-[10px] font-bold rounded-md border border-slate-200 bg-white px-1 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${item.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}
+                          >
+                            <option value="income">INCOME</option>
+                            <option value="expense">EXPENSE</option>
+                          </select>
                         </div>
-                        <span className={`font-bold font-mono ${item.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                          {item.type === 'income' ? '+' : '-'}Rp {item.amount.toLocaleString('id-ID')}
-                        </span>
+                        <div className="flex gap-2 items-center">
+                          <Input 
+                            type="datetime-local"
+                            value={item.date ? item.date.slice(0, 16) : ''} 
+                            onChange={(e) => handleUpdateItem(i, 'date', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                            className="h-7 text-[10px] flex-1"
+                          />
+                          <Input 
+                            type="number"
+                            value={item.amount} 
+                            onChange={(e) => handleUpdateItem(i, 'amount', parseFloat(e.target.value))}
+                            className="h-7 text-[11px] w-24 text-right font-mono font-bold"
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -277,11 +352,11 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
               )}
               
               <div className="pt-2 flex gap-3">
-                <Button variant="outline" className="flex-1 font-bold h-10" onClick={() => { setScanStatus('idle'); setScanResult(null); }}>
+                <Button variant="outline" className="flex-1 font-bold h-10 shadow-sm" onClick={() => { setScanStatus('idle'); setScanResult(null); }}>
                   Discard
                 </Button>
-                <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10" onClick={handleSaveScannedItems}>
-                  Save All
+                <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 shadow-md shadow-emerald-100" onClick={handleSaveScannedItems}>
+                  Confirm & Save
                 </Button>
               </div>
             </div>

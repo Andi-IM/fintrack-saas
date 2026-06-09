@@ -68,6 +68,16 @@ export function formatTransactionDate(day: string, monthStr: string, year: strin
   return `${cleanYear}-${month}-${cleanDay}`
 }
 
+export function formatISO8601Date(day: string, monthStr: string, year: string, timeStr?: string, timezoneOffset = '+07:00'): string {
+  const date = formatTransactionDate(day, monthStr, year)
+  // Ensure time is HH:MM:SS
+  let time = timeStr ? timeStr.trim() : '00:00:00'
+  if (time.length === 5) {
+    time = `${time}:00`
+  }
+  return `${date}T${time}${timezoneOffset}`
+}
+
 export function classifyCategory(name: string): string {
   const nameLower = name.toLowerCase()
   for (const pattern of STATEMENT_CATEGORY_PATTERNS) {

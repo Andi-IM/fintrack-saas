@@ -14,7 +14,8 @@ export class OcrSpaceExtractor implements IExtractor {
       const dataUri = `data:application/pdf;base64,${base64Data}`
       const response = await ocrSpace(dataUri, {
         apiKey: apiKey,
-        language: 'eng'
+        isTable: true,
+        OCREngine: "3"
       })
 
       // Log the raw response for debugging

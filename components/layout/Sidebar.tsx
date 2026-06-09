@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, FileText, Camera } from 'lucide-react'
+import { LayoutDashboard, FileText, Camera, Building2 } from 'lucide-react'
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -18,11 +18,18 @@ export function Sidebar() {
           Dashboard
         </Link>
         <Link 
-          href="/add" 
-          className={["flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname === "/add" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
+          href="/transactions" 
+          className={["flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname.startsWith("/transactions") || pathname === "/add" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
         >
           <FileText className="w-5 h-5" />
           Transactions
+        </Link>
+        <Link 
+          href="/statements" 
+          className={["flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname.startsWith("/statements") ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
+        >
+          <Building2 className="w-5 h-5" />
+          Bank Statements
         </Link>
 
         <div className="my-4 border-t border-slate-100"></div>

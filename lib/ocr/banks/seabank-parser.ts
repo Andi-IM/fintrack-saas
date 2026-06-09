@@ -2,7 +2,7 @@ import { OCRResult, BankTransaction } from '../types'
 import { IBankParser } from '../interfaces'
 import {
   parseStatementPeriod,
-  formatTransactionDate,
+  formatISO8601Date,
   classifyCategory,
   sanitizeTransactionName,
   sliceColumns,
@@ -11,6 +11,7 @@ import {
   splitIntoLines,
   buildBankResult,
 } from '../utils'
+import { STATEMENT_TIME_REGEX } from '@/lib/constants/ocr'
 
 interface ColumnHeaders {
   dateIdx: number
@@ -34,7 +35,7 @@ export class SeabankParser implements IBankParser {
     return text.toLowerCase().includes('seabank')
   }
 
-  parse(text: string): OCRResult {
+  parse(text: string, timezoneOffset?: string): OCRResult {
     const statementPeriod = parseStatementPeriod(text)
     const saldoAwal = this.parseSaldoAwal(text)
     const pages = splitIntoPages(text)
@@ -42,7 +43,7 @@ export class SeabankParser implements IBankParser {
     let lastBalance: number | null = null
 
     for (const page of pages) {
-      const result = this.parsePage(page, statementPeriod, saldoAwal, lastBalance)
+      const result = this.parsePage(page, statementPeriod, saldoAwal, lastBalance, timezoneOffset)
       allItems.push(...result.items)
       lastBalance = result.lastBalance
     }
@@ -55,6 +56,7 @@ export class SeabankParser implements IBankParser {
     statementPeriod: string,
     saldoAwal: number,
     lastBalance: number | null,
+    timezoneOffset?: string,
   ): { items: BankTransaction[]; lastBalance: number | null } {
     const lines = splitIntoLines(page)
     const headers = this.findColumnHeaders(lines)
@@ -85,7 +87,7 @@ export class SeabankParser implements IBankParser {
       const transaction = this.buildTransaction(
         pageDates[i], pageDescs[i], pageBalances[i],
         i, pageBalances, currentLastBalance, saldoAwal,
-        masukValues, keluarValues,
+        masukValues, keluarValues, timezoneOffset,
       )
       items.push(transaction)
       currentLastBalance = pageBalances[i]
@@ -241,13 +243,17 @@ export class SeabankParser implements IBankParser {
     saldoAwal: number,
     masukValues: number[],
     keluarValues: number[],
+    timezoneOffset?: string,
   ): BankTransaction {
     const { amount, type } = this.resolveAmountType(
       index, currentBalance, pageBalances, lastBalance, saldoAwal,
       masukValues, keluarValues,
     )
 
-    const formattedDate = formatTransactionDate(date.day, date.month, date.year)
+    const timeMatch = date.raw.match(STATEMENT_TIME_REGEX)
+    const timeStr = timeMatch ? timeMatch[0] : undefined
+
+    const formattedDate = formatISO8601Date(date.day, date.month, date.year, timeStr, timezoneOffset)
     const name = sanitizeTransactionName(desc)
     const category = classifyCategory(name)
 
