@@ -9,8 +9,15 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (!error && data) {
+      const userEmail = data.user?.email
+      const authorizedEmail = process.env.AUTHORIZED_EMAIL
+      if (userEmail !== authorizedEmail) {
+        await supabase.auth.signOut()
+        return NextResponse.redirect(`${origin}/login?message=Unauthorized user email`)
+      }
+
       const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
       const isLocalEnv = process.env.NODE_ENV === 'development'
       if (isLocalEnv) {
@@ -21,6 +28,8 @@ export async function GET(request: Request) {
       } else {
         return NextResponse.redirect(`${origin}${next}`)
       }
+    } else {
+      console.error('Auth callback error exchanging code for session:', error)
     }
   }
 
