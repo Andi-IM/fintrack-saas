@@ -7,6 +7,7 @@ import { UploadCloud, CheckCircle2, Loader2, Sparkles, AlertCircle } from 'lucid
 import { Button } from "@/components/ui/button"
 import { insertTransaction } from "@/lib/actions/transactions"
 import { useRouter } from 'next/navigation'
+import { scanDocumentWithAI } from '@/lib/actions/ocr'
 
 export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStatement' }) {
   const router = useRouter()
@@ -14,12 +15,14 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
   const [scanStatus, setScanStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle')
   const [scanProgress, setScanProgress] = useState(0)
   const [scanResult, setScanResult] = useState<any>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
       setFileToScan(acceptedFiles[0])
       setScanStatus('idle')
       setScanResult(null)
+      setErrorMessage(null)
     }
   }, [])
 
@@ -33,48 +36,44 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
   })
 
   const handleProcessScan = async () => {
+    if (!fileToScan) return
     setScanStatus('scanning')
     setScanProgress(0)
+    setErrorMessage(null)
     
-    // Simulate Gemini LLM processing
+    // Animate progress up to 90% while waiting for API response
     const progressInterval = setInterval(() => {
       setScanProgress(prev => {
-        if (prev >= 95) {
+        if (prev >= 90) {
           clearInterval(progressInterval)
-          return 95
+          return 90
         }
         return prev + 5
       })
-    }, 100)
+    }, 150)
     
-    setTimeout(() => {
+    try {
+      const formData = new FormData()
+      formData.append('file', fileToScan)
+      formData.append('context', scanContext)
+      
+      const result = await scanDocumentWithAI(formData)
+      
       clearInterval(progressInterval)
       setScanProgress(100)
-      setScanStatus('success')
       
-      if (scanContext === 'Receipt') {
-        setScanResult({
-          items: [
-            { name: "Nasi Goreng Spesial", amount: 35000 },
-            { name: "Es Teh Manis", amount: 8000 },
-            { name: "Kerupuk", amount: 5000 }
-          ],
-          total: 48000,
-          category: "Food",
-          merchant: "Warung Makan Sedap"
-        })
+      if (result) {
+        setScanResult(result)
+        setScanStatus('success')
       } else {
-        setScanResult({
-          items: [
-            { date: "2023-11-15", name: "Salary Nov", amount: 15000000, type: "income", category: "Salary" },
-            { date: "2023-11-16", name: "PLN Token", amount: 500000, type: "expense", category: "Utilities" },
-            { date: "2023-11-18", name: "Supermarket", amount: 850000, type: "expense", category: "Food" }
-          ],
-          totalItems: 3,
-          statementPeriod: "Nov 2023"
-        })
+        throw new Error('AI returned an empty result.')
       }
-    }, 2500)
+    } catch (err: any) {
+      clearInterval(progressInterval)
+      setScanStatus('error')
+      setErrorMessage(err.message || 'Failed to process document with Google Cloud Vision.')
+      console.error('OCR Client Error:', err)
+    }
   }
 
   const handleSaveScannedItems = async () => {
@@ -182,6 +181,21 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
               <p className="text-sm font-bold text-slate-800">Analyzing Document...</p>
               <p className="text-xs text-slate-500 mt-1">Our AI is extracting relevant financial data</p>
             </div>
+          </div>
+        )}
+
+        {scanStatus === 'error' && (
+          <div className="bg-rose-50 border border-rose-100 rounded-xl p-6 text-center space-y-4 shadow-sm">
+            <div className="bg-rose-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto text-rose-600">
+              <AlertCircle className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-800">Processing Failed</p>
+              <p className="text-xs text-rose-600/90 mt-2 break-words leading-relaxed">{errorMessage}</p>
+            </div>
+            <Button variant="outline" className="w-full font-bold h-10 border-rose-200 text-rose-700 hover:bg-rose-50" onClick={() => setScanStatus('idle')}>
+              Try Again
+            </Button>
           </div>
         )}
 
