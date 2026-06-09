@@ -2,30 +2,28 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 
-export async function login(formData: FormData) {
+export async function login() {
   const supabase = await createClient()
+  const origin = (await headers()).get('origin') || 'http://localhost:3000'
 
-  const data = {
-    email: formData.get('email') as string,
-  }
-
-  // Use Magic Link / OTP login for passwordless flow
-  const { error } = await supabase.auth.signInWithOtp({
-    email: data.email,
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'github',
     options: {
-      shouldCreateUser: true, // Allow creating new user if they don't exist
-    }
+      redirectTo: `${origin}/auth/callback`,
+    },
   })
 
   if (error) {
-    redirect('/login?message=Could not authenticate user')
+    console.error('Github auth error:', error)
+    redirect(`/login?message=${encodeURIComponent(error.message)}`)
   }
 
-  // With magic link, user needs to check email.
-  // We redirect them to a page telling them to check their email.
-  redirect('/login?message=Check your email for the login link')
+  if (data.url) {
+    redirect(data.url)
+  }
 }
 
 export async function logout() {
