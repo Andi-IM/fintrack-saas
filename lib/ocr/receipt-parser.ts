@@ -5,7 +5,7 @@ import { IParser } from './interfaces'
 export class ReceiptParser implements IParser {
   context: 'Receipt' = 'Receipt'
 
-  parse(text: string): OCRResult {
+  parse(text: string, timezoneOffset?: string): OCRResult {
     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0)
     
     // 1. Merchant: assume it's the first line

@@ -8,7 +8,7 @@ import { OCRResult, BankTransaction } from '../types'
 import { IBankParser } from '../interfaces'
 import {
   parseStatementPeriod,
-  formatTransactionDate,
+  formatISO8601Date,
   classifyCategory,
   sanitizeTransactionName,
   parseIndonesianAmount,
@@ -34,12 +34,21 @@ export class BsiParser implements IBankParser {
     )
   }
 
-  parse(text: string): OCRResult {
+  parse(text: string, timezoneOffset?: string): OCRResult {
     const lines = splitIntoLines(text)
     const statementPeriod = parseStatementPeriod(text)
+
+    // Check if the text contains a Markdown table
+    if (text.includes('|---|') || (text.includes('|') && text.toLowerCase().includes('date & time'))) {
+      const items = this.parseMarkdownTable(lines, timezoneOffset)
+      if (items.length > 0) {
+        return buildBankResult(items, this.bankName, statementPeriod)
+      }
+    }
+
     const saldoAwal = this.parseSaldoAwal(text)
-    const dateEntries = this.extractDates(lines)
-    const items = this.parseBankStatement(lines, dateEntries, saldoAwal)
+    const dateEntries = this.extractDates(lines, timezoneOffset)
+    const items = this.parseBankStatement(lines, dateEntries, saldoAwal, timezoneOffset)
 
     return buildBankResult(items, this.bankName, statementPeriod)
   }
@@ -77,7 +86,7 @@ export class BsiParser implements IBankParser {
     return 0
   }
 
-  private extractDates(lines: string[]): DateEntry[] {
+  private extractDates(lines: string[], timezoneOffset?: string): DateEntry[] {
     const entries: DateEntry[] = []
 
     for (let i = 0; i < lines.length; i++) {
@@ -89,36 +98,47 @@ export class BsiParser implements IBankParser {
         continue
       }
 
-      const date = this.formatDateLine(line)
+      // Try to find time on same line or next line
+      let timeStr: string | undefined
+      const timeMatch = line.match(STATEMENT_TIME_REGEX)
+      if (timeMatch) {
+        timeStr = timeMatch[0]
+      } else if (i + 1 < lines.length && STATEMENT_TIME_REGEX.test(lines[i + 1])) {
+        const nextTimeMatch = lines[i + 1].match(STATEMENT_TIME_REGEX)
+        if (nextTimeMatch) timeStr = nextTimeMatch[0]
+      }
+
+      const date = this.formatDateLine(line, timeStr, timezoneOffset)
       entries.push({ date, lineIndex: i })
     }
 
     return entries
   }
 
-  private formatDateLine(line: string): string {
+  private formatDateLine(line: string, timeStr?: string, timezoneOffset?: string): string {
     const dateParts = line.split(/\s+/)
-    if (dateParts.length < 2) return new Date().toISOString().split('T')[0]
+    if (dateParts.length < 2) return new Date().toISOString()
 
     const day = dateParts[0]
     const monthStr = dateParts[1]
     const yearMatch = line.match(/\b(202\d)\b/)
     const year = yearMatch ? yearMatch[0] : '2025'
 
-    return formatTransactionDate(day, monthStr, year)
+    return formatISO8601Date(day, monthStr, year, timeStr, timezoneOffset)
   }
 
   private parseBankStatement(
     lines: string[],
     dateEntries: DateEntry[],
     saldoAwal: number,
+    timezoneOffset?: string,
   ): BankTransaction[] {
     if (this.isColumnLayout(dateEntries)) {
       const items = this.parseColumnLayout(lines, dateEntries, saldoAwal)
       if (items.length > 0) return items
     }
 
-    return this.parseRowLayout(lines, saldoAwal)
+    return this.parseRowLayout(lines, saldoAwal, timezoneOffset)
   }
 
   private isColumnLayout(dateEntries: DateEntry[]): boolean {
@@ -281,7 +301,7 @@ export class BsiParser implements IBankParser {
     return -1
   }
 
-  private parseRowLayout(lines: string[], saldoAwal: number): BankTransaction[] {
+  private parseRowLayout(lines: string[], saldoAwal: number, timezoneOffset?: string): BankTransaction[] {
     const truncateIndex = this.findTruncationIndex(lines)
     const rowLines = lines.slice(0, truncateIndex)
     const blockStarts = this.findDateBlockStarts(rowLines)
@@ -293,7 +313,7 @@ export class BsiParser implements IBankParser {
       const block = this.extractBlock(rowLines, blockStarts, k)
       if (!block || block.lines.length === 0) continue
 
-      const result = this.resolveTransactionBlock(block, lastBalance)
+      const result = this.resolveTransactionBlock(block, lastBalance, timezoneOffset)
       if (result) {
         items.push(result.transaction)
         lastBalance = result.newBalance
@@ -339,12 +359,18 @@ export class BsiParser implements IBankParser {
   private resolveTransactionBlock(
     block: { dateStr: string; lines: string[] },
     lastBalance: number,
+    timezoneOffset?: string,
   ): { transaction: BankTransaction; newBalance: number } | null {
     const amounts: number[] = []
     const descLines: string[] = []
+    let timeStr: string | undefined
 
     for (const line of block.lines) {
-      if (STATEMENT_TIME_REGEX.test(line)) continue
+      const timeMatch = line.match(STATEMENT_TIME_REGEX)
+      if (timeMatch) {
+        timeStr = timeMatch[0]
+        continue
+      }
 
       const val = parseIndonesianAmount(line)
       if (val !== null) {
@@ -362,7 +388,7 @@ export class BsiParser implements IBankParser {
     if (amounts.length === 0) return null
 
     const resolved = this.resolveAmounts(amounts, descLines, lastBalance)
-    const formattedDate = this.formatDateFromBlock(block.dateStr)
+    const formattedDate = this.formatDateFromBlock(block.dateStr, timeStr, timezoneOffset)
     const rawName = descLines.join(' ')
     const name = sanitizeTransactionName(rawName)
     const category = classifyCategory(name)
@@ -449,15 +475,107 @@ export class BsiParser implements IBankParser {
     return { amount, type, newBalance }
   }
 
-  private formatDateFromBlock(dateStr: string): string {
+  private formatDateFromBlock(dateStr: string, timeStr?: string, timezoneOffset?: string): string {
     const dateParts = dateStr.split(/\s+/)
-    if (dateParts.length < 2) return new Date().toISOString().split('T')[0]
+    if (dateParts.length < 2) return new Date().toISOString()
 
     const day = dateParts[0]
     const monthStr = dateParts[1]
     const yearMatch = dateStr.match(/\b(202\d)\b/)
     const year = yearMatch ? yearMatch[0] : '2025'
 
-    return formatTransactionDate(day, monthStr, year)
+    return formatISO8601Date(day, monthStr, year, timeStr, timezoneOffset)
+  }
+
+  private parseMarkdownTable(lines: string[], timezoneOffset?: string): BankTransaction[] {
+    const items: BankTransaction[] = []
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+      // A valid markdown table row starts and ends with '|'
+      if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) continue
+      // Skip the header separator row (e.g. |---|---|...)
+      if (trimmed.includes('---|') || trimmed.includes(':---|')) continue
+      // Skip the header itself
+      if (trimmed.toLowerCase().includes('date & time') || trimmed.toLowerCase().includes('detail transaksi')) continue
+      // Skip summary rows
+      if (trimmed.toLowerCase().includes('saldo awal') || 
+          trimmed.toLowerCase().includes('mutasi debit') || 
+          trimmed.toLowerCase().includes('mutasi kredit') || 
+          trimmed.toLowerCase().includes('saldo akhir')) {
+        continue
+      }
+
+      // Split row by '|' and clean empty cells at the start and end
+      const rawCells = trimmed.split('|').map(c => c.trim())
+      const cells = rawCells.slice(1, rawCells.length - 1)
+
+      // A valid row must have at least 5 cells (Date, Desc, Debit, Kredit, Saldo)
+      if (cells.length < 5) continue
+
+      const dateRaw = cells[0].replace(/<br\s*\/?>/gi, ' ').trim()
+      const dateParts = dateRaw.split(/\s+/)
+      if (dateParts.length < 2) continue
+
+      const day = dateParts[0]
+      const monthStr = dateParts[1]
+      const yearMatch = dateRaw.match(/\b(202\d)\b/)
+      const year = yearMatch ? yearMatch[0] : '2026'
+
+      // Try to find time
+      let timeStr: string | undefined
+      for (const part of dateParts) {
+        if (STATEMENT_TIME_REGEX.test(part)) {
+          timeStr = part
+          break
+        }
+      }
+
+      const formattedDate = formatISO8601Date(day, monthStr, year, timeStr, timezoneOffset)
+
+      const debitRaw = cells[cells.length - 3]
+      const kreditRaw = cells[cells.length - 2]
+      
+      const debitVal = parseIndonesianAmount(debitRaw)
+      const kreditVal = parseIndonesianAmount(kreditRaw)
+
+      if (debitVal === null && kreditVal === null) continue
+
+      const isDebit = debitVal !== null && debitVal > 0
+      const isKredit = kreditVal !== null && kreditVal > 0
+      if (!isDebit && !isKredit) continue
+
+      const amount = isDebit ? debitVal : (kreditVal || 0)
+      const type = isDebit ? ('expense' as const) : ('income' as const)
+
+      let descStartIndex = 1
+      let descEndIndex = cells.length - 3
+      
+      if (cells.length >= 6) {
+        const potentialReff = cells[cells.length - 4]
+        if (/^[a-zA-Z0-9]+$/.test(potentialReff) && potentialReff.length >= 6) {
+          descEndIndex = cells.length - 4
+        }
+      }
+
+      const descList = cells.slice(descStartIndex, descEndIndex)
+        .map(d => d.replace(/<br\s*\/?>/gi, ' ').replace(/\s+/g, ' ').trim())
+        .filter(d => d.length > 0)
+      
+      const rawName = descList.join(' | ')
+      const name = sanitizeTransactionName(rawName)
+      const category = classifyCategory(name)
+
+      items.push({
+        date: formattedDate,
+        name,
+        amount,
+        type,
+        category,
+        bank: this.bankName,
+      })
+    }
+
+    return items
   }
 }

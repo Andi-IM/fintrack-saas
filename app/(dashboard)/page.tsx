@@ -1,14 +1,13 @@
 import { getTransactions } from '@/lib/actions/transactions'
 import { OverviewCards } from '@/components/dashboard/OverviewCards'
 import { TransactionChart } from '@/components/dashboard/TransactionChart'
-import { TransactionList } from '@/components/transactions/TransactionList'
 
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string, range?: string }>
+  searchParams: Promise<{ range?: string }>
 }) {
-  const { date, range = '1M' } = await searchParams
+  const { range = '1M' } = await searchParams
   const transactions = await getTransactions()
 
   return (
@@ -23,7 +22,6 @@ export default async function DashboardPage({
 
       <OverviewCards transactions={transactions} timeRange={range} />
       <TransactionChart transactions={transactions} timeRange={range} />
-      <TransactionList transactions={transactions} dateFilter={date} timeRange={range} />
     </>
   )
 }

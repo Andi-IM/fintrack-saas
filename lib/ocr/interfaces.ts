@@ -7,12 +7,13 @@ export interface IExtractor {
 
 export interface IParser {
   context: 'Receipt' | 'BankStatement'
-  parse(text: string): OCRResult
+  parse(text: string, timezoneOffset?: string): OCRResult
 }
 
 export interface IBankParser {
   identify(text: string): boolean
   bankName: string
-  parse(text: string): OCRResult
+  parse(text: string, timezoneOffset?: string): OCRResult
 }
+
 

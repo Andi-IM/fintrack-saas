@@ -33,7 +33,7 @@ export class DocumentProcessor {
     this.parsers.push(parser)
   }
 
-  async process(file: File, context: 'Receipt' | 'BankStatement'): Promise<OCRResult | null> {
+  async process(file: File, context: 'Receipt' | 'BankStatement', timezoneOffset?: string): Promise<OCRResult | null> {
     // 1. Convert File to base64
     const bytes = await file.arrayBuffer()
     const base64Data = Buffer.from(bytes).toString('base64')
@@ -56,7 +56,7 @@ export class DocumentProcessor {
     }
 
     // 5. Parse Text
-    return parser.parse(rawText)
+    return parser.parse(rawText, timezoneOffset)
   }
 
   private inferMimeType(filename: string): string {

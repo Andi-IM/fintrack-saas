@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { TrendingUp } from "lucide-react"
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount)
@@ -13,6 +13,7 @@ function formatCurrency(amount: number) {
 export function TransactionChart({ transactions, timeRange: initialRange }: { transactions: any[], timeRange: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const pathname = usePathname()
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
@@ -22,7 +23,7 @@ export function TransactionChart({ transactions, timeRange: initialRange }: { tr
   const handleRangeChange = (range: string) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set('range', range)
-    router.push(`/?${params.toString()}`)
+    router.push(`${pathname}?${params.toString()}`)
   }
 
   const timeFilteredTransactions = transactions.filter(tx => {
@@ -52,7 +53,7 @@ export function TransactionChart({ transactions, timeRange: initialRange }: { tr
     if (data && data.activePayload && data.activePayload.length > 0) {
       const params = new URLSearchParams(searchParams.toString())
       params.set('date', data.activePayload[0].payload.date)
-      router.push(`/?${params.toString()}`)
+      router.push(`/transactions?${params.toString()}`)
     }
   }
 

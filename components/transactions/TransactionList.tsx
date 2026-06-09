@@ -1,7 +1,7 @@
 'use client'
 
 import { format } from "date-fns"
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -16,11 +16,12 @@ function formatCurrency(amount: number) {
 export function TransactionList({ transactions, dateFilter, timeRange }: { transactions: any[], dateFilter?: string, timeRange: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const pathname = usePathname()
 
   const handleClearDateFilter = () => {
     const params = new URLSearchParams(searchParams.toString())
     params.delete('date')
-    router.push(`/?${params.toString()}`)
+    router.push(`${pathname}?${params.toString()}`)
   }
 
   const handleDelete = async (id: string) => {

@@ -2,7 +2,7 @@ import { OCRResult, BankTransaction } from '../types'
 import { IBankParser } from '../interfaces'
 import {
   parseStatementPeriod,
-  formatTransactionDate,
+  formatISO8601Date,
   classifyCategory,
   sanitizeTransactionName,
   sliceColumns,
@@ -10,6 +10,7 @@ import {
   splitIntoLines,
   buildBankResult,
 } from '../utils'
+import { STATEMENT_TIME_REGEX } from '@/lib/constants/ocr'
 
 interface ColumnHeaders {
   dateIdx: number
@@ -26,20 +27,20 @@ export class JagoParser implements IBankParser {
     return text.toLowerCase().includes('jago')
   }
 
-  parse(text: string): OCRResult {
+  parse(text: string, timezoneOffset?: string): OCRResult {
     const statementPeriod = parseStatementPeriod(text)
     const pages = splitIntoPages(text)
     const allItems: BankTransaction[] = []
 
     for (const page of pages) {
-      const items = this.parsePage(page)
+      const items = this.parsePage(page, timezoneOffset)
       allItems.push(...items)
     }
 
     return buildBankResult(allItems, this.bankName, statementPeriod)
   }
 
-  private parsePage(page: string): BankTransaction[] {
+  private parsePage(page: string, timezoneOffset?: string): BankTransaction[] {
     const lines = splitIntoLines(page)
     const headers = this.findColumnHeaders(lines)
 
@@ -62,7 +63,7 @@ export class JagoParser implements IBankParser {
 
     for (let i = 0; i < minLength; i++) {
       const transaction = this.buildTransaction(
-        pageDates[i], pageAmounts[i], descriptions[i],
+        pageDates[i], pageAmounts[i], descriptions[i], timezoneOffset
       )
       items.push(transaction)
     }
@@ -169,22 +170,33 @@ export class JagoParser implements IBankParser {
     dateStr: string,
     amountObj: { value: number; type: 'income' | 'expense' },
     rawDescription: string | undefined,
+    timezoneOffset?: string,
   ): BankTransaction {
     const name = sanitizeTransactionName(rawDescription || 'Transaction details')
 
-    const formattedDate = this.formatDate(dateStr)
+    const formattedDate = this.formatDate(dateStr, timezoneOffset)
     const category = classifyCategory(name)
 
     return { date: formattedDate, name, amount: amountObj.value, type: amountObj.type, category, bank: this.bankName }
   }
 
-  private formatDate(dateStr: string): string {
+  private formatDate(dateStr: string, timezoneOffset?: string): string {
     const parts = dateStr.split(/\s+/)
-    if (parts.length < 2) return new Date().toISOString().split('T')[0]
+    if (parts.length < 2) return new Date().toISOString()
 
     const day = parts[0]
     const monthStr = parts[1]
-    const year = parts.length >= 3 ? parts[2] : '2024'
-    return formatTransactionDate(day, monthStr, year)
+    const year = parts.length >= 3 && /^\d{4}$/.test(parts[2]) ? parts[2] : '2024'
+    
+    // Try to find time in parts
+    let timeStr: string | undefined
+    for (const part of parts) {
+      if (STATEMENT_TIME_REGEX.test(part)) {
+        timeStr = part
+        break
+      }
+    }
+
+    return formatISO8601Date(day, monthStr, year, timeStr, timezoneOffset)
   }
 }
