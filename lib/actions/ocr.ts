@@ -1,5 +1,19 @@
 'use server'
 
+// @ts-ignore
+import { ocrSpace } from 'ocr-space-api-wrapper'
+import {
+  RECEIPT_TOTAL_KEYWORDS,
+  RECEIPT_CATEGORY_PATTERNS,
+  STATEMENT_MONTHS,
+  STATEMENT_STOP_KEYWORDS,
+  STATEMENT_DATE_REGEX,
+  STATEMENT_TIME_REGEX,
+  STATEMENT_REF_REGEX,
+  STATEMENT_MONTH_MAP,
+  STATEMENT_CATEGORY_PATTERNS
+} from '@/lib/constants/ocr'
+
 interface OCRResult {
   merchant?: string
   items?: any[]
@@ -64,11 +78,10 @@ function parseReceiptText(text: string): any {
 
   // 2. Extract total amount
   let total = 0
-  const totalKeywords = [/total/i, /jumlah/i, /grand\s*total/i, /bayar/i, /nett/i, /amount/i]
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
-    if (totalKeywords.some(regex => regex.test(line))) {
+    if (RECEIPT_TOTAL_KEYWORDS.some(regex => regex.test(line))) {
       const numberMatches = line.match(/\d+([.,]\d+)?/g)
       if (numberMatches && numberMatches.length > 0) {
         const cleanNumber = numberMatches[numberMatches.length - 1].replace(/[.,]/g, '')
@@ -92,23 +105,78 @@ function parseReceiptText(text: string): any {
   // 3. Category matching based on keywords
   let category = 'Other'
   const textLower = text.toLowerCase()
-  if (/makan|minum|food|beverage|resto|cafe|coffee|kopi|nasi|mie|teh/i.test(textLower)) {
-    category = 'Food'
-  } else if (/trans|ojek|grab|gojek|taxi|taksi|bensin|fuel|pertamina/i.test(textLower)) {
-    category = 'Transport'
-  } else if (/pln|listrik|pdam|air|telkom|wifi|internet|pulsa/i.test(textLower)) {
-    category = 'Utilities'
-  } else if (/bioskop|cinema|tiket|fun|game|nonton/i.test(textLower)) {
-    category = 'Entertainment'
-  } else if (/baju|celana|shop|mall|store|tokopedia|shopee/i.test(textLower)) {
-    category = 'Shopping'
+  for (const pattern of RECEIPT_CATEGORY_PATTERNS) {
+    if (pattern.regex.test(textLower)) {
+      category = pattern.category
+      break
+    }
   }
 
-  // 4. Create items array
-  const items = [{
-    name: merchant,
-    amount: total
-  }]
+  // 4. Parse line items
+  const items: { name: string, amount: number }[] = []
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    
+    // Check if line contains a quantity marker like "x1", "x2", etc.
+    const qtyMatch = line.match(/\bx\s*(\d+)\b/i)
+    if (qtyMatch) {
+      const qty = parseInt(qtyMatch[1], 10)
+      
+      // Try to parse using: <name> <price> x<qty>
+      const fullMatch = line.match(/^(.*?)\s*(\d{1,3}(?:\.\d{3})+|\d+)\s*x\s*(\d+)/i)
+      if (fullMatch) {
+        let name = fullMatch[1].trim()
+        const priceStr = fullMatch[2].replace(/\./g, '')
+        const price = parseInt(priceStr, 10) || 0
+        
+        // If name is empty, try to get from previous line
+        if (!name && i > 0) {
+          name = lines[i - 1]
+        }
+        
+        if (name) {
+          items.push({
+            name,
+            amount: price * qty
+          })
+          continue
+        }
+      }
+
+      // Fallback: if line is just "x1" or "x 1"
+      if (line.toLowerCase().startsWith('x') || line.toLowerCase() === `x${qty}`) {
+        // Price should be on the previous line
+        if (i > 0) {
+          const prevLine = lines[i - 1]
+          const price = parseInt(prevLine.replace(/\./g, '').replace(/,/g, ''), 10)
+          
+          if (!isNaN(price) && i > 1) {
+            const name = lines[i - 2]
+            items.push({
+              name,
+              amount: price * qty
+            })
+            continue
+          }
+        }
+      }
+    }
+  }
+
+  // Fallback: If no items were parsed, create a default one from merchant name
+  if (items.length === 0) {
+    items.push({
+      name: merchant,
+      amount: total
+    })
+  } else {
+    // If we have parsed items, set total to the sum of items to ensure accuracy
+    const itemsSum = items.reduce((sum, item) => sum + item.amount, 0)
+    if (itemsSum > 0) {
+      total = itemsSum
+    }
+  }
 
   return {
     merchant,
@@ -119,15 +187,469 @@ function parseReceiptText(text: string): any {
 }
 
 function parseBankStatementText(text: string): any {
+  const textLower = text.toLowerCase()
+  
+  // Detect bank format based on bank name keywords or structure
+  const isJago = textLower.includes('jago')
+  const isSeabank = textLower.includes('seabank')
+  const isBsi = textLower.includes('bsi') || textLower.includes('laporan rekening')
+  const bankName = isJago ? 'Bank JAGO' : isSeabank ? 'SeaBank' : isBsi ? 'BSI' : 'Bank'
+
+  if (isSeabank) {
+    const pages = text.split('---PAGE_BREAK---')
+    const items: any[] = []
+    let statementPeriod = 'Unknown Period'
+    let saldoAwal = 0
+
+    // Parse statement period
+    for (const line of text.split('\n')) {
+      const lineLower = line.trim().toLowerCase()
+      if (lineLower.includes('sampai') || lineLower.includes('s/d') || lineLower.includes(' - ') || lineLower.includes('periode')) {
+        for (const m of STATEMENT_MONTHS) {
+          if (lineLower.includes(m)) {
+            const yearMatch = line.match(/\b(202\d)\b/)
+            if (yearMatch) {
+              statementPeriod = `${m.toUpperCase()} ${yearMatch[0]}`
+              break
+            }
+          }
+        }
+      }
+      if (statementPeriod !== 'Unknown Period') break
+    }
+
+    if (statementPeriod === 'Unknown Period') {
+      for (const line of text.split('\n')) {
+        const lineLower = line.trim().toLowerCase()
+        if (lineLower.includes('halaman') || lineLower.includes('telepon')) continue
+        for (const m of STATEMENT_MONTHS) {
+          if (lineLower.includes(m)) {
+            const yearMatch = line.match(/\b(202\d)\b/)
+            if (yearMatch) {
+              statementPeriod = `${m.toUpperCase()} ${yearMatch[0]}`
+              break
+            }
+          }
+        }
+        if (statementPeriod !== 'Unknown Period') break
+      }
+    }
+
+    // Parse Saldo Awal from text
+    const saldoAwalMatch = text.match(/saldo awal\s*(?:\(idr\))?\s*([\d.]+)/i)
+    if (saldoAwalMatch) {
+      saldoAwal = parseInt(saldoAwalMatch[1].replace(/\./g, ''), 10) || 0
+    }
+
+    let lastBalance: number | null = null
+
+    for (const page of pages) {
+      const lines = page.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+      
+      // Locate header line indices
+      let dateIdx = -1
+      let transIdx = -1
+      let keluarIdx = -1
+      let masukIdx = -1
+      let balanceIdx = -1
+
+      for (let i = 0; i < lines.length; i++) {
+        const lower = lines[i].toLowerCase()
+        if (lower.startsWith('tanggal')) dateIdx = i
+        else if (lower.startsWith('transaksi')) transIdx = i
+        else if (lower.includes('keluar')) keluarIdx = i
+        else if (lower.includes('masuk')) masukIdx = i
+        else if (lower.includes('saldo akhir')) balanceIdx = i
+      }
+
+      if (dateIdx === -1 || transIdx === -1) {
+        continue
+      }
+
+      // Slice column sections
+      const indices = [
+        { label: 'date', idx: dateIdx },
+        { label: 'trans', idx: transIdx },
+        { label: 'keluar', idx: keluarIdx },
+        { label: 'masuk', idx: masukIdx },
+        { label: 'balance', idx: balanceIdx }
+      ].filter(item => item.idx !== -1).sort((a, b) => a.idx - b.idx)
+
+      const columnLines: Record<string, string[]> = {}
+      for (let i = 0; i < indices.length; i++) {
+        const start = indices[i].idx + 1
+        const end = i + 1 < indices.length ? indices[i + 1].idx : lines.length
+        columnLines[indices[i].label] = lines.slice(start, end)
+      }
+
+      // 1. Parse dates
+      const pageDates: { day: string; month: string; year: string; raw: string }[] = []
+      let currentMonthYear = ''
+
+      if (columnLines.date) {
+        for (const line of columnLines.date) {
+          const lineLower = line.toLowerCase().trim()
+          if (
+            lineLower.includes('halaman') || 
+            lineLower.includes('seabank') || 
+            lineLower.includes('sampai') || 
+            lineLower.includes('s/d') ||
+            lineLower.includes('periode') ||
+            lineLower.includes('ringkasan')
+          ) continue
+          
+          const isMonthYear = /^[a-zA-Z]{3,12}\s+\d{4}$/.test(line)
+          if (isMonthYear) {
+            currentMonthYear = line
+            continue
+          }
+
+          // Find standard month inside line
+          const monthMatch = lineLower.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|des|mei|agu|okt)\b/)
+          if (monthMatch) {
+            const month = monthMatch[1]
+            const beforeMonth = lineLower.substring(0, monthMatch.index).trim()
+            
+            let dayDigits = beforeMonth
+              .replace(/[gG]/g, '9')
+              .replace(/[sS]/g, '5')
+              .replace(/[liI]/g, '1')
+              .replace(/[oO]/g, '0')
+              .replace(/\D/g, '')
+              
+            if (dayDigits.length > 0 && dayDigits.length <= 2) {
+              const yearMatch = line.match(/\b(202\d)\b/)
+              let yearStr = yearMatch ? yearMatch[1] : ''
+              
+              if (!yearStr && currentMonthYear) {
+                const myYearMatch = currentMonthYear.match(/\b(202\d)\b/)
+                if (myYearMatch) yearStr = myYearMatch[1]
+              }
+              
+              if (!yearStr) {
+                const periodYearMatch = statementPeriod.match(/\b(202\d)\b/)
+                yearStr = periodYearMatch ? periodYearMatch[1] : '2026'
+              }
+
+              pageDates.push({
+                day: dayDigits.padStart(2, '0'),
+                month,
+                year: yearStr,
+                raw: line
+              })
+            }
+          }
+        }
+      }
+
+      // 2. Parse descriptions with SeaBank ending keywords
+      const pageDescs: string[] = []
+      if (columnLines.trans) {
+        let currentDesc = ''
+        const seabankEndKeywords = ['transfer', 'pembayaran', 'pernbayara n', 'pembayara n', 'pernbayaran', 'bunga tabungan', 'biaya', 'cashback', 'qris']
+        
+        for (const line of columnLines.trans) {
+          const lineLower = line.toLowerCase().trim()
+          if (lineLower.length === 0) continue
+          
+          currentDesc = currentDesc ? `${currentDesc} ${line}` : line
+          
+          const isEnd = seabankEndKeywords.some(kw => lineLower.includes(kw))
+          if (isEnd) {
+            pageDescs.push(currentDesc)
+            currentDesc = ''
+          }
+        }
+        if (currentDesc) {
+          pageDescs.push(currentDesc)
+        }
+      }
+
+      // 3. Parse balances
+      const pageBalances: number[] = []
+      for (const line of (columnLines.balance || [])) {
+        const clean = line.replace(/\./g, '').replace(/,/g, '')
+        const val = parseInt(clean, 10)
+        if (!isNaN(val) && val > 100) { 
+          pageBalances.push(val)
+        }
+      }
+
+      const minLen = Math.min(pageDates.length, pageDescs.length, pageBalances.length)
+      for (let i = 0; i < minLen; i++) {
+        const dateObj = pageDates[i]
+        const descStr = pageDescs[i]
+        const currentBalance = pageBalances[i]
+        
+        let amount = 0
+        let type = 'expense'
+        
+        if (i > 0) {
+          const prevBalance = pageBalances[i - 1]
+          const diff = currentBalance - prevBalance
+          amount = Math.abs(diff)
+          type = diff >= 0 ? 'income' : 'expense'
+        } else if (lastBalance !== null) {
+          const diff = currentBalance - lastBalance
+          amount = Math.abs(diff)
+          type = diff >= 0 ? 'income' : 'expense'
+        } else {
+          // First transaction of first page fallback
+          const diff = currentBalance - saldoAwal
+          amount = Math.abs(diff)
+          type = diff >= 0 ? 'income' : 'expense'
+          
+          // Match against explicit masuk/keluar columns if difference feels like a mismatch
+          const cleanMasuk = (columnLines.masuk || []).map(l => parseInt(l.replace(/\./g, '').replace(/,/g, ''), 10)).filter(v => !isNaN(v))
+          const cleanKeluar = (columnLines.keluar || []).map(l => parseInt(l.replace(/\./g, '').replace(/,/g, ''), 10)).filter(v => !isNaN(v))
+          
+          if (cleanMasuk.includes(currentBalance)) {
+            amount = currentBalance
+            type = 'income'
+          } else if (cleanKeluar.includes(currentBalance)) {
+            amount = currentBalance
+            type = 'expense'
+          }
+        }
+
+        // Update lastBalance for subsequent transactions
+        lastBalance = currentBalance
+
+        // Format Date
+        const monthMap: Record<string, string> = {
+          'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'may': '05', 'jun': '06',
+          'jul': '07', 'aug': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12', 'des': '12'
+        }
+        const monthNum = monthMap[dateObj.month.substring(0, 3)] || '12'
+        const formattedDate = `${dateObj.year}-${monthNum}-${dateObj.day}`
+
+        let name = descStr.replace(/\d{9,20}/g, '').replace(/\s+/g, ' ').trim()
+        if (name.length < 3) name = 'Transaction'
+
+        // Categorize
+        let category = 'Other'
+        const nameLower = name.toLowerCase()
+        for (const pattern of STATEMENT_CATEGORY_PATTERNS) {
+          if (pattern.regex.test(nameLower)) {
+            category = pattern.category
+            break
+          }
+        }
+        if (/bunga|interest/i.test(nameLower)) category = 'Interest'
+
+        items.push({
+          date: formattedDate,
+          name,
+          amount,
+          type,
+          category,
+          bank: bankName
+        })
+      }
+    }
+
+    return {
+      statementPeriod,
+      items,
+      totalItems: items.length,
+      bank: bankName
+    }
+  }
+
+  if (isJago) {
+    const pages = text.split('---PAGE_BREAK---')
+    const items: any[] = []
+    let statementPeriod = 'Unknown Period'
+
+    // Try to extract period first from the general text
+    for (const line of text.split('\n')) {
+      const lineLower = line.trim().toLowerCase()
+      if (lineLower.includes('sampai') || lineLower.includes('s/d') || lineLower.includes(' - ') || lineLower.includes('periode')) {
+        for (const m of STATEMENT_MONTHS) {
+          if (lineLower.includes(m)) {
+            const yearMatch = line.match(/\b(202\d)\b/)
+            if (yearMatch) {
+              statementPeriod = `${m.toUpperCase()} ${yearMatch[0]}`
+              break
+            }
+          }
+        }
+      }
+      if (statementPeriod !== 'Unknown Period') break
+    }
+
+    for (const page of pages) {
+      const lines = page.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+      
+      // Locate header line indices
+      let dateIdx = -1
+      let sourceIdx = -1
+      let descIdx = -1
+      let amountIdx = -1
+      let balanceIdx = -1
+
+      for (let i = 0; i < lines.length; i++) {
+        const lower = lines[i].toLowerCase()
+        if (lower.includes('tanggal & waktu')) dateIdx = i
+        else if (lower.includes('sumber/tujuan')) sourceIdx = i
+        else if (lower.includes('rincian transaksi')) descIdx = i
+        else if (lower.includes('jumlah')) amountIdx = i
+        else if (lower.includes('saldo')) balanceIdx = i
+      }
+
+      if (dateIdx === -1 || amountIdx === -1) {
+        continue
+      }
+
+      // Slice column sections
+      const indices = [
+        { label: 'date', idx: dateIdx },
+        { label: 'source', idx: sourceIdx },
+        { label: 'desc', idx: descIdx },
+        { label: 'amount', idx: amountIdx },
+        { label: 'balance', idx: balanceIdx }
+      ].filter(item => item.idx !== -1).sort((a, b) => a.idx - b.idx)
+
+      const columnLines: Record<string, string[]> = {}
+      for (let i = 0; i < indices.length; i++) {
+        const start = indices[i].idx + 1
+        const end = i + 1 < indices.length ? indices[i + 1].idx : lines.length
+        columnLines[indices[i].label] = lines.slice(start, end)
+      }
+
+      // 1. Parse dates from date column
+      const pageDates: string[] = []
+      const dateRegex = /\b(\d{1,2})\s+([a-zA-Z]{3,9})\s+(\d{4})\b/
+      let currentMonthYear = ''
+
+      if (columnLines.date) {
+        for (const line of columnLines.date) {
+          const isMonthYear = /^[a-zA-Z]{3,12}\s+\d{4}$/.test(line)
+          if (isMonthYear) {
+            currentMonthYear = line
+            continue
+          }
+
+          const match = line.match(dateRegex)
+          if (match) {
+            pageDates.push(line)
+          } else {
+            const dayMonthMatch = line.match(/\b(\d{1,2})\s+([a-zA-Z]{3,9})\b/)
+            if (dayMonthMatch) {
+              const yearMatch = currentMonthYear.match(/\b(202\d)\b/)
+              const yearStr = yearMatch ? yearMatch[0] : '2024'
+              pageDates.push(`${line} ${yearStr}`)
+            }
+          }
+        }
+      }
+
+      // 2. Parse amounts from amount column
+      const pageAmounts: { raw: string; value: number; type: string }[] = []
+      if (columnLines.amount) {
+        for (const line of columnLines.amount) {
+          const cleanLine = line.replace(/,oo/gi, '').replace(/,00/gi, '')
+          const isAmountLine = /^[-+]?\d{1,3}(\.\d{3})*(,\d{2})?$/.test(cleanLine) || /^[-+]?\d+$/.test(cleanLine)
+          if (isAmountLine) {
+            let cleanVal = cleanLine
+            if (cleanLine.includes(',')) {
+              cleanVal = cleanLine.split(',')[0]
+            }
+            cleanVal = cleanVal.replace(/\./g, '').replace(/,/g, '')
+            const val = parseInt(cleanVal, 10)
+            if (!isNaN(val)) {
+              pageAmounts.push({
+                raw: line,
+                value: Math.abs(val),
+                type: line.startsWith('+') ? 'income' : 'expense'
+              })
+            }
+          }
+        }
+      }
+
+      // 3. Parse descriptions
+      let descriptions: string[] = []
+      if (columnLines.source) {
+        let currentSource = ''
+        for (const line of columnLines.source) {
+          const isNewItem = /^[A-Z]/.test(line) && !/^[A-Z]+$/.test(line)
+          if (isNewItem && currentSource.length > 0) {
+            descriptions.push(currentSource)
+            currentSource = line
+          } else {
+            currentSource = currentSource ? `${currentSource} ${line}` : line
+          }
+        }
+        if (currentSource) {
+          descriptions.push(currentSource)
+        }
+      }
+
+      // 4. Align columns by index
+      const minLength = Math.min(pageDates.length, pageAmounts.length)
+      for (let i = 0; i < minLength; i++) {
+        const dateStr = pageDates[i]
+        const amtObj = pageAmounts[i]
+        
+        let name = descriptions[i] || 'Transaction details'
+        name = name.replace(/\d{9,20}/g, '').replace(/\s+/g, ' ').trim()
+        if (name.length < 3) name = 'Transaction'
+
+        // Format Date
+        let formattedDate = new Date().toISOString().split('T')[0]
+        const monthMap: Record<string, string> = {
+          'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'mei': '05', 'jun': '06',
+          'jul': '07', 'agu': '08', 'sep': '09', 'okt': '10', 'nov': '11', 'des': '12',
+          'maret': '03', 'agustus': '08'
+        }
+
+        const parts = dateStr.split(/\s+/)
+        if (parts.length >= 2) {
+          const day = parts[0].padStart(2, '0')
+          const monthStr = parts[1].toLowerCase().substring(0, 3)
+          const month = monthMap[monthStr] || '01'
+          const year = parts.length >= 3 ? parts[2] : '2024'
+          formattedDate = `${year}-${month}-${day}`
+        }
+
+        // Categorize
+        let category = 'Other'
+        const nameLower = name.toLowerCase()
+        for (const pattern of STATEMENT_CATEGORY_PATTERNS) {
+          if (pattern.regex.test(nameLower)) {
+            category = pattern.category
+            break
+          }
+        }
+
+        items.push({
+          date: formattedDate,
+          name,
+          amount: amtObj.value,
+          type: amtObj.type,
+          category,
+          bank: bankName
+        })
+      }
+    }
+
+    return {
+      statementPeriod,
+      items,
+      totalItems: items.length,
+      bank: bankName
+    }
+  }
+
+  // Row-based layout (BSI / Default)
   let lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0)
   
   // 1. Period extraction
-  const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december',
-                  'jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des']
   let statementPeriod = 'Unknown Period'
   for (const line of lines) {
     const lineLower = line.toLowerCase()
-    for (const m of months) {
+    for (const m of STATEMENT_MONTHS) {
       if (lineLower.includes(m)) {
         const yearMatch = line.match(/\b(202\d)\b/)
         if (yearMatch) {
@@ -140,10 +662,9 @@ function parseBankStatementText(text: string): any {
   }
 
   // Truncate lines at the first footer/summary keyword to avoid including summary numbers
-  const stopKeywords = ['saldo awal', 'mutasi debit', 'mutasi kredit', 'saldo akhir']
   let truncateIndex = lines.length
   for (let i = 0; i < lines.length; i++) {
-    if (stopKeywords.some(keyword => lines[i].toLowerCase().includes(keyword))) {
+    if (STATEMENT_STOP_KEYWORDS.some(keyword => lines[i].toLowerCase().includes(keyword))) {
       truncateIndex = i
       break
     }
@@ -153,11 +674,10 @@ function parseBankStatementText(text: string): any {
   // 2. Identify transaction rows/blocks
   // A transaction line starts with a date pattern:
   // e.g. "03 Des 2025" or "26 Des 2025" or "03/12/2025" or "03-12"
-  const dateRegex = /^\b(\d{1,2})[\s\-.\/]([a-zA-Z]{3,9}|\d{1,2})([\s\-.\/]\d{2,4})?\b/
   const blockStartIndices: number[] = []
   
   for (let i = 0; i < lines.length; i++) {
-    if (dateRegex.test(lines[i])) {
+    if (STATEMENT_DATE_REGEX.test(lines[i])) {
       blockStartIndices.push(i)
     }
   }
@@ -175,15 +695,12 @@ function parseBankStatementText(text: string): any {
 
     const potentialAmounts: number[] = []
     const descLines: string[] = []
-    
-    const timeRegex = /^\b\d{1,2}:\d{2}(:\d{2})?\b/
-    const refRegex = /^[A-Za-z0-9]{8,20}$/ // reference number like FT25337Q1JKX
 
     for (let i = 1; i < blockLines.length; i++) {
       const line = blockLines[i]
       
       // Skip time line
-      if (timeRegex.test(line)) continue
+      if (STATEMENT_TIME_REGEX.test(line)) continue
       
       // Check if it's an amount line
       const isAmount = /^\d{1,3}(\.\d{3})*(,\d{2})?$/.test(line) || /^\d+,\d{2}$/.test(line) || /^\d+(\.\d{2})?$/.test(line) || /^\d{4,9}$/.test(line)
@@ -201,7 +718,7 @@ function parseBankStatementText(text: string): any {
         }
       } else {
         // Description line
-        if (!refRegex.test(line) && !line.toLowerCase().includes('reff') && !line.toLowerCase().includes('debit') && !line.toLowerCase().includes('kredit')) {
+        if (!STATEMENT_REF_REGEX.test(line) && !line.toLowerCase().includes('reff') && !line.toLowerCase().includes('debit') && !line.toLowerCase().includes('kredit')) {
           descLines.push(line)
         }
       }
@@ -239,18 +756,12 @@ function parseBankStatementText(text: string): any {
 
     // Format the date (e.g. "03 Des 2025" -> "2025-12-03")
     let formattedDate = new Date().toISOString().split('T')[0]
-    const monthMap: Record<string, string> = {
-      'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'mei': '05', 'jun': '06',
-      'jul': '07', 'agu': '08', 'sep': '09', 'okt': '10', 'nov': '11', 'des': '12',
-      'januari': '01', 'februari': '02', 'maret': '03', 'april': '04', 'juni': '06',
-      'juli': '07', 'agustus': '08', 'september': '09', 'oktober': '10', 'november': '11', 'desember': '12'
-    }
 
     const dateParts = dateStr.split(/\s+/)
     if (dateParts.length >= 2) {
       const day = dateParts[0].padStart(2, '0')
       const monthStr = dateParts[1].toLowerCase().replace(/[^a-z]/g, '')
-      const month = monthMap[monthStr] || '01'
+      const month = STATEMENT_MONTH_MAP[monthStr] || '01'
       const yearMatch = dateStr.match(/\b(202\d)\b/)
       const year = yearMatch ? yearMatch[0] : '2025'
       formattedDate = `${year}-${month}-${day}`
@@ -263,16 +774,11 @@ function parseBankStatementText(text: string): any {
     // Categorization
     let category = 'Other'
     const nameLower = name.toLowerCase()
-    if (/gaji|salary|gajian/i.test(nameLower)) {
-      category = 'Salary'
-    } else if (/makan|food|gofood|grabfood|kopi|coffee|resto/i.test(nameLower)) {
-      category = 'Food'
-    } else if (/pln|listrik|pdam|telkom/i.test(nameLower)) {
-      category = 'Utilities'
-    } else if (/bensin|pertamina|gojek|grab|uber|transport/i.test(nameLower)) {
-      category = 'Transport'
-    } else if (/flip|transfer|trf/i.test(nameLower)) {
-      category = 'Transfer'
+    for (const pattern of STATEMENT_CATEGORY_PATTERNS) {
+      if (pattern.regex.test(nameLower)) {
+        category = pattern.category
+        break
+      }
     }
 
     // Ignore transactions that have 0 amount (usually header/footer rows)
@@ -282,7 +788,8 @@ function parseBankStatementText(text: string): any {
         name,
         amount,
         type,
-        category
+        category,
+        bank: bankName
       })
     }
   }
@@ -290,7 +797,36 @@ function parseBankStatementText(text: string): any {
   return {
     statementPeriod,
     items,
-    totalItems: items.length
+    totalItems: items.length,
+    bank: bankName
+  }
+}
+
+async function extractTextWithOcrSpace(base64Data: string): Promise<string> {
+  const apiKey = process.env.OCR_SPACE_API_KEY || 'helloworld'
+  
+  try {
+    const dataUri = `data:application/pdf;base64,${base64Data}`
+    const response = await ocrSpace(dataUri, {
+      apiKey: apiKey,
+      language: 'eng'
+    })
+
+    if (response && response.ParsedResults && response.ParsedResults.length > 0) {
+      const rawText = response.ParsedResults.map((res: any) => res.ParsedText).join('\n---PAGE_BREAK---\n')
+      if (rawText && rawText.trim().length > 0) {
+        return rawText
+      }
+    }
+
+    if (response && response.ErrorMessage) {
+      throw new Error(Array.isArray(response.ErrorMessage) ? response.ErrorMessage.join(', ') : response.ErrorMessage)
+    }
+
+    throw new Error('No text detected in the PDF by OCR.space.')
+  } catch (error: any) {
+    console.error('OCR.space API Error:', error)
+    throw new Error(error.message || 'Failed to process PDF with OCR.space')
   }
 }
 
@@ -308,8 +844,16 @@ export async function scanDocumentWithAI(formData: FormData): Promise<OCRResult 
   const base64Data = Buffer.from(bytes).toString('base64')
 
   try {
-    // Step 1: Extract raw text using Google Cloud Vision API
-    const rawText = await extractTextWithVisionAPI(base64Data)
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+    
+    let rawText: string
+    if (isPdf) {
+      rawText = await extractTextWithOcrSpace(base64Data)
+    } else {
+      rawText = await extractTextWithVisionAPI(base64Data)
+    }
+    
+    console.log('Vision/OCR.space Text Extracted:', rawText)
     
     // Step 2: Local parsing without Gemini
     let parsed
@@ -321,7 +865,7 @@ export async function scanDocumentWithAI(formData: FormData): Promise<OCRResult 
     
     return parsed
   } catch (error: any) {
-    console.error('Error during Google Cloud Vision OCR processing:', error)
-    throw new Error(error.message || 'Failed to process document with Google Cloud Vision OCR')
+    console.error('Error during OCR processing:', error)
+    throw new Error(error.message || 'Failed to process document with OCR')
   }
 }
