@@ -1,0 +1,156 @@
+import { STATEMENT_MONTHS, STATEMENT_MONTH_MAP, STATEMENT_CATEGORY_PATTERNS } from '@/lib/constants/ocr'
+import { BankTransaction, OCRResult } from './types'
+
+export function cleanAndNormalizeAmount(line: string): string {
+  let clean = line.trim()
+  
+  // Replace letter 'o' or 'O' with '0' if the string is otherwise mostly digits, dots, commas, dashes, or plus signs
+  const hasDigitsOrSeparators = /[0-9.,\-+]/.test(clean)
+  const lettersCount = (clean.match(/[a-zA-Z]/g) || []).length
+  const oCount = (clean.match(/[oO]/g) || []).length
+  
+  if (oCount > 0 && lettersCount === oCount && (hasDigitsOrSeparators || clean.length <= 6)) {
+    clean = clean.replace(/[oO]/g, '0')
+  }
+  
+  // Remove space if it's sandwiched between numbers or punctuation
+  clean = clean.replace(/(\d)\s+([.,])\s+(\d)/g, '$1$2$3')
+  clean = clean.replace(/(\d)\s+([.,])/g, '$1$2')
+  clean = clean.replace(/([.,])\s+(\d)/g, '$1$2')
+  
+  return clean
+}
+
+export function parseStatementPeriod(text: string): string {
+  let statementPeriod = 'Unknown Period'
+  const lines = text.split('\n')
+  for (const line of lines) {
+    const lineLower = line.trim().toLowerCase()
+    if (lineLower.includes('sampai') || lineLower.includes('s/d') || lineLower.includes(' - ') || lineLower.includes('periode')) {
+      for (const m of STATEMENT_MONTHS) {
+        if (lineLower.includes(m)) {
+          const yearMatch = line.match(/\b(202\d)\b/)
+          if (yearMatch) {
+            statementPeriod = `${m.toUpperCase()} ${yearMatch[0]}`
+            break
+          }
+        }
+      }
+    }
+    if (statementPeriod !== 'Unknown Period') break
+  }
+
+  if (statementPeriod === 'Unknown Period') {
+    for (const line of lines) {
+      const lineLower = line.trim().toLowerCase()
+      if (lineLower.includes('halaman') || lineLower.includes('telepon')) continue
+      for (const m of STATEMENT_MONTHS) {
+        if (lineLower.includes(m)) {
+          const yearMatch = line.match(/\b(202\d)\b/)
+          if (yearMatch) {
+            statementPeriod = `${m.toUpperCase()} ${yearMatch[0]}`
+            break
+          }
+        }
+      }
+      if (statementPeriod !== 'Unknown Period') break
+    }
+  }
+
+  return statementPeriod
+}
+
+export function formatTransactionDate(day: string, monthStr: string, year: string): string {
+  const cleanDay = day.replace(/\D/g, '').padStart(2, '0')
+  const cleanMonthStr = monthStr.toLowerCase().replace(/[^a-z]/g, '').substring(0, 3)
+  const month = STATEMENT_MONTH_MAP[cleanMonthStr] || '01'
+  const cleanYear = year.replace(/\D/g, '') || new Date().getFullYear().toString()
+  return `${cleanYear}-${month}-${cleanDay}`
+}
+
+export function classifyCategory(name: string): string {
+  const nameLower = name.toLowerCase()
+  for (const pattern of STATEMENT_CATEGORY_PATTERNS) {
+    if (pattern.regex.test(nameLower)) {
+      return pattern.category
+    }
+  }
+  if (/bunga|interest/i.test(nameLower)) {
+    return 'Interest'
+  }
+  return 'Other'
+}
+
+export function sanitizeTransactionName(name: string): string {
+  let cleanName = name.replace(/\d{9,20}/g, '').replace(/\s+/g, ' ').trim()
+  if (cleanName.length < 3) {
+    cleanName = 'Transaction'
+  }
+  return cleanName
+}
+
+export function sliceColumns(
+  lines: string[],
+  headers: { label: string; idx: number }[]
+): Record<string, string[]> {
+  const sorted = headers
+    .filter(h => h.idx !== -1)
+    .sort((a, b) => a.idx - b.idx)
+
+  const columns: Record<string, string[]> = {}
+  for (let i = 0; i < sorted.length; i++) {
+    const start = sorted[i].idx + 1
+    const end = i + 1 < sorted.length ? sorted[i + 1].idx : lines.length
+    columns[sorted[i].label] = lines.slice(start, end)
+  }
+  return columns
+}
+
+export function parseIndonesianAmount(line: string): number | null {
+  const normalized = cleanAndNormalizeAmount(line)
+  const isAmount = /^\d{1,3}(\.\d{3})*(,\d{2})?$/.test(normalized) || 
+                   /^\d+,\d{2}$/.test(normalized) || 
+                   /^\d+(\.\d{2})?$/.test(normalized) || 
+                   /^\d{4,9}$/.test(normalized)
+  
+  if (!isAmount) return null
+
+  let cleanVal = normalized
+  if (normalized.endsWith(',00') || normalized.endsWith('.00')) {
+    cleanVal = normalized.substring(0, normalized.length - 3)
+  } else if (normalized.includes(',')) {
+    cleanVal = normalized.split(',')[0]
+  }
+  
+  const val = parseInt(cleanVal.replace(/\./g, ''), 10)
+  return isNaN(val) ? null : val
+}
+
+export function normalizeOcrDigit(text: string): string {
+  return text
+    .replace(/[gG]/g, '9')
+    .replace(/[sS]/g, '5')
+    .replace(/[liI]/g, '1')
+    .replace(/[oO]/g, '0')
+}
+
+export function splitIntoPages(text: string): string[] {
+  return text.split('---PAGE_BREAK---')
+}
+
+export function splitIntoLines(text: string): string[] {
+  return text.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+}
+
+export function buildBankResult(
+  items: BankTransaction[],
+  bankName: string,
+  statementPeriod: string
+): OCRResult {
+  return {
+    statementPeriod,
+    items,
+    totalItems: items.length,
+    bank: bankName,
+  }
+}
