@@ -162,6 +162,22 @@ export default function BankStatementList() {
                   {/* Transaction Details */}
                   {expandedPeriods.includes(statement.id) && (
                     <div className="px-6 pb-4 bg-slate-50/30">
+                      {/* Balance Summary Card */}
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Saldo Awal</p>
+                          <p className="text-sm font-bold text-slate-700 font-mono">
+                            Rp {(statement.opening_balance || 0).toLocaleString('id-ID')}
+                          </p>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Saldo Akhir</p>
+                          <p className="text-sm font-bold text-indigo-600 font-mono">
+                            Rp {(statement.closing_balance || 0).toLocaleString('id-ID')}
+                          </p>
+                        </div>
+                      </div>
+
                       <div className="rounded-lg border border-slate-200 bg-white overflow-hidden shadow-sm">
                         <table className="w-full text-left text-xs">
                           <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">

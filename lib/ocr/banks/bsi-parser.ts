@@ -37,20 +37,21 @@ export class BsiParser implements IBankParser {
   parse(text: string, timezoneOffset?: string): OCRResult {
     const lines = splitIntoLines(text)
     const statementPeriod = parseStatementPeriod(text)
+    const saldoAwal = this.parseSaldoAwal(text)
+    const saldoAkhir = this.parseSaldoAkhir(text)
 
     // Check if the text contains a Markdown table
     if (text.includes('|---|') || (text.includes('|') && text.toLowerCase().includes('date & time'))) {
       const items = this.parseMarkdownTable(lines, timezoneOffset)
       if (items.length > 0) {
-        return buildBankResult(items, this.bankName, statementPeriod)
+        return buildBankResult(items, this.bankName, statementPeriod, saldoAwal, saldoAkhir)
       }
     }
 
-    const saldoAwal = this.parseSaldoAwal(text)
     const dateEntries = this.extractDates(lines, timezoneOffset)
     const items = this.parseBankStatement(lines, dateEntries, saldoAwal, timezoneOffset)
 
-    return buildBankResult(items, this.bankName, statementPeriod)
+    return buildBankResult(items, this.bankName, statementPeriod, saldoAwal, saldoAkhir)
   }
 
   private parseSaldoAwal(text: string): number {
@@ -72,6 +73,38 @@ export class BsiParser implements IBankParser {
             nextLine.toLowerCase().includes('mutasi') ||
             nextLine.toLowerCase().includes('saldo') ||
             nextLine.toLowerCase().includes('saido')
+          ) {
+            continue
+          }
+          const cleanLine = nextLine.replace(/rp/gi, '').replace(/idr/gi, '').trim()
+          const val = parseIndonesianAmount(cleanLine)
+          if (val !== null && val > 0) {
+            return val
+          }
+        }
+      }
+    }
+    return 0
+  }
+
+  private parseSaldoAkhir(text: string): number {
+    const lines = splitIntoLines(text)
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].toLowerCase()
+      if (line.includes('saldo akhir') || line.includes('saldo saat ini')) {
+        // Check same line first
+        const match = lines[i].match(/(?:saldo\s+akhir|saldo\s+saat\s+ini)\s*(?::|rp)?\s*([\d.,\-+oO]+)/i)
+        if (match) {
+          const val = parseIndonesianAmount(match[1])
+          if (val !== null && val > 0) return val
+        }
+        // Check next 5 lines for a line containing the amount
+        for (let j = 1; j <= 5; j++) {
+          if (i + j >= lines.length) break
+          const nextLine = lines[i + j]
+          if (
+            nextLine.toLowerCase().includes('mutasi') ||
+            nextLine.toLowerCase().includes('saldo')
           ) {
             continue
           }

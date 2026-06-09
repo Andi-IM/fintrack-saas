@@ -36,12 +36,14 @@ export class BniParser implements IBankParser {
 
   parse(text: string, timezoneOffset?: string): OCRResult {
     const lines = splitIntoLines(text)
+    const saldoAwal = this.parseSaldoAwal(text)
+    const saldoAkhir = this.parseSaldoAkhir(text)
 
     // Check if it's the new BNI mutation format
     if (text.includes('Laporan Mutasi Rekening') || text.includes('Tanggal & Waktu')) {
       const items = this.parseNewBniFormat(text, lines, timezoneOffset)
       const newPeriod = this.parseNewBniPeriod(text)
-      return buildBankResult(items, this.bankName, newPeriod)
+      return buildBankResult(items, this.bankName, newPeriod, saldoAwal, saldoAkhir)
     }
 
     const statementPeriod = this.parseBniPeriod(text)
@@ -50,13 +52,39 @@ export class BniParser implements IBankParser {
     if (text.includes('|---|') || (text.includes('|') && text.toLowerCase().includes('tgl. trans'))) {
       const items = this.parseMarkdownTable(lines, timezoneOffset)
       if (items.length > 0) {
-        return buildBankResult(items, this.bankName, statementPeriod)
+        return buildBankResult(items, this.bankName, statementPeriod, saldoAwal, saldoAkhir)
       }
     }
 
     // Otherwise, parse Vision layout (Google Vision vertical/column block format)
     const items = this.parseVisionLayout(text, lines, timezoneOffset)
-    return buildBankResult(items, this.bankName, statementPeriod)
+    return buildBankResult(items, this.bankName, statementPeriod, saldoAwal, saldoAkhir)
+  }
+
+  private parseSaldoAwal(text: string): number {
+    const match = text.match(/saldo awal\s*(?::|rp)?\s*([\d,.]+)/i)
+    if (match) {
+      return this.parseBniAmount(match[1]) || 0
+    }
+    // New format might use "Saldo Awal (IDR)"
+    const matchNew = text.match(/Saldo Awal\s*\(IDR\)\s*([\d,.]+)/i)
+    if (matchNew) {
+      return this.parseBniAmount(matchNew[1]) || 0
+    }
+    return 0
+  }
+
+  private parseSaldoAkhir(text: string): number {
+    const match = text.match(/saldo akhir\s*(?::|rp)?\s*([\d,.]+)/i)
+    if (match) {
+      return this.parseBniAmount(match[1]) || 0
+    }
+    // New format might use "Saldo Akhir (IDR)"
+    const matchNew = text.match(/Saldo Akhir\s*\(IDR\)\s*([\d,.]+)/i)
+    if (matchNew) {
+      return this.parseBniAmount(matchNew[1]) || 0
+    }
+    return 0
   }
 
   private parseNewBniPeriod(text: string): string {

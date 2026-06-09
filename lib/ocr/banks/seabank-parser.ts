@@ -44,6 +44,7 @@ export class SeabankParser implements IBankParser {
   parse(text: string, timezoneOffset?: string): OCRResult {
     const statementPeriod = parseStatementPeriod(text)
     const saldoAwal = this.parseSaldoAwal(text)
+    const saldoAkhir = this.parseSaldoAkhir(text)
     const pages = splitIntoPages(text)
     const allItems: BankTransaction[] = []
     let lastBalance: number | null = null
@@ -54,7 +55,7 @@ export class SeabankParser implements IBankParser {
       lastBalance = result.lastBalance
     }
 
-    return buildBankResult(allItems, this.bankName, statementPeriod)
+    return buildBankResult(allItems, this.bankName, statementPeriod, saldoAwal, saldoAkhir)
   }
 
   private parsePage(
@@ -104,6 +105,12 @@ export class SeabankParser implements IBankParser {
 
   private parseSaldoAwal(text: string): number {
     const match = text.match(/saldo awal\s*(?:\(idr\))?\s*([\d.]+)/i)
+    if (!match) return 0
+    return parseInt(match[1].replace(/\./g, ''), 10) || 0
+  }
+
+  private parseSaldoAkhir(text: string): number {
+    const match = text.match(/saldo akhir\s*(?:\(idr\))?\s*([\d.]+)/i)
     if (!match) return 0
     return parseInt(match[1].replace(/\./g, ''), 10) || 0
   }
