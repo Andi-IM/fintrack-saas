@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { UploadCloud, FileText, LockIcon, LogOut, CheckCircle2, Loader2, TrendingUp, TrendingDown, Image as ImageIcon, Banknote, Camera, Plus, LayoutDashboard, Edit2, Trash2, Calendar } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useDropzone } from "react-dropzone";
+import { supabase } from "@/lib/supabase";
 
 const AUTHORIZED_EMAIL = "authorized@example.com";
 
@@ -47,46 +48,50 @@ interface Transaction {
   items?: LineItem[];
 }
 
-// Mock Supabase Database functions
-const mockSupabaseQuery = {
+// Supabase Database functions
+const supabaseQuery = {
   getTransactions: async (): Promise<Transaction[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve([
-          { id: "1", type: "income", amount: 15000000, category: "Salary", date: "2026-06-01" },
-          { id: "2", type: "expense", amount: 1200000, category: "Groceries", date: "2026-06-03" },
-          { id: "3", type: "expense", amount: 150000, category: "Transport", date: "2026-06-05" },
-        ]);
-      }, 500);
-    });
+    const { data, error } = await supabase.from('transactions').select('*').order('date', { ascending: false });
+    if (error) {
+      console.error(error);
+      return [];
+    }
+    return data as Transaction[];
   },
-  insertTransaction: async (data: Omit<Transaction, "id" | "date">): Promise<Transaction> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          ...data,
-          id: Math.random().toString(36).substr(2, 9),
-          date: new Date().toISOString().split("T")[0],
-        });
-      }, 300);
-    });
+  insertTransaction: async (data: Omit<Transaction, "id" | "date">): Promise<Transaction | null> => {
+    const { data: insertedData, error } = await supabase
+      .from('transactions')
+      .insert({ ...data, date: new Date().toISOString().split("T")[0] })
+      .select()
+      .single();
+    if (error) {
+       console.error(error);
+       return null;
+    }
+    return insertedData as Transaction;
   },
   insertMultipleTransactions: async (data: Omit<Transaction, "id">[]): Promise<Transaction[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(data.map(d => ({
-          ...d,
-          id: Math.random().toString(36).substr(2, 9),
-          date: d.date || new Date().toISOString().split("T")[0],
-        })));
-      }, 300);
-    });
+    const formattedData = data.map(d => ({
+       ...d,
+       date: d.date || new Date().toISOString().split("T")[0],
+    }));
+    const { data: insertedData, error } = await supabase
+      .from('transactions')
+      .insert(formattedData)
+      .select();
+    if (error) {
+      console.error(error);
+      return [];
+    }
+    return insertedData as Transaction[];
   },
   deleteTransaction: async (id: string): Promise<void> => {
-    return new Promise((resolve) => setTimeout(resolve, 300));
+    const { error } = await supabase.from('transactions').delete().eq('id', id);
+    if (error) console.error(error);
   },
   updateTransaction: async (id: string, data: Partial<Transaction>): Promise<void> => {
-    return new Promise((resolve) => setTimeout(resolve, 300));
+    const { error } = await supabase.from('transactions').update(data).eq('id', id);
+    if (error) console.error(error);
   }
 };
 
@@ -172,7 +177,7 @@ export default function FinanceTracker() {
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
-    const data = await mockSupabaseQuery.getTransactions();
+    const data = await supabaseQuery.getTransactions();
     setTransactions(data);
     setIsLoading(false);
   }, []);
@@ -350,14 +355,18 @@ export default function FinanceTracker() {
     };
     
     if (editingId) {
-      await mockSupabaseQuery.updateTransaction(editingId, txData);
+      await supabaseQuery.updateTransaction(editingId, txData);
       setTransactions((prev) => prev.map(t => t.id === editingId ? { ...t, ...txData } : t));
       setEditingId(null);
       showToast("Transaction updated successfully!");
     } else {
-      const newTx = await mockSupabaseQuery.insertTransaction(txData);
-      setTransactions((prev) => [newTx, ...prev]);
-      showToast("Transaction added successfully!");
+      const newTx = await supabaseQuery.insertTransaction(txData);
+      if (newTx) {
+         setTransactions((prev) => [newTx, ...prev]);
+         showToast("Transaction added successfully!");
+      } else {
+         showToast("Failed to add transaction", "error");
+      }
     }
     
     // Reset Form
@@ -372,7 +381,7 @@ export default function FinanceTracker() {
   };
 
   const handleDelete = async (id: string) => {
-    await mockSupabaseQuery.deleteTransaction(id);
+    await supabaseQuery.deleteTransaction(id);
     setTransactions(prev => prev.filter(t => t.id !== id));
     showToast("Transaction deleted successfully");
   };
@@ -937,7 +946,7 @@ export default function FinanceTracker() {
                                showToast("No rows selected for import", "error");
                                return;
                              }
-                             const newTxs = await mockSupabaseQuery.insertMultipleTransactions(selectedTxs);
+                             const newTxs = await supabaseQuery.insertMultipleTransactions(selectedTxs);
                              setTransactions(prev => [...newTxs, ...prev]);
                              setBankStatementReview(null);
                              setActiveTab("dashboard");
@@ -946,7 +955,7 @@ export default function FinanceTracker() {
                             Import Selected
                           </Button>
                           <Button onClick={async () => {
-                             const newTxs = await mockSupabaseQuery.insertMultipleTransactions(bankStatementReview);
+                             const newTxs = await supabaseQuery.insertMultipleTransactions(bankStatementReview);
                              setTransactions(prev => [...newTxs, ...prev]);
                              setBankStatementReview(null);
                              setActiveTab("dashboard");
