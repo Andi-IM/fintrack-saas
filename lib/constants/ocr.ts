@@ -19,7 +19,7 @@ export const RECEIPT_CATEGORY_PATTERNS = [
 
 export const STATEMENT_MONTHS = [
   'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december',
-  'jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des'
+  'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'agu', 'aug', 'sep', 'okt', 'oct', 'nov', 'des', 'dec'
 ]
 
 export const STATEMENT_STOP_KEYWORDS = [
