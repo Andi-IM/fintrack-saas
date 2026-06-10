@@ -1,11 +1,20 @@
-node_modules/
-.next/
-coverage/
-.DS_Store
-*.log
+# Workspace level ignores
+/node_modules/
+/front-end/node_modules/
+/front-end/.next/
+/front-end/tsconfig.tsbuildinfo
+
+# Environment and logs
 .env*
 !.env.example
-logs/
+/*.log
+/logs/
+/coverage/
 
-# Supabase
+# OS and Editor files
+.DS_Store
+.vscode/
+.idea/
+
+# Supabase backend ignores
 supabase/.temp/
