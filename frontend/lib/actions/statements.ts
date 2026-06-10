@@ -157,6 +157,134 @@ function compareRanges(
   return 'none'
 }
 
+export interface BankAnalyticsSummary {
+  bankName: string
+  latestBalance: number
+  latestPeriod: string
+  statementsCount: number
+  totalIncome: number
+  totalExpense: number
+}
+
+export interface BalanceHistoryPoint {
+  bankName: string
+  period: string
+  openingBalance: number
+  closingBalance: number
+  sortKey: number
+}
+
+export interface StatementAnalytics {
+  netWorth: number
+  totalIncome: number
+  totalExpense: number
+  bankSummaries: BankAnalyticsSummary[]
+  balanceHistory: BalanceHistoryPoint[]
+}
+
+export async function getStatementAnalytics(): Promise<ActionResponse<StatementAnalytics>> {
+  const supabase = await createClient()
+
+  const { data: statements, error } = await supabase
+    .from('bank_statements')
+    .select(`
+      *,
+      bank_statement_items (*)
+    `)
+
+  if (error) {
+    console.error('Error fetching bank statements:', error)
+    return { success: false, error: 'Failed to fetch bank statements' }
+  }
+
+  if (!statements || statements.length === 0) {
+    return {
+      success: true,
+      data: {
+        netWorth: 0,
+        totalIncome: 0,
+        totalExpense: 0,
+        bankSummaries: [],
+        balanceHistory: [],
+      }
+    }
+  }
+
+  const typedStatements = statements as BankStatementWithItems[]
+  const grouped = typedStatements.reduce((acc, s) => {
+    if (!acc[s.bank_name]) acc[s.bank_name] = []
+    acc[s.bank_name].push(s)
+    return acc
+  }, {} as Record<string, BankStatementWithItems[]>)
+
+  const bankSummaries: BankAnalyticsSummary[] = []
+  const balanceHistory: BalanceHistoryPoint[] = []
+  let totalIncome = 0
+  let totalExpense = 0
+
+  for (const [bankName, stmts] of Object.entries(grouped)) {
+    const withRange = stmts.map(s => ({
+      ...s,
+      range: getPeriodRange(s.statement_period)
+    }))
+
+    const sortedByPeriod = [...withRange].sort((a, b) => {
+      const endA = a.range?.endVal ?? 0
+      const endB = b.range?.endVal ?? 0
+      return endB - endA
+    })
+
+    const latest = sortedByPeriod[0]
+    const bankIncome = stmts.reduce((sum, s) =>
+      sum + (s.bank_statement_items || []).filter(i => i.type === 'income').reduce((a, i) => a + i.amount, 0), 0)
+    const bankExpense = stmts.reduce((sum, s) =>
+      sum + (s.bank_statement_items || []).filter(i => i.type === 'expense').reduce((a, i) => a + i.amount, 0), 0)
+
+    totalIncome += bankIncome
+    totalExpense += bankExpense
+
+    bankSummaries.push({
+      bankName,
+      latestBalance: latest.closing_balance || 0,
+      latestPeriod: latest.statement_period,
+      statementsCount: stmts.length,
+      totalIncome: bankIncome,
+      totalExpense: bankExpense,
+    })
+
+    const sortedAsc = [...withRange].sort((a, b) => {
+      const endA = a.range?.endVal ?? 0
+      const endB = b.range?.endVal ?? 0
+      return endA - endB
+    })
+
+    for (const s of sortedAsc) {
+      balanceHistory.push({
+        bankName,
+        period: s.statement_period,
+        openingBalance: s.opening_balance || 0,
+        closingBalance: s.closing_balance || 0,
+        sortKey: s.range?.endVal ?? 0,
+      })
+    }
+  }
+
+  balanceHistory.sort((a, b) => a.sortKey - b.sortKey)
+
+  bankSummaries.sort((a, b) => b.latestBalance - a.latestBalance)
+
+  return {
+    success: true,
+    data: {
+      netWorth: bankSummaries.reduce((sum, b) => sum + b.latestBalance, 0),
+      totalIncome,
+      totalExpense,
+      bankSummaries,
+      balanceHistory,
+    }
+  }
+}
+
 export async function saveBankStatement({ 
   bankName, 
   statementPeriod, 

@@ -1,4 +1,5 @@
 import BankStatementList from '@/components/transactions/BankStatementList'
+import StatementAnalytics from '@/components/statements/StatementAnalytics'
 import Link from 'next/link'
 import { FileText } from 'lucide-react'
 
@@ -19,6 +20,8 @@ export default function BankStatementsPage() {
           <FileText className="w-4 h-4 mr-2" /> Upload Statement
         </Link>
       </div>
+
+      <StatementAnalytics />
 
       <BankStatementList />
     </div>
