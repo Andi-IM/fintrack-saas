@@ -43,10 +43,13 @@ export class DocumentProcessor {
     const base64Data = Buffer.from(bytes).toString('base64')
     const mimeType = file.type || this.inferMimeType(file.name)
 
-    // 2. Select Extractor based on MIME type
+    // 2. Select Extractor based on MIME type and Bank Jago check
+    // Jago filename format: "Jago_(nama_rekening)_History_(tanggal).pdf"
+    const isJago = file.name.toLowerCase().includes('jago')
+
     const extractor = this.extractors.find(e => {
       if (e instanceof DoctrOcrExtractor) {
-        return e.supportedMimeTypes.includes(mimeType) && !!process.env.OCR_SERVICE_URL
+        return e.supportedMimeTypes.includes(mimeType) && isJago && !!process.env.OCR_SERVICE_URL
       }
       return e.supportedMimeTypes.includes(mimeType)
     })
