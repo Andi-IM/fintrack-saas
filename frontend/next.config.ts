@@ -23,11 +23,15 @@ const nextConfig: NextConfig = {
   transpilePackages: ['motion'],
   webpack: (config, {dev}) => {
     // HMR is disabled in AI Studio via DISABLE_HMR env var.
-    // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+    // Do not modify—file watching is disabled to prevent flickering during agent edits.
     if (dev && process.env.DISABLE_HMR === 'true') {
       config.watchOptions = {
         ignored: /.*/,
       };
+    }
+    // Suppress "Serializing big strings" cache warnings from large type files (e.g. lucide-react).
+    if (dev && config.cache && typeof config.cache === 'object') {
+      (config.cache as Record<string, unknown>).maxMemoryGenerations = 0;
     }
     return config;
   },
