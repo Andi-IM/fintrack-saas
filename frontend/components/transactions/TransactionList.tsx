@@ -1,8 +1,9 @@
 'use client'
 
 import { format } from "date-fns"
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { useMemo } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useMemo, useState, useEffect } from 'react'
+import { useQueryState } from 'nuqs'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -13,19 +14,38 @@ import { Tables } from "@/lib/database.types"
 
 import { formatCurrency, filterTransactionsByRange } from "@/lib/utils/transaction"
 
-export function TransactionList({ transactions, dateFilter, timeRange }: { transactions: Tables<'transactions'>[], dateFilter?: string, timeRange: string }) {
+export function TransactionList({ transactions, dateFilter: propDateFilter, timeRange }: { transactions: Tables<'transactions'>[], dateFilter?: string, timeRange: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const pathname = usePathname()
+
+  const [dateFilter, setDateFilter] = useQueryState('date', {
+    shallow: false,
+  })
+
+  // Local state for optimistic updates
+  const [localTransactions, setLocalTransactions] = useState<Tables<'transactions'>[]>(transactions)
+
+  // Keep local state in sync when server validation triggers fresh props
+  useEffect(() => {
+    setLocalTransactions(transactions)
+  }, [transactions])
 
   const handleClearDateFilter = () => {
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete('date')
-    router.push(`${pathname}?${params.toString()}`)
+    setDateFilter(null)
   }
 
   const handleDelete = async (id: string) => {
-    await deleteTransaction(id)
+    const previousTransactions = [...localTransactions]
+    // Optimistically remove from UI
+    setLocalTransactions(prev => prev.filter(tx => tx.id !== id))
+
+    try {
+      await deleteTransaction(id)
+    } catch (err) {
+      console.error(err)
+      alert("Failed to delete transaction. Rolling back.")
+      setLocalTransactions(previousTransactions)
+    }
   }
 
   const handleEdit = (id: string) => {
@@ -33,8 +53,8 @@ export function TransactionList({ transactions, dateFilter, timeRange }: { trans
   }
 
   const timeFilteredTransactions = useMemo(() => {
-    return filterTransactionsByRange(transactions, timeRange)
-  }, [transactions, timeRange])
+    return filterTransactionsByRange(localTransactions, timeRange)
+  }, [localTransactions, timeRange])
 
   const filteredTransactions = useMemo(() => {
     return timeFilteredTransactions.filter(tx => {
