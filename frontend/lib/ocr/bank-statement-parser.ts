@@ -4,6 +4,7 @@ import { SeabankParser } from './banks/seabank-parser'
 import { JagoParser } from './banks/jago-parser'
 import { BniParser } from './banks/bni-parser'
 import { BsiParser } from './banks/bsi-parser'
+import { GopayParser } from './banks/gopay-parser'
 
 export class BankStatementParser implements IParser {
   context: 'BankStatement' = 'BankStatement'
@@ -13,6 +14,7 @@ export class BankStatementParser implements IParser {
     this.bankParsers = bankParsers ?? [
       new BniParser(),
       new JagoParser(),
+      new GopayParser(),
       new SeabankParser(),
       new BsiParser(),
     ]
