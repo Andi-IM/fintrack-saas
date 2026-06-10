@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getGroupedBankStatements, getFileUrl, deleteBankStatement } from '@/lib/actions/statements'
+import { getGroupedBankStatements, getFileUrl, deleteBankStatement, updateStatementItem, deleteStatementItem, addStatementItem } from '@/lib/actions/statements'
+import type { Tables } from '@/lib/database.types'
 import { Card, CardContent } from '@/components/ui/card'
 import { 
   ChevronDown, 
@@ -13,53 +14,112 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   Loader2,
-  Trash2
+  Trash2,
+  Pencil,
+  Plus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import ItemEditDialog from '@/components/statements/ItemEditDialog'
+import type { ItemFormData } from '@/components/statements/ItemEditDialog'
+
+function formatDateForInput(iso: string): string {
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return iso
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
 
 export default function BankStatementList() {
   const queryClient = useQueryClient()
   const [expandedBanks, setExpandedBanks] = useState<string[]>([])
   const [expandedPeriods, setExpandedPeriods] = useState<string[]>([])
+  const [editingItem, setEditingItem] = useState<{ statementId: string; item: Tables<'bank_statement_items'> } | null>(null)
+  const [addingToStatement, setAddingToStatement] = useState<string | null>(null)
 
-  const { data: groupedData, isLoading: loading } = useQuery({
-    queryKey: ['bank-statements'],
+  const queryOptions = {
+    queryKey: ['bank-statements'] as const,
     queryFn: async () => {
       const result = await getGroupedBankStatements()
       if (!result.success) {
         throw new Error(result.error)
       }
+      return result.data ?? {}
+    },
+  }
+
+  const { data: groupedData, isLoading: loading } = useQuery({
+    ...queryOptions,
+    queryFn: async () => {
+      const result = await getGroupedBankStatements()
+      if (!result.success) throw new Error(result.error)
       const data = result.data ?? {}
-      // Auto expand the first bank if it is loaded and not already expanded
-      const keys = Object.keys(data)
-      if (keys.length > 0 && expandedBanks.length === 0) {
-        setExpandedBanks([keys[0]])
+      if (Object.keys(data).length > 0 && expandedBanks.length === 0) {
+        setExpandedBanks([Object.keys(data)[0]])
       }
       return data
-    }
+    },
   })
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['bank-statements'] })
+    queryClient.invalidateQueries({ queryKey: ['bank-statement-analytics'] })
+  }
 
   const deleteMutation = useMutation({
     mutationFn: async ({ id, filePath }: { id: string; filePath: string }) => {
       const result = await deleteBankStatement(id, filePath)
-      if (!result.success) {
-        throw new Error(result.error)
-      }
+      if (!result.success) throw new Error(result.error)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bank-statements'] })
-    },
+    onSuccess: invalidateAll,
     onError: (err) => {
       console.error(err)
       alert(err instanceof Error ? err.message : 'Failed to delete statement')
     }
   })
 
-  const handleDelete = async (e: React.MouseEvent, id: string, filePath: string) => {
+  const updateItemMutation = useMutation({
+    mutationFn: async ({ itemId, data }: { itemId: string; data: ItemFormData }) => {
+      const result = await updateStatementItem(itemId, data)
+      if (!result.success) throw new Error(result.error)
+    },
+    onSuccess: invalidateAll,
+    onError: (err) => {
+      alert(err instanceof Error ? err.message : 'Failed to update item')
+    }
+  })
+
+  const deleteItemMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      const result = await deleteStatementItem(itemId)
+      if (!result.success) throw new Error(result.error)
+    },
+    onSuccess: invalidateAll,
+    onError: (err) => {
+      alert(err instanceof Error ? err.message : 'Failed to delete item')
+    }
+  })
+
+  const addItemMutation = useMutation({
+    mutationFn: async ({ statementId, data }: { statementId: string; data: ItemFormData }) => {
+      const result = await addStatementItem(statementId, data)
+      if (!result.success) throw new Error(result.error)
+    },
+    onSuccess: invalidateAll,
+    onError: (err) => {
+      alert(err instanceof Error ? err.message : 'Failed to add item')
+    }
+  })
+
+  const handleDeleteStatement = async (e: React.MouseEvent, id: string, filePath: string) => {
     e.stopPropagation()
     if (!confirm('Are you sure you want to delete this statement and all its items? This will also remove the uploaded file.')) return
-    
     deleteMutation.mutate({ id, filePath })
+  }
+
+  const handleDeleteItem = async (e: React.MouseEvent, itemId: string) => {
+    e.stopPropagation()
+    if (!confirm('Delete this transaction item?')) return
+    deleteItemMutation.mutate(itemId)
   }
 
   const toggleBank = (bank: string) => {
@@ -102,6 +162,7 @@ export default function BankStatementList() {
   }
 
   return (
+    <>
     <div className="space-y-4">
       {Object.entries(groupedData).map(([bank, statements]) => (
         <div key={bank} className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
@@ -140,7 +201,7 @@ export default function BankStatementList() {
                         variant="ghost" 
                         size="icon"
                         className="h-8 w-8 text-rose-500 hover:text-rose-700 hover:bg-rose-50"
-                        onClick={(e) => handleDelete(e, statement.id, statement.file_path)}
+                        onClick={(e) => handleDeleteStatement(e, statement.id, statement.file_path)}
                         disabled={deleteMutation.isPending && deleteMutation.variables?.id === statement.id}
                       >
                         {deleteMutation.isPending && deleteMutation.variables?.id === statement.id ? (
@@ -191,6 +252,7 @@ export default function BankStatementList() {
                               <th className="px-4 py-2">Date</th>
                               <th className="px-4 py-2">Description</th>
                               <th className="px-4 py-2 text-right">Amount</th>
+                              <th className="px-4 py-2 text-right w-16">Actions</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
@@ -215,10 +277,52 @@ export default function BankStatementList() {
                                     Rp {item.amount.toLocaleString('id-ID')}
                                   </div>
                                 </td>
+                                <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                                  <div className="flex items-center justify-end gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        setEditingItem({ statementId: statement.id, item })
+                                      }}
+                                    >
+                                      <Pencil className="w-3.5 h-3.5" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                                      onClick={(e) => handleDeleteItem(e, item.id)}
+                                      disabled={deleteItemMutation.isPending}
+                                    >
+                                      {deleteItemMutation.isPending ? (
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                      ) : (
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      )}
+                                    </Button>
+                                  </div>
+                                </td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
+                        <div className="px-4 py-2 border-t border-slate-100 bg-slate-50/50">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-bold"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setAddingToStatement(statement.id)
+                            }}
+                          >
+                            <Plus className="w-3.5 h-3.5 mr-1" />
+                            Add Item
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -229,5 +333,37 @@ export default function BankStatementList() {
         </div>
       ))}
     </div>
-  )
+
+    {/* Edit Item Dialog */}
+    {editingItem && (
+      <ItemEditDialog
+        open={!!editingItem}
+        onOpenChange={(open) => { if (!open) setEditingItem(null) }}
+        title="Edit Transaction Item"
+        initialData={{
+          date: formatDateForInput(editingItem.item.date),
+          description: editingItem.item.description,
+          amount: editingItem.item.amount,
+          type: editingItem.item.type as 'income' | 'expense',
+          category: editingItem.item.category || '',
+        }}
+        onSave={async (data) => {
+          await updateItemMutation.mutateAsync({ itemId: editingItem.item.id, data })
+        }}
+      />
+    )}
+
+    {/* Add Item Dialog */}
+    {addingToStatement && (
+      <ItemEditDialog
+        open={!!addingToStatement}
+        onOpenChange={(open) => { if (!open) setAddingToStatement(null) }}
+        title="Add Transaction Item"
+        onSave={async (data) => {
+          await addItemMutation.mutateAsync({ statementId: addingToStatement, data })
+        }}
+      />
+    )}
+    </>
+)
 }

@@ -1,12 +1,16 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getStatementAnalytics } from '@/lib/actions/statements'
-import type { StatementAnalytics as StatementAnalyticsData } from '@/lib/actions/statements'
+import type {
+  StatementAnalytics as StatementAnalyticsData,
+  DailyBalancePoint,
+} from '@/lib/actions/statements'
 import { Card, CardContent } from '@/components/ui/card'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 import {
   Wallet, TrendingUp, TrendingDown, Building2, Loader2, Landmark,
@@ -84,58 +88,265 @@ function OverviewCards({ data }: { data: StatementAnalyticsData }) {
   )
 }
 
+const RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', 'ALL'] as const
+type TimeRange = typeof RANGE_OPTIONS[number]
+
+function filterByRange(history: DailyBalancePoint[], range: TimeRange): DailyBalancePoint[] {
+  if (range === 'ALL') return history
+  const now = Date.now()
+  const ms = {
+    '1M': 30 * 24 * 60 * 60 * 1000,
+    '3M': 90 * 24 * 60 * 60 * 1000,
+    '6M': 180 * 24 * 60 * 60 * 1000,
+    '1Y': 365 * 24 * 60 * 60 * 1000,
+  }[range]
+  const cutoff = now - ms
+  return history.filter(h => new Date(h.date).getTime() >= cutoff)
+}
+
 function BalanceChart({ data }: { data: StatementAnalyticsData }) {
-  const chartData = useMemo(() => {
-    const banks = [...new Set(data.balanceHistory.map(h => h.bankName))]
-    const periodMap = new Map<string, Record<string, number | null>>()
+  const [range, setRange] = useState<TimeRange>('1Y')
+  const [visibleBanks, setVisibleBanks] = useState<Set<string>>(() =>
+    new Set(data.balanceHistory.map(h => h.bankName))
+  )
 
-    data.balanceHistory.forEach(h => {
-      if (!periodMap.has(h.period)) {
-        periodMap.set(h.period, {})
-      }
-      periodMap.get(h.period)![h.bankName] = h.closingBalance
+  const filteredHistory = useMemo(
+    () => filterByRange(data.balanceHistory, range),
+    [data.balanceHistory, range],
+  )
+
+  const { chartData, banks, txLookup } = useMemo(() => {
+    const allBanks = [...new Set(filteredHistory.map(h => h.bankName))]
+    const allDates = [...new Set(filteredHistory.map(h => h.date))].sort()
+
+    const bankTimelines: Record<string, DailyBalancePoint[]> = {}
+    const txMap = new Map<string, DailyBalancePoint['transactions']>()
+    allBanks.forEach(b => {
+      bankTimelines[b] = filteredHistory.filter(h => h.bankName === b)
     })
 
-    const sortedKeys = [...periodMap.keys()].sort((a, b) => {
-      const ha = data.balanceHistory.find(h => h.period === a)
-      const hb = data.balanceHistory.find(h => h.period === b)
-      return (ha?.sortKey ?? 0) - (hb?.sortKey ?? 0)
-    })
-
-    return sortedKeys.map(period => {
-      const entry: Record<string, string | number | null> = { period }
-      banks.forEach(bank => {
-        const val = periodMap.get(period)?.[bank]
-        entry[bank] = val ?? null
+    const rows = allDates.map(date => {
+      const entry: Record<string, string | number | null> = { date: date.slice(0, 10) }
+      allBanks.forEach(bank => {
+        const timeline = bankTimelines[bank]
+        const point = [...timeline].reverse().find(p => p.date <= date)
+        entry[bank] = point?.balance ?? null
+        if (point) {
+          const match = timeline.find(p => p.date === date && p.bankName === bank)
+          if (match) txMap.set(`${date}|${bank}`, match.transactions)
+        }
       })
       return entry
     })
-  }, [data.balanceHistory])
+
+    return { chartData: rows, banks: allBanks, txLookup: txMap }
+  }, [filteredHistory])
+
+  const toggleBank = useCallback((bank: string) => {
+    setVisibleBanks(prev => {
+      const next = new Set(prev)
+      if (next.has(bank)) next.delete(bank)
+      else next.add(bank)
+      return next
+    })
+  }, [])
+
+  const handleLegendClick = useCallback((e: { value?: string }) => {
+    if (e.value) toggleBank(e.value)
+  }, [toggleBank])
+
+  const CustomTooltip = useCallback(({ active, payload, label }: {
+    active?: boolean; payload?: { dataKey: string; value: number; name: string }[]; label?: string
+  }) => {
+    if (!active || !payload || !label) return null
+    const dateStr = new Date(label).toLocaleDateString('id-ID', {
+      day: '2-digit', month: 'long', year: 'numeric',
+    })
+    return (
+      <div className="bg-white rounded-lg border border-slate-200 shadow-lg p-3 text-xs max-w-[260px]">
+        <p className="font-bold text-slate-700 mb-2">{dateStr}</p>
+        {payload.filter(p => p.value != null && visibleBanks.has(p.name)).map(p => {
+          const txs = txLookup.get(`${label}|${p.name}`)
+          return (
+            <div key={p.name} className="mb-1.5 last:mb-0">
+              <div className="flex items-center gap-1.5 font-bold text-slate-800 mb-1">
+                <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: getBankColor(p.name) }} />
+                {p.name}
+                <span className="ml-auto font-mono">{formatCurrency(p.value)}</span>
+              </div>
+              {txs && txs.length > 0 && (
+                <div className="space-y-0.5 pl-3.5">
+                  {txs.map((tx, i) => (
+                    <div key={i} className="flex justify-between gap-2 text-[11px]">
+                      <span className="text-slate-500 truncate">{tx.description}</span>
+                      <span className={tx.type === 'income' ? 'text-emerald-600 font-mono shrink-0' : 'text-rose-600 font-mono shrink-0'}>
+                        {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+        {payload.filter(p => p.value != null && visibleBanks.has(p.name)).length === 0 && (
+          <p className="text-slate-400 italic">No data</p>
+        )}
+      </div>
+    )
+  }, [txLookup, visibleBanks])
 
   if (chartData.length < 2) return null
-
-  const banks = [...new Set(data.balanceHistory.map(h => h.bankName))]
 
   return (
     <Card className="shadow-sm border-slate-200 rounded-xl bg-white">
       <CardContent className="p-5">
-        <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-          <Landmark className="w-4 h-4 text-indigo-500" />
-          Balance History
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <Landmark className="w-4 h-4 text-indigo-500" />
+            Balance History
+          </h3>
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+            {RANGE_OPTIONS.map(r => (
+              <button
+                key={r}
+                onClick={() => setRange(r)}
+                className={[
+                  'px-3 py-1 rounded-md text-[10px] font-bold transition-all',
+                  range === r
+                    ? 'bg-white shadow-sm text-indigo-700'
+                    : 'text-slate-500 hover:text-slate-700',
+                ].join(' ')}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 20, left: 20, bottom: 20 }}>
+            <LineChart data={chartData} margin={{ top: 10, right: 20, left: 20, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
               <XAxis
-                dataKey="period"
+                dataKey="date"
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 10, fill: '#64748b' }}
-                interval={0}
-                angle={-20}
-                textAnchor="end"
-                height={60}
+                tickFormatter={(val: string) => {
+                  const d = new Date(val)
+                  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })
+                }}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 11, fill: '#64748b' }}
+                tickFormatter={(val: number) => formatCurrency(val)}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend
+                onClick={handleLegendClick}
+                wrapperStyle={{ fontSize: '11px', cursor: 'pointer', paddingTop: '8px' }}
+              />
+              {banks.map(bank => (
+                <Line
+                  key={bank}
+                  type="stepAfter"
+                  dataKey={bank}
+                  name={bank}
+                  stroke={getBankColor(bank)}
+                  strokeWidth={visibleBanks.has(bank) ? 2.5 : 0}
+                  strokeOpacity={1}
+                  dot={false}
+                  activeDot={{ r: 4, fill: getBankColor(bank), strokeWidth: 0 }}
+                  connectNulls={false}
+                  hide={!visibleBanks.has(bank)}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function TotalSaldoChart({ data }: { data: StatementAnalyticsData }) {
+  const [range, setRange] = useState<TimeRange>('1Y')
+
+  const filteredHistory = useMemo(
+    () => filterByRange(data.balanceHistory, range),
+    [data.balanceHistory, range],
+  )
+
+  const chartData = useMemo(() => {
+    const allDates = [...new Set(filteredHistory.map(h => h.date))].sort()
+    const banks = [...new Set(filteredHistory.map(h => h.bankName))]
+
+    const bankTimelines: Record<string, DailyBalancePoint[]> = {}
+    banks.forEach(b => {
+      bankTimelines[b] = filteredHistory.filter(h => h.bankName === b)
+    })
+
+    return allDates.map(date => {
+      const entry: Record<string, string | number> = { date: date.slice(0, 10), total: 0 }
+      let sum = 0
+      banks.forEach(bank => {
+        const timeline = bankTimelines[bank]
+        const point = [...timeline].reverse().find(p => p.date <= date)
+        if (point?.balance != null) sum += point.balance
+      })
+      entry.total = sum
+      return entry
+    })
+  }, [filteredHistory])
+
+  if (chartData.length < 2) return null
+
+  return (
+    <Card className="shadow-sm border-slate-200 rounded-xl bg-white">
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <Wallet className="w-4 h-4 text-indigo-500" />
+            Total Saldo
+          </h3>
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+            {RANGE_OPTIONS.map(r => (
+              <button
+                key={r}
+                onClick={() => setRange(r)}
+                className={[
+                  'px-3 py-1 rounded-md text-[10px] font-bold transition-all',
+                  range === r
+                    ? 'bg-white shadow-sm text-indigo-700'
+                    : 'text-slate-500 hover:text-slate-700',
+                ].join(' ')}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="h-[200px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 20, bottom: 20 }}>
+              <defs>
+                <linearGradient id="total-gradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis
+                dataKey="date"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 10, fill: '#64748b' }}
+                tickFormatter={(val: string) => {
+                  const d = new Date(val)
+                  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })
+                }}
               />
               <YAxis
                 axisLine={false}
@@ -149,26 +360,25 @@ function BalanceChart({ data }: { data: StatementAnalyticsData }) {
                   border: '1px solid #e2e8f0',
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                 }}
+                labelFormatter={(label) => {
+                  const d = new Date(label as string)
+                  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })
+                }}
                 formatter={(value: unknown) =>
                   value !== undefined && value !== null
                     ? formatCurrency(Number(value))
                     : '-'
                 }
               />
-              <Legend
-                wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }}
+              <Area
+                type="stepAfter"
+                dataKey="total"
+                name="Total Saldo"
+                stroke="#6366f1"
+                strokeWidth={2}
+                fill="url(#total-gradient)"
               />
-              {banks.map(bank => (
-                <Bar
-                  key={bank}
-                  dataKey={bank}
-                  name={bank}
-                  fill={getBankColor(bank)}
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={40}
-                />
-              ))}
-            </BarChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </CardContent>
@@ -245,6 +455,7 @@ export default function StatementAnalytics() {
     <div className="space-y-5">
       <OverviewCards data={analytics} />
       <BalanceChart data={analytics} />
+      <TotalSaldoChart data={analytics} />
       <BankSummaryGrid data={analytics} />
     </div>
   )

@@ -22,6 +22,8 @@ export async function getGroupedBankStatements(): Promise<ActionResponse<Record<
     `)
     .order('bank_name', { ascending: true })
     .order('created_at', { ascending: false })
+    .order('date', { ascending: true, foreignTable: 'bank_statement_items' })
+    .order('id', { ascending: true, foreignTable: 'bank_statement_items' })
 
   if (error) {
     console.error('Error fetching bank statements:', error)
@@ -166,12 +168,18 @@ export interface BankAnalyticsSummary {
   totalExpense: number
 }
 
-export interface BalanceHistoryPoint {
+export interface DailyTransaction {
+  description: string
+  amount: number
+  type: string
+  category: string | null
+}
+
+export interface DailyBalancePoint {
   bankName: string
-  period: string
-  openingBalance: number
-  closingBalance: number
-  sortKey: number
+  date: string
+  balance: number
+  transactions: DailyTransaction[]
 }
 
 export interface StatementAnalytics {
@@ -179,7 +187,7 @@ export interface StatementAnalytics {
   totalIncome: number
   totalExpense: number
   bankSummaries: BankAnalyticsSummary[]
-  balanceHistory: BalanceHistoryPoint[]
+  balanceHistory: DailyBalancePoint[]
 }
 
 export async function getStatementAnalytics(): Promise<ActionResponse<StatementAnalytics>> {
@@ -218,7 +226,7 @@ export async function getStatementAnalytics(): Promise<ActionResponse<StatementA
   }, {} as Record<string, BankStatementWithItems[]>)
 
   const bankSummaries: BankAnalyticsSummary[] = []
-  const balanceHistory: BalanceHistoryPoint[] = []
+  const balanceHistory: DailyBalancePoint[] = []
   let totalIncome = 0
   let totalExpense = 0
 
@@ -228,13 +236,18 @@ export async function getStatementAnalytics(): Promise<ActionResponse<StatementA
       range: getPeriodRange(s.statement_period)
     }))
 
-    const sortedByPeriod = [...withRange].sort((a, b) => {
+    const sortedAsc = [...withRange].sort((a, b) => {
+      const endA = a.range?.endVal ?? 0
+      const endB = b.range?.endVal ?? 0
+      return endA - endB
+    })
+
+    const latest = [...sortedAsc].sort((a, b) => {
       const endA = a.range?.endVal ?? 0
       const endB = b.range?.endVal ?? 0
       return endB - endA
-    })
+    })[0]
 
-    const latest = sortedByPeriod[0]
     const bankIncome = stmts.reduce((sum, s) =>
       sum + (s.bank_statement_items || []).filter(i => i.type === 'income').reduce((a, i) => a + i.amount, 0), 0)
     const bankExpense = stmts.reduce((sum, s) =>
@@ -252,24 +265,50 @@ export async function getStatementAnalytics(): Promise<ActionResponse<StatementA
       totalExpense: bankExpense,
     })
 
-    const sortedAsc = [...withRange].sort((a, b) => {
-      const endA = a.range?.endVal ?? 0
-      const endB = b.range?.endVal ?? 0
-      return endA - endB
-    })
+    // Compute daily running balance timeline with transaction details
+    let runningBalance = 0
+    let isFirstStatement = true
 
-    for (const s of sortedAsc) {
-      balanceHistory.push({
-        bankName,
-        period: s.statement_period,
-        openingBalance: s.opening_balance || 0,
-        closingBalance: s.closing_balance || 0,
-        sortKey: s.range?.endVal ?? 0,
-      })
+    for (const stmt of sortedAsc) {
+      const items = (stmt.bank_statement_items || [])
+        .filter(i => i.date && i.amount != null && i.type)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+      if (isFirstStatement) {
+        runningBalance = stmt.opening_balance ?? 0
+        isFirstStatement = false
+      }
+
+      const dailyMap = new Map<string, { balance: number; transactions: DailyTransaction[] }>()
+
+      for (const item of items) {
+        const dateKey = item.date.slice(0, 10)
+
+        if (item.type === 'income') runningBalance += item.amount
+        else runningBalance -= item.amount
+
+        if (!dailyMap.has(dateKey)) {
+          dailyMap.set(dateKey, { balance: runningBalance, transactions: [] })
+        }
+        dailyMap.get(dateKey)!.balance = runningBalance
+        dailyMap.get(dateKey)!.transactions.push({
+          description: item.description,
+          amount: item.amount,
+          type: item.type || 'expense',
+          category: item.category,
+        })
+      }
+
+      for (const [date, point] of [...dailyMap.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+        balanceHistory.push({
+          bankName,
+          date,
+          balance: point.balance,
+          transactions: point.transactions,
+        })
+      }
     }
   }
-
-  balanceHistory.sort((a, b) => a.sortKey - b.sortKey)
 
   bankSummaries.sort((a, b) => b.latestBalance - a.latestBalance)
 
@@ -398,17 +437,24 @@ export async function saveBankStatement({
     return { success: false, error: 'Failed to save statement records' }
   }
 
-  // 3. Insert statement items
+  // 3. Insert statement items with running balance
   if (items.length > 0) {
-    const itemsToInsert = items.map(item => ({
-      statement_id: statement.id,
-      date: item.date,
-      description: item.name,
-      amount: item.amount,
-      type: item.type,
-      category: item.category || 'Other',
-      metadata: {}
-    }))
+    let runningBalance = openingBalance ?? 0
+    const itemsToInsert = items.map(item => {
+      if (item.type === 'income') runningBalance += item.amount
+      else runningBalance -= item.amount
+
+      return {
+        statement_id: statement.id,
+        date: item.date,
+        description: item.name,
+        amount: item.amount,
+        type: item.type,
+        category: item.category || 'Other',
+        balance: runningBalance,
+        metadata: {}
+      }
+    })
 
     const { error: itemsError } = await supabase
       .from('bank_statement_items')
@@ -424,5 +470,186 @@ export async function saveBankStatement({
   }
 
   return { success: true, data: { statementId: statement.id } }
+}
+
+// ──────────────────────────────────────────────
+// Statement Item CRUD
+// ──────────────────────────────────────────────
+
+const statementItemSchema = z.object({
+  date: z.string().min(1, 'Date is required'),
+  description: z.string().min(1, 'Description is required'),
+  amount: z.number().positive('Amount must be greater than 0'),
+  type: z.enum(['income', 'expense']),
+  category: z.string().optional(),
+})
+
+async function recalculateStatementBalances(statementId: string): Promise<void> {
+  const supabase = await createClient()
+
+  const { data: statement, error: stmtErr } = await supabase
+    .from('bank_statements')
+    .select('opening_balance')
+    .eq('id', statementId)
+    .single()
+
+  if (stmtErr || !statement) {
+    console.error('Error fetching statement for recalculation:', stmtErr)
+    return
+  }
+
+  const { data: items, error: itemsErr } = await supabase
+    .from('bank_statement_items')
+    .select('id, date, amount, type')
+    .eq('statement_id', statementId)
+    .order('date', { ascending: true })
+    .order('id', { ascending: true })
+
+  if (itemsErr || !items) {
+    console.error('Error fetching items for recalculation:', itemsErr)
+    return
+  }
+
+  let runningBalance = statement.opening_balance ?? 0
+  const totalItems = items.length
+  let lastBalance = 0
+
+  for (const item of items) {
+    if (item.type === 'income') runningBalance += item.amount
+    else runningBalance -= item.amount
+    lastBalance = runningBalance
+
+    const { error: updateErr } = await supabase
+      .from('bank_statement_items')
+      .update({ balance: runningBalance })
+      .eq('id', item.id)
+
+    if (updateErr) {
+      console.error(`Error updating balance for item ${item.id}:`, updateErr)
+    }
+  }
+
+  const { error: closeErr } = await supabase
+    .from('bank_statements')
+    .update({ closing_balance: lastBalance, total_items: totalItems })
+    .eq('id', statementId)
+
+  if (closeErr) {
+    console.error('Error updating statement closing balance:', closeErr)
+  }
+}
+
+export async function updateStatementItem(
+  itemId: string,
+  input: z.input<typeof statementItemSchema>
+): Promise<ActionResponse<void>> {
+  const parsed = statementItemSchema.safeParse(input)
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: 'Validation failed',
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    }
+  }
+
+  const supabase = await createClient()
+
+  const { data: item } = await supabase
+    .from('bank_statement_items')
+    .select('statement_id')
+    .eq('id', itemId)
+    .single()
+
+  if (!item) {
+    return { success: false, error: 'Item not found' }
+  }
+
+  const { error: updateErr } = await supabase
+    .from('bank_statement_items')
+    .update({
+      date: parsed.data.date,
+      description: parsed.data.description,
+      amount: parsed.data.amount,
+      type: parsed.data.type,
+      category: parsed.data.category || null,
+    })
+    .eq('id', itemId)
+
+  if (updateErr) {
+    console.error('Error updating statement item:', updateErr)
+    return { success: false, error: 'Failed to update statement item' }
+  }
+
+  await recalculateStatementBalances(item.statement_id)
+
+  revalidatePath('/')
+  return { success: true }
+}
+
+export async function deleteStatementItem(itemId: string): Promise<ActionResponse<void>> {
+  const supabase = await createClient()
+
+  const { data: item } = await supabase
+    .from('bank_statement_items')
+    .select('statement_id')
+    .eq('id', itemId)
+    .single()
+
+  if (!item) {
+    return { success: false, error: 'Item not found' }
+  }
+
+  const { error: deleteErr } = await supabase
+    .from('bank_statement_items')
+    .delete()
+    .eq('id', itemId)
+
+  if (deleteErr) {
+    console.error('Error deleting statement item:', deleteErr)
+    return { success: false, error: 'Failed to delete statement item' }
+  }
+
+  await recalculateStatementBalances(item.statement_id)
+
+  revalidatePath('/')
+  return { success: true }
+}
+
+export async function addStatementItem(
+  statementId: string,
+  input: z.input<typeof statementItemSchema>
+): Promise<ActionResponse<void>> {
+  const parsed = statementItemSchema.safeParse(input)
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: 'Validation failed',
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    }
+  }
+
+  const supabase = await createClient()
+
+  const { error: insertErr } = await supabase
+    .from('bank_statement_items')
+    .insert({
+      statement_id: statementId,
+      date: parsed.data.date,
+      description: parsed.data.description,
+      amount: parsed.data.amount,
+      type: parsed.data.type,
+      category: parsed.data.category || null,
+      balance: 0,
+    })
+
+  if (insertErr) {
+    console.error('Error adding statement item:', insertErr)
+    return { success: false, error: 'Failed to add statement item' }
+  }
+
+  await recalculateStatementBalances(statementId)
+
+  revalidatePath('/')
+  return { success: true }
 }
 
