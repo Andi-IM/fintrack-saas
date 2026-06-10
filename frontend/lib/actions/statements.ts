@@ -3,8 +3,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { STATEMENT_MONTH_MAP } from '@/lib/constants/ocr'
 import { revalidatePath } from 'next/cache'
+import { Tables } from '@/lib/database.types'
 
-export async function getGroupedBankStatements() {
+export type BankStatementWithItems = Tables<'bank_statements'> & {
+  bank_statement_items: Tables<'bank_statement_items'>[]
+}
+
+export async function getGroupedBankStatements(): Promise<Record<string, BankStatementWithItems[]>> {
   const supabase = await createClient()
 
   // Fetch statements ordered by bank_name and statement_period
@@ -25,12 +30,12 @@ export async function getGroupedBankStatements() {
   }
 
   // Group by bank_name
-  const grouped = statements.reduce((acc: any, statement: any) => {
+  const grouped = (statements || []).reduce((acc: Record<string, BankStatementWithItems[]>, statement) => {
     const bank = statement.bank_name
     if (!acc[bank]) {
       acc[bank] = []
     }
-    acc[bank].push(statement)
+    acc[bank].push(statement as BankStatementWithItems)
     return acc
   }, {})
 

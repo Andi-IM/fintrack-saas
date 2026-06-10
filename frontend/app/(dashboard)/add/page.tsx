@@ -12,7 +12,7 @@ export default async function AddTransactionPage({
   let initialData = null
   if (edit) {
     const transactions = await getTransactions()
-    initialData = transactions.find((t: any) => t.id === edit) || null
+    initialData = transactions.find((t) => t.id === edit) || null
   }
 
   return (

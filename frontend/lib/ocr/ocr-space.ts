@@ -30,7 +30,7 @@ export class OcrSpaceExtractor implements IExtractor {
       }
 
       if (response && response.ParsedResults && response.ParsedResults.length > 0) {
-        const rawText = response.ParsedResults.map((res: any) => res.ParsedText).join('\n---PAGE_BREAK---\n')
+        const rawText = (response.ParsedResults as { ParsedText: string }[]).map((res) => res.ParsedText).join('\n---PAGE_BREAK---\n')
         if (rawText && rawText.trim().length > 0) {
           return rawText
         }
@@ -41,9 +41,10 @@ export class OcrSpaceExtractor implements IExtractor {
       }
 
       throw new Error('No text detected in the PDF by OCR.space.')
-    } catch (error: any) {
+    } catch (error) {
       console.error('OCR.space API Error:', error)
-      throw new Error(error.message || 'Failed to process PDF with OCR.space')
+      const message = error instanceof Error ? error.message : 'Failed to process PDF with OCR.space'
+      throw new Error(message)
     }
   }
 }

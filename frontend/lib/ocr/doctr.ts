@@ -61,7 +61,7 @@ export class DoctrOcrExtractor implements IExtractor {
       const result = await response.json()
       
       if (result.status === 'success' && result.data && Array.isArray(result.data.pages)) {
-        const rawText = result.data.pages.map((page: any) => page.full_text).join('\n---PAGE_BREAK---\n')
+        const rawText = (result.data.pages as { full_text: string }[]).map((page) => page.full_text).join('\n---PAGE_BREAK---\n')
         if (rawText && rawText.trim().length > 0) {
           return rawText
         }
@@ -72,9 +72,10 @@ export class DoctrOcrExtractor implements IExtractor {
       }
 
       throw new Error('No text detected in the document by docTR OCR service.')
-    } catch (error: any) {
+    } catch (error) {
       console.error('DoctrOcrExtractor Error:', error)
-      throw new Error(error.message || 'Failed to extract text with docTR OCR service')
+      const message = error instanceof Error ? error.message : 'Failed to extract text with docTR OCR service'
+      throw new Error(message)
     }
   }
 }
