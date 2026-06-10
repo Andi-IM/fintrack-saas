@@ -26,10 +26,12 @@ app = modal.App("doctr-web-api")
     timeout=600,
     scaledown_window=60,
     memory=4096, # Tambah memori ke 4GB
+    secrets=[modal.Secret.from_dotenv()]
 )
 @modal.asgi_app(label="ocr-api")
 def api():
-    from fastapi import FastAPI, File, UploadFile, HTTPException
+    from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, Security
+    from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
     from fastapi.middleware.cors import CORSMiddleware
     from datetime import datetime
     import os
@@ -43,6 +45,34 @@ def api():
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Otentikasi API Key (Bearer Token & Custom Header)
+    security_bearer = HTTPBearer(auto_error=False)
+    security_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+    async def verify_api_key(
+        bearer: HTTPAuthorizationCredentials = Security(security_bearer),
+        header: str = Security(security_header)
+    ):
+        expected_key = os.environ.get("OCR_API_KEY")
+        if not expected_key:
+            raise HTTPException(
+                status_code=500,
+                detail="OCR_API_KEY environment variable is not configured on the server."
+            )
+        
+        token = None
+        if bearer:
+            token = bearer.credentials
+        elif header:
+            token = header
+            
+        if not token or token != expected_key:
+            raise HTTPException(
+                status_code=401,
+                detail="Could not validate credentials. Missing or invalid API key."
+            )
+        return token
 
     def transform_result(result, filename: str):
         """Transform docTR result to standardized format."""
@@ -95,7 +125,10 @@ def api():
         }
 
     @web_app.post("/")
-    async def ocr_endpoint(file: UploadFile = File(...)):
+    async def ocr_endpoint(
+        file: UploadFile = File(...),
+        _api_key: str = Depends(verify_api_key)
+    ):
         try:
             os.environ['USE_TORCH'] = '1'
             from doctr.io import DocumentFile
