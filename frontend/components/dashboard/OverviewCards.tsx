@@ -2,28 +2,38 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/ca
 import { Banknote, TrendingUp, TrendingDown } from "lucide-react"
 import { Tables } from "@/lib/database.types"
 
+import { useMemo } from 'react'
+
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount)
 }
 
 export function OverviewCards({ transactions, timeRange }: { transactions: Tables<'transactions'>[], timeRange: string }) {
-  const timeFilteredTransactions = transactions.filter(tx => {
-    const txDate = new Date(tx.date)
-    const now = new Date()
-    const diffTime = Math.abs(now.getTime() - txDate.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    
-    if (timeRange === "1W" && diffDays > 7) return false
-    if (timeRange === "1M" && diffDays > 30) return false
-    if (timeRange === "3M" && diffDays > 90) return false
-    if (timeRange === "1Y" && diffDays > 365) return false
-    
-    return true
-  })
+  const timeFilteredTransactions = useMemo(() => {
+    return transactions.filter(tx => {
+      const txDate = new Date(tx.date)
+      const now = new Date()
+      const diffTime = Math.abs(now.getTime() - txDate.getTime())
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      
+      if (timeRange === "1W" && diffDays > 7) return false
+      if (timeRange === "1M" && diffDays > 30) return false
+      if (timeRange === "3M" && diffDays > 90) return false
+      if (timeRange === "1Y" && diffDays > 365) return false
+      
+      return true
+    })
+  }, [transactions, timeRange])
 
-  const totalIncome = timeFilteredTransactions.filter(t => t.type === "income").reduce((acc, t) => acc + t.amount, 0)
-  const totalExpense = timeFilteredTransactions.filter(t => t.type === "expense").reduce((acc, t) => acc + t.amount, 0)
-  const netBalance = totalIncome - totalExpense
+  const { totalIncome, totalExpense } = useMemo(() => {
+    const income = timeFilteredTransactions.filter(t => t.type === "income").reduce((acc, t) => acc + t.amount, 0)
+    const expense = timeFilteredTransactions.filter(t => t.type === "expense").reduce((acc, t) => acc + t.amount, 0)
+    return { totalIncome: income, totalExpense: expense }
+  }, [timeFilteredTransactions])
+
+  const netBalance = useMemo(() => {
+    return totalIncome - totalExpense
+  }, [totalIncome, totalExpense])
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
