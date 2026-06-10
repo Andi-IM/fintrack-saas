@@ -1,4 +1,3 @@
-// @ts-ignore
 import { ocrSpace } from 'ocr-space-api-wrapper'
 import { IExtractor } from './interfaces'
 import fs from 'fs/promises'
@@ -6,6 +5,10 @@ import path from 'path'
 
 export class OcrSpaceExtractor implements IExtractor {
   supportedMimeTypes = ['application/pdf']
+
+  canHandle(mimeType: string, context: { filename?: string; routeToDoctr?: boolean }): boolean {
+    return this.supportedMimeTypes.includes(mimeType);
+  }
 
   async extractText(base64Data: string): Promise<string> {
     const apiKey = process.env.OCR_SPACE_API_KEY || 'helloworld'

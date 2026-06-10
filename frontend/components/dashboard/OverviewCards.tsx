@@ -1,28 +1,12 @@
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Banknote, TrendingUp, TrendingDown } from "lucide-react"
 import { Tables } from "@/lib/database.types"
-
 import { useMemo } from 'react'
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount)
-}
+import { formatCurrency, filterTransactionsByRange } from "@/lib/utils/transaction"
 
 export function OverviewCards({ transactions, timeRange }: { transactions: Tables<'transactions'>[], timeRange: string }) {
   const timeFilteredTransactions = useMemo(() => {
-    return transactions.filter(tx => {
-      const txDate = new Date(tx.date)
-      const now = new Date()
-      const diffTime = Math.abs(now.getTime() - txDate.getTime())
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-      
-      if (timeRange === "1W" && diffDays > 7) return false
-      if (timeRange === "1M" && diffDays > 30) return false
-      if (timeRange === "3M" && diffDays > 90) return false
-      if (timeRange === "1Y" && diffDays > 365) return false
-      
-      return true
-    })
+    return filterTransactionsByRange(transactions, timeRange)
   }, [transactions, timeRange])
 
   const { totalIncome, totalExpense } = useMemo(() => {

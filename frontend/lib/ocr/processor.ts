@@ -11,10 +11,11 @@ import { BsiParser } from './banks/bsi-parser'
 import { DoctrOcrExtractor } from './doctr'
 
 export class DocumentProcessor {
+  private static instance: DocumentProcessor | null = null
   private extractors: IExtractor[] = []
   private parsers: IParser[] = []
 
-  constructor() {
+  private constructor() {
     // Register default strategies
     this.registerExtractor(new DoctrOcrExtractor())
     this.registerExtractor(new VisionExtractor())
@@ -27,6 +28,13 @@ export class DocumentProcessor {
       new SeabankParser(),
       new BsiParser(),
     ]))
+  }
+
+  public static getInstance(): DocumentProcessor {
+    if (!DocumentProcessor.instance) {
+      DocumentProcessor.instance = new DocumentProcessor()
+    }
+    return DocumentProcessor.instance
   }
 
   registerExtractor(extractor: IExtractor) {
@@ -48,12 +56,9 @@ export class DocumentProcessor {
     const isJago = file.name.toLowerCase().includes('jago')
     const routeToDoctr = isJago && !!process.env.OCR_SERVICE_URL
 
-    const extractor = this.extractors.find(e => {
-      if (e instanceof DoctrOcrExtractor) {
-        return e.supportedMimeTypes.includes(mimeType) && routeToDoctr
-      }
-      return e.supportedMimeTypes.includes(mimeType)
-    })
+    const extractor = this.extractors.find(e => 
+      e.canHandle(mimeType, { filename: file.name, routeToDoctr })
+    )
     if (!extractor) {
       throw new Error(`No OCR extractor found for file type: ${mimeType}`)
     }
@@ -86,4 +91,4 @@ export class DocumentProcessor {
 }
 
 // Export a singleton instance
-export const documentProcessor = new DocumentProcessor()
+export const documentProcessor = DocumentProcessor.getInstance()

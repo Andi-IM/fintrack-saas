@@ -3,6 +3,10 @@ import { IExtractor } from './interfaces'
 export class DoctrOcrExtractor implements IExtractor {
   supportedMimeTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
 
+  canHandle(mimeType: string, context: { filename?: string; routeToDoctr?: boolean }): boolean {
+    return this.supportedMimeTypes.includes(mimeType) && !!context.routeToDoctr;
+  }
+
   async extractText(base64Data: string): Promise<string> {
     const serviceUrl = process.env.OCR_SERVICE_URL
     const apiKey = process.env.OCR_API_KEY

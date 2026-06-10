@@ -7,11 +7,8 @@ import { TrendingUp } from "lucide-react"
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Tables } from "@/lib/database.types"
 
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount)
-}
-
 import { useMemo } from 'react'
+import { formatCurrency, filterTransactionsByRange } from '@/lib/utils/transaction'
 
 export function TransactionChart({ transactions, timeRange: initialRange }: { transactions: Tables<'transactions'>[], timeRange: string }) {
   const router = useRouter()
@@ -30,19 +27,7 @@ export function TransactionChart({ transactions, timeRange: initialRange }: { tr
   }
 
   const timeFilteredTransactions = useMemo(() => {
-    return transactions.filter(tx => {
-      const txDate = new Date(tx.date)
-      const now = new Date()
-      const diffTime = Math.abs(now.getTime() - txDate.getTime())
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-      
-      if (initialRange === "1W" && diffDays > 7) return false
-      if (initialRange === "1M" && diffDays > 30) return false
-      if (initialRange === "3M" && diffDays > 90) return false
-      if (initialRange === "1Y" && diffDays > 365) return false
-      
-      return true
-    })
+    return filterTransactionsByRange(transactions, initialRange)
   }, [transactions, initialRange])
 
   const chartData = useMemo(() => {
