@@ -68,8 +68,11 @@ export function TransactionForm({ initialData }: { initialData?: Tables<'transac
     }
   }, [initialData, reset])
 
+  const [serverError, setServerError] = useState<string | null>(null)
+
   const onSubmit = async (data: TransactionFormValues) => {
     setLoading(true)
+    setServerError(null)
     try {
       const payload = {
         date: data.date,
@@ -82,14 +85,23 @@ export function TransactionForm({ initialData }: { initialData?: Tables<'transac
       }
 
       if (initialData) {
-        await updateTransaction(initialData.id, payload)
+        const result = await updateTransaction(initialData.id, payload)
+        if (!result.success) {
+          setServerError(result.error)
+          return
+        }
       } else {
-        await insertTransaction(payload)
+        const result = await insertTransaction(payload)
+        if (!result.success) {
+          setServerError(result.error)
+          return
+        }
       }
 
       router.push('/')
     } catch (err) {
       console.error(err)
+      setServerError('An unexpected error occurred.')
     } finally {
       setLoading(false)
     }
@@ -103,6 +115,11 @@ export function TransactionForm({ initialData }: { initialData?: Tables<'transac
       </CardHeader>
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-5">
+          {serverError && (
+            <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 text-sm text-rose-700 font-semibold">
+              {serverError}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Date</Label>

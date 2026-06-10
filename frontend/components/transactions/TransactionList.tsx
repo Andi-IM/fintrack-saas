@@ -39,11 +39,9 @@ export function TransactionList({ transactions, dateFilter: propDateFilter, time
     // Optimistically remove from UI
     setLocalTransactions(prev => prev.filter(tx => tx.id !== id))
 
-    try {
-      await deleteTransaction(id)
-    } catch (err) {
-      console.error(err)
-      alert("Failed to delete transaction. Rolling back.")
+    const result = await deleteTransaction(id)
+    if (!result.success) {
+      alert(`Failed to delete transaction: ${result.error}`)
       setLocalTransactions(previousTransactions)
     }
   }

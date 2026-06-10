@@ -1,20 +1,19 @@
 'use server'
 
+import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { STATEMENT_MONTH_MAP } from '@/lib/constants/ocr'
 import { revalidatePath } from 'next/cache'
 import { Tables } from '@/lib/database.types'
+import { ActionResponse } from './types'
 
 export type BankStatementWithItems = Tables<'bank_statements'> & {
   bank_statement_items: Tables<'bank_statement_items'>[]
 }
 
-export async function getGroupedBankStatements(): Promise<Record<string, BankStatementWithItems[]>> {
+export async function getGroupedBankStatements(): Promise<ActionResponse<Record<string, BankStatementWithItems[]>>> {
   const supabase = await createClient()
 
-  // Fetch statements ordered by bank_name and statement_period
-  // Note: Ordering statement_period might be tricky if it's just a string like "DES 2025"
-  // For now, we'll sort alphabetically/normally and then group in JS
   const { data: statements, error } = await supabase
     .from('bank_statements')
     .select(`
@@ -26,10 +25,9 @@ export async function getGroupedBankStatements(): Promise<Record<string, BankSta
 
   if (error) {
     console.error('Error fetching bank statements:', error)
-    throw new Error('Failed to fetch bank statements')
+    return { success: false, error: 'Failed to fetch bank statements' }
   }
 
-  // Group by bank_name
   const grouped = (statements || []).reduce((acc: Record<string, BankStatementWithItems[]>, statement) => {
     const bank = statement.bank_name
     if (!acc[bank]) {
@@ -39,10 +37,10 @@ export async function getGroupedBankStatements(): Promise<Record<string, BankSta
     return acc
   }, {})
 
-  return grouped
+  return { success: true, data: grouped }
 }
 
-export async function getFileUrl(path: string) {
+export async function getFileUrl(path: string): Promise<ActionResponse<string>> {
   const supabase = await createClient()
   
   const { data, error } = await supabase.storage
@@ -51,13 +49,13 @@ export async function getFileUrl(path: string) {
 
   if (error) {
     console.error('Error creating signed URL:', error)
-    throw new Error('Failed to get file access')
+    return { success: false, error: 'Failed to get file access' }
   }
 
-  return data.signedUrl
+  return { success: true, data: data.signedUrl }
 }
 
-export async function deleteBankStatement(id: string, filePath: string) {
+export async function deleteBankStatement(id: string, filePath: string): Promise<ActionResponse<void>> {
   const supabase = await createClient()
 
   // 1. Delete from database first (cascade will handle bank_statement_items)
@@ -69,7 +67,7 @@ export async function deleteBankStatement(id: string, filePath: string) {
 
   if (dbError) {
     console.error('Error deleting statement from DB:', dbError)
-    throw new Error(`Failed to delete statement from database: ${dbError.message}`)
+    return { success: false, error: `Failed to delete statement from database: ${dbError.message}` }
   }
 
   // 2. Delete file from storage only after DB record is successfully removed
@@ -84,21 +82,24 @@ export async function deleteBankStatement(id: string, filePath: string) {
   }
 
   revalidatePath('/')
-  return { success: true }
+  return { success: true, data: undefined }
 }
 
-interface SaveStatementInput {
-  bankName: string
-  statementPeriod: string
-  openingBalance?: number
-  closingBalance?: number
-  items: Array<{
-    date: string
-    name: string
-    amount: number
-    type: 'income' | 'expense'
-    category?: string
-  }>
+const saveStatementSchema = z.object({
+  bankName: z.string().min(1, 'Bank name is required'),
+  statementPeriod: z.string().min(1, 'Statement period is required'),
+  openingBalance: z.number().optional(),
+  closingBalance: z.number().optional(),
+  items: z.array(z.object({
+    date: z.string(),
+    name: z.string(),
+    amount: z.number(),
+    type: z.enum(['income', 'expense']),
+    category: z.string().optional(),
+  })),
+})
+
+interface SaveStatementInput extends z.infer<typeof saveStatementSchema> {
   file: File
 }
 
@@ -163,7 +164,16 @@ export async function saveBankStatement({
   closingBalance,
   items, 
   file 
-}: SaveStatementInput) {
+}: SaveStatementInput): Promise<ActionResponse<{ statementId: string }>> {
+  const parsed = saveStatementSchema.safeParse({ bankName, statementPeriod, openingBalance, closingBalance, items })
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: 'Validation failed',
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    }
+  }
+
   const supabase = await createClient()
 
   // 1. Check for duplicate or overlapping statements
@@ -174,6 +184,7 @@ export async function saveBankStatement({
 
   if (checkError) {
     console.error('Error checking for duplicate statements:', checkError)
+    return { success: false, error: `Failed to check for duplicate statements: ${checkError.message}` }
   }
 
   const newRange = getPeriodRange(statementPeriod)
@@ -186,7 +197,7 @@ export async function saveBankStatement({
         const relation = compareRanges(newRange, oldRange)
         
         if (relation === 'subset_or_duplicate') {
-          throw new Error(`Laporan mutasi untuk ${bankName} dengan periode ${statementPeriod} sudah tercakup oleh laporan periode ${existing.statement_period} yang diunggah sebelumnya.`)
+          return { success: false, error: `Laporan mutasi untuk ${bankName} dengan periode ${statementPeriod} sudah tercakup oleh laporan periode ${existing.statement_period} yang diunggah sebelumnya.` }
         } else if (relation === 'superset') {
           console.log(`Replacing existing statement ${existing.id} (${existing.statement_period}) with new statement (${statementPeriod})`)
           
@@ -205,12 +216,12 @@ export async function saveBankStatement({
               .remove([existing.file_path])
           }
         } else if (relation === 'overlap') {
-          throw new Error(`Laporan mutasi yang diunggah (${statementPeriod}) tumpang tindih dengan laporan periode ${existing.statement_period}. Harap periksa kembali berkas Anda untuk menghindari duplikasi transaksi.`)
+          return { success: false, error: `Laporan mutasi yang diunggah (${statementPeriod}) tumpang tindih dengan laporan periode ${existing.statement_period}. Harap periksa kembali berkas Anda untuk menghindari duplikasi transaksi.` }
         }
       } else {
         // Fallback to simple string match if parsing fails
         if (existing.statement_period === statementPeriod) {
-          throw new Error(`Laporan mutasi untuk ${bankName} dengan periode ${statementPeriod} sudah pernah diunggah sebelumnya.`)
+          return { success: false, error: `Laporan mutasi untuk ${bankName} dengan periode ${statementPeriod} sudah pernah diunggah sebelumnya.` }
         }
       }
     }
@@ -234,7 +245,7 @@ export async function saveBankStatement({
 
   if (uploadError) {
     console.error('Error uploading statement file:', uploadError)
-    throw new Error('Failed to upload bank statement file')
+    return { success: false, error: 'Failed to upload bank statement file' }
   }
 
   // 2. Insert statement metadata
@@ -256,7 +267,7 @@ export async function saveBankStatement({
     console.error('Error creating bank statement record:', statementError)
     // Attempt to clean up uploaded file
     await supabase.storage.from('statements').remove([filePath])
-    throw new Error('Failed to save statement records')
+    return { success: false, error: 'Failed to save statement records' }
   }
 
   // 3. Insert statement items
@@ -280,10 +291,10 @@ export async function saveBankStatement({
       // Rollback statement metadata
       await supabase.from('bank_statements').delete().eq('id', statement.id)
       await supabase.storage.from('statements').remove([filePath])
-      throw new Error('Failed to save statement items records')
+      return { success: false, error: 'Failed to save statement items records' }
     }
   }
 
-  return { success: true, statementId: statement.id }
+  return { success: true, data: { statementId: statement.id } }
 }
 

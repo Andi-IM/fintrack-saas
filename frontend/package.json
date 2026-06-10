@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "verify:adr-018": "bash scripts/verify-adr-018.sh",
     "clean": "next clean"
   },
   "dependencies": {

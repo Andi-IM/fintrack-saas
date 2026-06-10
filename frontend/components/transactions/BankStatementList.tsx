@@ -25,13 +25,15 @@ export default function BankStatementList() {
   const { data: groupedData, isLoading: loading } = useQuery({
     queryKey: ['bank-statements'],
     queryFn: async () => {
-      const data = await getGroupedBankStatements()
+      const result = await getGroupedBankStatements()
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+      const data = result.data ?? {}
       // Auto expand the first bank if it is loaded and not already expanded
-      if (data) {
-        const keys = Object.keys(data)
-        if (keys.length > 0 && expandedBanks.length === 0) {
-          setExpandedBanks([keys[0]])
-        }
+      const keys = Object.keys(data)
+      if (keys.length > 0 && expandedBanks.length === 0) {
+        setExpandedBanks([keys[0]])
       }
       return data
     }
@@ -39,14 +41,17 @@ export default function BankStatementList() {
 
   const deleteMutation = useMutation({
     mutationFn: async ({ id, filePath }: { id: string; filePath: string }) => {
-      await deleteBankStatement(id, filePath)
+      const result = await deleteBankStatement(id, filePath)
+      if (!result.success) {
+        throw new Error(result.error)
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bank-statements'] })
     },
     onError: (err) => {
       console.error(err)
-      alert('Failed to delete statement')
+      alert(err instanceof Error ? err.message : 'Failed to delete statement')
     }
   })
 
@@ -70,11 +75,11 @@ export default function BankStatementList() {
   }
 
   const handleViewFile = async (path: string) => {
-    try {
-      const url = await getFileUrl(path)
-      window.open(url, '_blank')
-    } catch (err) {
-      alert('Failed to access file')
+    const result = await getFileUrl(path)
+    if (result.success) {
+      window.open(result.data, '_blank')
+    } else {
+      alert(result.error)
     }
   }
 
