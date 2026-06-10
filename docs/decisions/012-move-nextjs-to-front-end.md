@@ -1,7 +1,7 @@
 # ADR-012: Move Next.js Frontend to front-end Directory
 
 ## Status
-Proposed
+Accepted
 
 ## Context
 The project was originally set up with the Next.js frontend code in the root directory. To clean up the root directory and allow for potential future monorepo structure (e.g., adding a backend service or separating concerns), we need to move all Next.js frontend-related files and directories into a dedicated `front-end` directory.
