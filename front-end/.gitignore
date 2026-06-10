@@ -1,8 +1,14 @@
-node_modules/
-.next/
-coverage/
-.DS_Store
-*.log
+# Front-end project level ignores
+/node_modules/
+/.next/
+/tsconfig.tsbuildinfo
+/coverage/
+
+# Environment files
 .env*
 !.env.example
-logs/
+
+# Development and logs
+.DS_Store
+*.log
+/logs/
