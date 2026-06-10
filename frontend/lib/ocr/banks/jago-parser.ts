@@ -69,10 +69,11 @@ export class JagoParser implements IBankParser {
         const amountStr = amountMatch[2]
         const cleanAmount = this.parseCleanAmount(amountStr)
         
-        const desc = segment.substring(0, amountMatch.index).trim()
+        const matchIndex = amountMatch.index ?? 0
+        const desc = segment.substring(0, matchIndex).trim()
         
         // Balance is the first number after the amount
-        const postAmount = segment.substring(amountMatch.index + amountMatch[0].length).trim()
+        const postAmount = segment.substring(matchIndex + amountMatch[0].length).trim()
         const balanceMatch = postAmount.match(/^([\d.,]+)/)
         let balance = 0
         if (balanceMatch) {

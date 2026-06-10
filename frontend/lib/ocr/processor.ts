@@ -8,7 +8,6 @@ import { SeabankParser } from './banks/seabank-parser'
 import { JagoParser } from './banks/jago-parser'
 import { BniParser } from './banks/bni-parser'
 import { BsiParser } from './banks/bsi-parser'
-import { GopayParser } from './banks/gopay-parser'
 import { DoctrOcrExtractor } from './doctr'
 
 export class DocumentProcessor {
@@ -25,7 +24,6 @@ export class DocumentProcessor {
     this.registerParser(new BankStatementParser([
       new BniParser(),
       new JagoParser(),
-      new GopayParser(),
       new SeabankParser(),
       new BsiParser(),
     ]))
@@ -45,12 +43,10 @@ export class DocumentProcessor {
     const base64Data = Buffer.from(bytes).toString('base64')
     const mimeType = file.type || this.inferMimeType(file.name)
 
-    // 2. Select Extractor based on MIME type and Bank Jago / Gopay check
+    // 2. Select Extractor based on MIME type and Bank Jago check
     // Jago filename format: "Jago_(nama_rekening)_History_(tanggal).pdf"
-    // Gopay filename format: "Gopay_(nama_rekening)_History_(tanggal).pdf"
     const isJago = file.name.toLowerCase().includes('jago')
-    const isGopay = file.name.toLowerCase().includes('gopay')
-    const routeToDoctr = (isJago || isGopay) && !!process.env.OCR_SERVICE_URL
+    const routeToDoctr = isJago && !!process.env.OCR_SERVICE_URL
 
     const extractor = this.extractors.find(e => {
       if (e instanceof DoctrOcrExtractor) {
