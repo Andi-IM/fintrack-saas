@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { insertTransaction, updateTransaction } from "@/lib/actions/transactions"
 import { useRouter } from 'next/navigation'
+import { Tables } from '@/lib/database.types'
 import { Loader2 } from 'lucide-react'
 
-export function TransactionForm({ initialData }: { initialData?: any }) {
+export function TransactionForm({ initialData }: { initialData?: Tables<'transactions'> | null }) {
   const router = useRouter()
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -30,7 +31,7 @@ export function TransactionForm({ initialData }: { initialData?: any }) {
         amount: initialData.amount.toString(),
         category: initialData.category,
         type: initialData.type,
-        note: initialData.note,
+        note: initialData.note || '',
         paymentMethod: initialData.paymentMethod || 'Cash',
         change: initialData.change ? initialData.change.toString() : ''
       })

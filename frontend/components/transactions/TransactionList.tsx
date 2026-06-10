@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button"
 import { Edit2, Trash2, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { deleteTransaction } from "@/lib/actions/transactions"
+import { Tables } from "@/lib/database.types"
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount)
 }
 
-export function TransactionList({ transactions, dateFilter, timeRange }: { transactions: any[], dateFilter?: string, timeRange: string }) {
+export function TransactionList({ transactions, dateFilter, timeRange }: { transactions: Tables<'transactions'>[], dateFilter?: string, timeRange: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname()
@@ -94,7 +95,7 @@ export function TransactionList({ transactions, dateFilter, timeRange }: { trans
                         <span className="inline-block px-2 py-0.5 bg-slate-100 rounded text-[10px] text-slate-600 border border-slate-200 font-bold uppercase tracking-tight">{tx.category}</span>
                         {tx.paymentMethod && <span className="text-[10px] text-slate-400 font-medium">{tx.paymentMethod}</span>}
                       </div>
-                      {tx.change !== undefined && tx.change > 0 && <span className="block text-[10px] text-slate-400 font-normal mt-1 italic">Calculated change: {formatCurrency(tx.change)}</span>}
+                      {tx.change !== null && tx.change !== undefined && tx.change > 0 && <span className="block text-[10px] text-slate-400 font-normal mt-1 italic">Calculated change: {formatCurrency(tx.change)}</span>}
                     </TableCell>
                     <TableCell className={cn("px-6 py-4 text-right font-bold whitespace-nowrap align-top", tx.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
                       {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount).replace("Rp", "Rp ")}

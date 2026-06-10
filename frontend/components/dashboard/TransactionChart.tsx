@@ -5,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { TrendingUp } from "lucide-react"
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { Tables } from "@/lib/database.types"
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount)
 }
 
-export function TransactionChart({ transactions, timeRange: initialRange }: { transactions: any[], timeRange: string }) {
+export function TransactionChart({ transactions, timeRange: initialRange }: { transactions: Tables<'transactions'>[], timeRange: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname()
@@ -49,10 +50,11 @@ export function TransactionChart({ transactions, timeRange: initialRange }: { tr
   
   const chartData = (Object.values(chartDataMap) as Array<{date: string, income: number, expense: number}>).sort((a, b) => a.date.localeCompare(b.date))
 
-  const handleChartClick = (data: any) => {
-    if (data && data.activePayload && data.activePayload.length > 0) {
+  const handleChartClick = (data: unknown) => {
+    const chartData = data as { activePayload?: { payload: { date: string } }[] } | null | undefined
+    if (chartData && chartData.activePayload && chartData.activePayload.length > 0) {
       const params = new URLSearchParams(searchParams.toString())
-      params.set('date', data.activePayload[0].payload.date)
+      params.set('date', chartData.activePayload[0].payload.date)
       router.push(`/transactions?${params.toString()}`)
     }
   }
@@ -88,7 +90,7 @@ export function TransactionChart({ transactions, timeRange: initialRange }: { tr
               <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} dx={-10} tickFormatter={(val) => formatCurrency(val).replace(",00", "")} />
               <Tooltip 
                 contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                formatter={(value: any) => formatCurrency(Number(value))}
+                formatter={(value: unknown) => value !== undefined && value !== null ? formatCurrency(Number(value)) : ''}
               />
               <Area type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorIncome)" />
               <Area type="monotone" dataKey="expense" stroke="#f43f5e" strokeWidth={2} fillOpacity={1} fill="url(#colorExpense)" />

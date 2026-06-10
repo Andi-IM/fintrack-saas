@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { Tables, TablesInsert, TablesUpdate } from '@/lib/database.types'
 
 interface LineItem {
   id: string
@@ -11,7 +12,7 @@ interface LineItem {
 }
 
 // We map to the Database.public.Tables.transactions
-export async function getTransactions() {
+export async function getTransactions(): Promise<Tables<'transactions'>[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('transactions')
@@ -22,10 +23,10 @@ export async function getTransactions() {
     console.error("Error fetching transactions:", error)
     return []
   }
-  return data
+  return data || []
 }
 
-export async function insertTransaction(data: any) {
+export async function insertTransaction(data: TablesInsert<'transactions'>) {
   const supabase = await createClient()
   const { data: insertedData, error } = await supabase
     .from('transactions')
@@ -42,7 +43,7 @@ export async function insertTransaction(data: any) {
   return insertedData
 }
 
-export async function updateTransaction(id: string, data: any) {
+export async function updateTransaction(id: string, data: TablesUpdate<'transactions'>) {
   const supabase = await createClient()
   const { error } = await supabase
     .from('transactions')

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getGroupedBankStatements, getFileUrl, deleteBankStatement } from '@/lib/actions/statements'
+import { getGroupedBankStatements, getFileUrl, deleteBankStatement, BankStatementWithItems } from '@/lib/actions/statements'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { 
   ChevronDown, 
@@ -18,7 +18,7 @@ import {
 import { Button } from '@/components/ui/button'
 
 export default function BankStatementList() {
-  const [groupedData, setGroupedData] = useState<any>(null)
+  const [groupedData, setGroupedData] = useState<Record<string, BankStatementWithItems[]> | null>(null)
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [expandedBanks, setExpandedBanks] = useState<string[]>([])
@@ -101,7 +101,7 @@ export default function BankStatementList() {
 
   return (
     <div className="space-y-4">
-      {Object.entries(groupedData).map(([bank, statements]: [string, any]) => (
+      {Object.entries(groupedData).map(([bank, statements]) => (
         <div key={bank} className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
           {/* Bank Header */}
           <button 
@@ -123,7 +123,7 @@ export default function BankStatementList() {
           {/* Periods List */}
           {expandedBanks.includes(bank) && (
             <div className="divide-y divide-slate-100">
-              {statements.map((statement: any) => (
+              {statements.map((statement) => (
                 <div key={statement.id} className="bg-white">
                   <div 
                     onClick={() => togglePeriod(statement.id)}
@@ -188,7 +188,7 @@ export default function BankStatementList() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
-                            {statement.bank_statement_items.map((item: any) => (
+                            {statement.bank_statement_items.map((item) => (
                               <tr key={item.id} className="hover:bg-slate-50 transition-colors">
                                 <td className="px-4 py-2.5 text-slate-500 whitespace-nowrap">
                                   {new Date(item.date).toLocaleString('id-ID', { 

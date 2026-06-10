@@ -16,8 +16,9 @@ export async function scanDocumentWithAI(formData: FormData): Promise<OCRResult 
   try {
     // The orchestration is now handled by the documentProcessor
     return await documentProcessor.process(file, context, timezoneOffset)
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error during OCR processing:', error)
-    throw new Error(error.message || 'Failed to process document with OCR')
+    const message = error instanceof Error ? error.message : 'Failed to process document with OCR'
+    throw new Error(message)
   }
 }

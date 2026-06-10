@@ -10,32 +10,39 @@ import { useRouter } from 'next/navigation'
 import { scanDocumentWithAI } from '@/lib/actions/ocr'
 import { saveBankStatement } from '@/lib/actions/statements'
 import { Input } from "@/components/ui/input"
+import { OCRResult, ReceiptItem, BankTransaction } from '@/lib/ocr/types'
+import { Json } from '@/lib/database.types'
 
 export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStatement' }) {
   const router = useRouter()
   const [fileToScan, setFileToScan] = useState<File | null>(null)
   const [scanStatus, setScanStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle')
   const [scanProgress, setScanProgress] = useState(0)
-  const [scanResult, setScanResult] = useState<any>(null)
+  const [scanResult, setScanResult] = useState<OCRResult | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const handleUpdateItem = (index: number, field: string, value: any) => {
-    setScanResult((prev: any) => {
+  const handleUpdateItem = (index: number, field: string, value: string | number) => {
+    setScanResult((prev) => {
+      if (!prev || !prev.items) return prev
       const newItems = [...prev.items]
-      newItems[index] = { ...newItems[index], [field]: value }
+      newItems[index] = { ...newItems[index], [field]: value } as typeof newItems[number]
       return { ...prev, items: newItems }
     })
   }
 
   const handleDeleteItem = (index: number) => {
-    setScanResult((prev: any) => {
-      const newItems = prev.items.filter((_: any, i: number) => i !== index)
+    setScanResult((prev) => {
+      if (!prev || !prev.items) return prev
+      const newItems = prev.items.filter((_, i) => i !== index)
       return { ...prev, items: newItems }
     })
   }
 
-  const handleUpdateResult = (field: string, value: any) => {
-    setScanResult((prev: any) => ({ ...prev, [field]: value }))
+  const handleUpdateResult = (field: keyof OCRResult, value: string | number) => {
+    setScanResult((prev) => {
+      if (!prev) return null
+      return { ...prev, [field]: value }
+    })
   }
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -107,10 +114,11 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
       } else {
         throw new Error('AI returned an empty result.')
       }
-    } catch (err: any) {
+    } catch (err) {
       clearInterval(progressInterval)
       setScanStatus('error')
-      setErrorMessage(err.message || 'Failed to process document with Google Cloud Vision.')
+      const message = err instanceof Error ? err.message : 'Failed to process document with Google Cloud Vision.'
+      setErrorMessage(message)
       console.error('OCR Client Error:', err)
     }
   }
@@ -123,13 +131,13 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
       if (scanContext === 'Receipt') {
         await insertTransaction({
           date: new Date().toISOString().split('T')[0],
-          amount: scanResult.total,
-          category: scanResult.category,
+          amount: scanResult.total || 0,
+          category: scanResult.category || 'Other',
           type: 'expense',
-          note: `Receipt: ${scanResult.merchant}`,
+          note: `Receipt: ${scanResult.merchant || ''}`,
           paymentMethod: 'Cash',
           change: 0,
-          items: scanResult.items
+          items: scanResult.items as unknown as Json
         })
       } else if (scanContext === 'BankStatement') {
         await saveBankStatement({
@@ -137,7 +145,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
           statementPeriod: scanResult.statementPeriod || 'Unknown Period',
           openingBalance: scanResult.openingBalance,
           closingBalance: scanResult.closingBalance,
-          items: scanResult.items,
+          items: (scanResult.items || []) as BankTransaction[],
           file: fileToScan
         })
       }
@@ -146,9 +154,10 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
       setScanResult(null)
       setFileToScan(null)
       router.push('/')
-    } catch (err: any) {
+    } catch (err) {
       setScanStatus('error')
-      setErrorMessage(err.message || 'Failed to save data.')
+      const message = err instanceof Error ? err.message : 'Failed to save data.'
+      setErrorMessage(message)
     }
   }
 
@@ -285,7 +294,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3 space-y-2 border border-slate-100">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Identified Items</p>
-                    {scanResult.items.map((item: any, i: number) => (
+                    {((scanResult.items as ReceiptItem[]) || []).map((item, i) => (
                       <div key={i} className="flex gap-2 items-center border-b border-slate-200 border-dashed pb-2 last:border-0 last:pb-0">
                         <Input 
                           value={item.name} 
@@ -348,7 +357,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                     </div>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-2 space-y-2 border border-slate-100 max-h-[220px] overflow-y-auto shadow-inner">
-                    {scanResult.items.map((item: any, i: number) => (
+                    {((scanResult.items as BankTransaction[]) || []).map((item, i) => (
                       <div key={i} className="bg-white p-2 rounded border border-slate-200 shadow-sm space-y-2 transition-all hover:border-indigo-200">
                         <div className="flex gap-2 items-center">
                           <Input 

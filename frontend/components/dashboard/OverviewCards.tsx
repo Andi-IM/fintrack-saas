@@ -1,11 +1,12 @@
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Banknote, TrendingUp, TrendingDown } from "lucide-react"
+import { Tables } from "@/lib/database.types"
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount)
 }
 
-export function OverviewCards({ transactions, timeRange }: { transactions: any[], timeRange: string }) {
+export function OverviewCards({ transactions, timeRange }: { transactions: Tables<'transactions'>[], timeRange: string }) {
   const timeFilteredTransactions = transactions.filter(tx => {
     const txDate = new Date(tx.date)
     const now = new Date()
