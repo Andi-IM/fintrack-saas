@@ -1,61 +1,98 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-
 import { Button } from "@/components/ui/button"
 import { insertTransaction, updateTransaction } from "@/lib/actions/transactions"
 import { useRouter } from 'next/navigation'
 import { Tables } from '@/lib/database.types'
 import { Loader2 } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+const transactionFormSchema = z.object({
+  date: z.string().min(1, 'Date is required'),
+  amount: z.preprocess(
+    (val) => (val === '' ? undefined : val),
+    z.coerce.number().positive('Amount must be greater than 0')
+  ),
+  type: z.enum(['expense', 'income']),
+  category: z.string().min(1, 'Category is required'),
+  note: z.string().optional(),
+  paymentMethod: z.string().min(1, 'Payment method is required'),
+  change: z.preprocess(
+    (val) => (val === '' ? undefined : val),
+    z.coerce.number().nonnegative('Change must be 0 or greater').optional()
+  ),
+})
+
+type TransactionFormValues = z.infer<typeof transactionFormSchema>
 
 export function TransactionForm({ initialData }: { initialData?: Tables<'transactions'> | null }) {
   const router = useRouter()
-  const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
-    amount: '',
-    category: 'Food',
-    type: 'expense',
-    note: '',
-    paymentMethod: 'Cash',
-    change: ''
-  })
   const [loading, setLoading] = useState(false)
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<z.input<typeof transactionFormSchema>>({
+    resolver: zodResolver(transactionFormSchema as any),
+    defaultValues: {
+      date: new Date().toISOString().split('T')[0],
+      amount: undefined as any,
+      type: 'expense',
+      category: 'Food',
+      note: '',
+      paymentMethod: 'Cash',
+      change: undefined as any,
+    },
+  })
 
   useEffect(() => {
     if (initialData) {
-      setFormData({
+      reset({
         date: initialData.date,
-        amount: initialData.amount.toString(),
+        amount: initialData.amount,
+        type: initialData.type as 'expense' | 'income',
         category: initialData.category,
-        type: initialData.type,
         note: initialData.note || '',
         paymentMethod: initialData.paymentMethod || 'Cash',
-        change: initialData.change ? initialData.change.toString() : ''
+        change: initialData.change || undefined,
       })
     }
-  }, [initialData])
+  }, [initialData, reset])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (data: TransactionFormValues) => {
     setLoading(true)
-    
-    const payload = {
-      ...formData,
-      amount: Number(formData.amount),
-      change: formData.change ? Number(formData.change) : 0
-    }
+    try {
+      const payload = {
+        date: data.date,
+        amount: data.amount,
+        type: data.type,
+        category: data.category,
+        note: data.note || '',
+        paymentMethod: data.paymentMethod,
+        change: data.change || 0,
+      }
 
-    if (initialData) {
-      await updateTransaction(initialData.id, payload)
-    } else {
-      await insertTransaction(payload)
-    }
+      if (initialData) {
+        await updateTransaction(initialData.id, payload)
+      } else {
+        await insertTransaction(payload)
+      }
 
-    setLoading(false)
-    router.push('/')
+      router.push('/')
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -65,15 +102,26 @@ export function TransactionForm({ initialData }: { initialData?: Tables<'transac
         <CardDescription>Enter details of your transaction</CardDescription>
       </CardHeader>
       <CardContent className="pt-6">
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Date</Label>
-              <Input type="date" value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} required className="h-11 rounded-lg border-slate-200" />
+              <Input 
+                type="date" 
+                {...register('date')}
+                className="h-11 rounded-lg border-slate-200" 
+              />
+              {errors.date && <p className="text-xs text-rose-500 font-semibold">{errors.date.message}</p>}
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Amount (Rp)</Label>
-              <Input type="number" value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} required className="h-11 rounded-lg border-slate-200" placeholder="e.g. 50000" />
+              <Input 
+                type="number" 
+                {...register('amount')}
+                className="h-11 rounded-lg border-slate-200" 
+                placeholder="e.g. 50000" 
+              />
+              {errors.amount && <p className="text-xs text-rose-500 font-semibold">{errors.amount.message}</p>}
             </div>
           </div>
           
@@ -81,19 +129,18 @@ export function TransactionForm({ initialData }: { initialData?: Tables<'transac
             <div className="space-y-2">
               <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Type</Label>
               <select 
-                value={formData.type} 
-                onChange={(e) => setFormData({...formData, type: e.target.value})}
+                {...register('type')}
                 className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
               >
                 <option value="expense">Expense</option>
                 <option value="income">Income</option>
               </select>
+              {errors.type && <p className="text-xs text-rose-500 font-semibold">{errors.type.message}</p>}
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Category</Label>
               <select 
-                value={formData.category} 
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                {...register('category')}
                 className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
               >
                 <option value="Food">Food</option>
@@ -104,20 +151,26 @@ export function TransactionForm({ initialData }: { initialData?: Tables<'transac
                 <option value="Salary">Salary</option>
                 <option value="Other">Other</option>
               </select>
+              {errors.category && <p className="text-xs text-rose-500 font-semibold">{errors.category.message}</p>}
             </div>
           </div>
           
           <div className="space-y-2">
             <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Note (Optional)</Label>
-            <Input type="text" value={formData.note} onChange={(e) => setFormData({...formData, note: e.target.value})} className="h-11 rounded-lg border-slate-200" placeholder="What was this for?" />
+            <Input 
+              type="text" 
+              {...register('note')}
+              className="h-11 rounded-lg border-slate-200" 
+              placeholder="What was this for?" 
+            />
+            {errors.note && <p className="text-xs text-rose-500 font-semibold">{errors.note.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Payment Method</Label>
               <select 
-                value={formData.paymentMethod} 
-                onChange={(e) => setFormData({...formData, paymentMethod: e.target.value})}
+                {...register('paymentMethod')}
                 className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
               >
                 <option value="Cash">Cash</option>
@@ -126,13 +179,20 @@ export function TransactionForm({ initialData }: { initialData?: Tables<'transac
                 <option value="E-Wallet">E-Wallet</option>
                 <option value="Transfer">Bank Transfer</option>
               </select>
+              {errors.paymentMethod && <p className="text-xs text-rose-500 font-semibold">{errors.paymentMethod.message}</p>}
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex justify-between">
                 <span>Change (Kembalian)</span>
                 <span className="text-slate-400 font-normal">Optional</span>
               </Label>
-              <Input type="number" value={formData.change} onChange={(e) => setFormData({...formData, change: e.target.value})} className="h-11 rounded-lg border-slate-200 bg-slate-50" placeholder="e.g. 5000" />
+              <Input 
+                type="number" 
+                {...register('change')}
+                className="h-11 rounded-lg border-slate-200 bg-slate-50" 
+                placeholder="e.g. 5000" 
+              />
+              {errors.change && <p className="text-xs text-rose-500 font-semibold">{errors.change.message}</p>}
             </div>
           </div>
           

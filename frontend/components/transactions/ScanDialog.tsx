@@ -1,17 +1,18 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useDropzone } from 'react-dropzone'
 import { UploadCloud, CheckCircle2, Loader2, Sparkles, AlertCircle, Trash2 } from 'lucide-react'
-import { Button } from "@/components/ui/button"
 import { insertTransaction } from "@/lib/actions/transactions"
 import { useRouter } from 'next/navigation'
 import { scanDocumentWithAI } from '@/lib/actions/ocr'
 import { saveBankStatement } from '@/lib/actions/statements'
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { OCRResult, ReceiptItem, BankTransaction } from '@/lib/ocr/types'
 import { Json } from '@/lib/database.types'
+import { useScanStore } from '@/hooks/use-scan-store'
 
 function isReceiptItem(item: ReceiptItem | BankTransaction): item is ReceiptItem {
   return 'name' in item && 'amount' in item && !('date' in item);
@@ -23,11 +24,22 @@ function isBankTransaction(item: ReceiptItem | BankTransaction): item is BankTra
 
 export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStatement' }) {
   const router = useRouter()
-  const [fileToScan, setFileToScan] = useState<File | null>(null)
-  const [scanStatus, setScanStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle')
-  const [scanProgress, setScanProgress] = useState(0)
-  const [scanResult, setScanResult] = useState<OCRResult | null>(null)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const {
+    fileToScan,
+    scanStatus,
+    scanProgress,
+    scanResult,
+    errorMessage,
+    setFileToScan,
+    setScanStatus,
+    setScanProgress,
+    setScanResult,
+    setErrorMessage,
+    resetScan,
+    updateScanResultItem,
+    deleteScanResultItem,
+    updateScanResultField,
+  } = useScanStore()
 
   const receiptItems = scanContext === 'Receipt' && scanResult && scanResult.items
     ? (scanResult.items || []).filter(isReceiptItem)
@@ -36,30 +48,6 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
   const bankTransactions = scanContext === 'BankStatement' && scanResult && scanResult.items
     ? (scanResult.items || []).filter(isBankTransaction)
     : []
-
-  const handleUpdateItem = (index: number, field: string, value: string | number) => {
-    setScanResult((prev) => {
-      if (!prev || !prev.items) return prev
-      const newItems = [...prev.items]
-      newItems[index] = { ...newItems[index], [field]: value } as typeof newItems[number]
-      return { ...prev, items: newItems }
-    })
-  }
-
-  const handleDeleteItem = (index: number) => {
-    setScanResult((prev) => {
-      if (!prev || !prev.items) return prev
-      const newItems = prev.items.filter((_, i) => i !== index)
-      return { ...prev, items: newItems }
-    })
-  }
-
-  const handleUpdateResult = (field: keyof OCRResult, value: string | number) => {
-    setScanResult((prev) => {
-      if (!prev) return null
-      return { ...prev, [field]: value }
-    })
-  }
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
@@ -78,7 +66,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
       setScanResult(null)
       setErrorMessage(null)
     }
-  }, [])
+  }, [setErrorMessage, setScanStatus, setFileToScan, setScanResult])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
     onDrop,
@@ -166,9 +154,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
         })
       }
       
-      setScanStatus('idle')
-      setScanResult(null)
-      setFileToScan(null)
+      resetScan()
       router.push('/')
     } catch (err) {
       setScanStatus('error')
@@ -294,7 +280,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Merchant</p>
                       <Input 
                         value={scanResult.merchant} 
-                        onChange={(e) => handleUpdateResult('merchant', e.target.value)}
+                        onChange={(e) => updateScanResultField('merchant', e.target.value)}
                         className="h-8 text-sm font-bold"
                       />
                     </div>
@@ -303,7 +289,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                       <Input 
                         type="number"
                         value={scanResult.total} 
-                        onChange={(e) => handleUpdateResult('total', parseFloat(e.target.value))}
+                        onChange={(e) => updateScanResultField('total', parseFloat(e.target.value))}
                         className="h-8 text-sm font-bold text-right text-indigo-600"
                       />
                     </div>
@@ -314,17 +300,17 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                       <div key={i} className="flex gap-2 items-center border-b border-slate-200 border-dashed pb-2 last:border-0 last:pb-0">
                         <Input 
                           value={item.name} 
-                          onChange={(e) => handleUpdateItem(i, 'name', e.target.value)}
+                          onChange={(e) => updateScanResultItem(i, 'name', e.target.value)}
                           className="h-7 text-[11px] flex-1 bg-transparent border-none focus-visible:ring-1"
                         />
                         <Input 
                           type="number"
                           value={item.amount} 
-                          onChange={(e) => handleUpdateItem(i, 'amount', parseFloat(e.target.value))}
+                          onChange={(e) => updateScanResultItem(i, 'amount', parseFloat(e.target.value))}
                           className="h-7 text-[11px] w-24 text-right bg-transparent border-none focus-visible:ring-1 font-mono"
                         />
                         <button
-                          onClick={() => handleDeleteItem(i)}
+                          onClick={() => deleteScanResultItem(i)}
                           className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded transition-colors"
                           title="Hapus item ini"
                         >
@@ -341,7 +327,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Bank Name</p>
                       <Input 
                         value={scanResult.bank} 
-                        onChange={(e) => handleUpdateResult('bank', e.target.value)}
+                        onChange={(e) => updateScanResultField('bank', e.target.value)}
                         className="h-8 text-xs font-bold"
                       />
                     </div>
@@ -349,7 +335,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Period</p>
                       <Input 
                         value={scanResult.statementPeriod} 
-                        onChange={(e) => handleUpdateResult('statementPeriod', e.target.value)}
+                        onChange={(e) => updateScanResultField('statementPeriod', e.target.value)}
                         className="h-8 text-xs font-bold text-right"
                       />
                     </div>
@@ -358,7 +344,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                       <Input 
                         type="number"
                         value={scanResult.openingBalance ?? 0} 
-                        onChange={(e) => handleUpdateResult('openingBalance', parseFloat(e.target.value) || 0)}
+                        onChange={(e) => updateScanResultField('openingBalance', parseFloat(e.target.value) || 0)}
                         className="h-8 text-xs font-bold font-mono"
                       />
                     </div>
@@ -367,7 +353,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                       <Input 
                         type="number"
                         value={scanResult.closingBalance ?? 0} 
-                        onChange={(e) => handleUpdateResult('closingBalance', parseFloat(e.target.value) || 0)}
+                        onChange={(e) => updateScanResultField('closingBalance', parseFloat(e.target.value) || 0)}
                         className="h-8 text-xs font-bold text-right font-mono text-indigo-600"
                       />
                     </div>
@@ -378,12 +364,12 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                         <div className="flex gap-2 items-center">
                           <Input 
                             value={item.name} 
-                            onChange={(e) => handleUpdateItem(i, 'name', e.target.value)}
+                            onChange={(e) => updateScanResultItem(i, 'name', e.target.value)}
                             className="h-7 text-[11px] font-bold flex-1"
                           />
                           <select 
                             value={item.type} 
-                            onChange={(e) => handleUpdateItem(i, 'type', e.target.value)}
+                            onChange={(e) => updateScanResultItem(i, 'type', e.target.value)}
                             className={`h-7 w-20 text-[10px] font-bold rounded-md border border-slate-200 bg-white px-1 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${item.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}
                           >
                             <option value="income">INCOME</option>
@@ -394,17 +380,17 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                           <Input 
                             type="datetime-local"
                             value={item.date ? item.date.slice(0, 16) : ''} 
-                            onChange={(e) => handleUpdateItem(i, 'date', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                            onChange={(e) => updateScanResultItem(i, 'date', e.target.value ? new Date(e.target.value).toISOString() : '')}
                             className="h-7 text-[10px] flex-1"
                           />
                           <Input 
                             type="number"
                             value={item.amount} 
-                            onChange={(e) => handleUpdateItem(i, 'amount', parseFloat(e.target.value))}
+                            onChange={(e) => updateScanResultItem(i, 'amount', parseFloat(e.target.value))}
                             className="h-7 text-[11px] w-24 text-right font-mono font-bold"
                           />
                           <button
-                            onClick={() => handleDeleteItem(i)}
+                            onClick={() => deleteScanResultItem(i)}
                             className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded transition-colors"
                             title="Hapus transaksi ini"
                           >
@@ -418,7 +404,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
               )}
               
               <div className="pt-2 flex gap-3">
-                <Button variant="outline" className="flex-1 font-bold h-10 shadow-sm" onClick={() => { setScanStatus('idle'); setScanResult(null); }}>
+                <Button variant="outline" className="flex-1 font-bold h-10 shadow-sm" onClick={resetScan}>
                   Discard
                 </Button>
                 <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 shadow-md shadow-emerald-100" onClick={handleSaveScannedItems}>

@@ -1,15 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { getGroupedBankStatements, getFileUrl, deleteBankStatement, BankStatementWithItems } from '@/lib/actions/statements'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { getGroupedBankStatements, getFileUrl, deleteBankStatement } from '@/lib/actions/statements'
+import { Card, CardContent } from '@/components/ui/card'
 import { 
   ChevronDown, 
   ChevronRight, 
   Building2, 
   Calendar, 
   FileText, 
-  ExternalLink,
   ArrowUpRight,
   ArrowDownLeft,
   Loader2,
@@ -18,46 +18,43 @@ import {
 import { Button } from '@/components/ui/button'
 
 export default function BankStatementList() {
-  const [groupedData, setGroupedData] = useState<Record<string, BankStatementWithItems[]> | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const queryClient = useQueryClient()
   const [expandedBanks, setExpandedBanks] = useState<string[]>([])
   const [expandedPeriods, setExpandedPeriods] = useState<string[]>([])
 
-  const fetchData = async () => {
-    try {
+  const { data: groupedData, isLoading: loading } = useQuery({
+    queryKey: ['bank-statements'],
+    queryFn: async () => {
       const data = await getGroupedBankStatements()
-      setGroupedData(data)
-      return data
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchData().then(data => {
+      // Auto expand the first bank if it is loaded and not already expanded
       if (data) {
         const keys = Object.keys(data)
-        if (keys.length > 0) setExpandedBanks([keys[0]])
+        if (keys.length > 0 && expandedBanks.length === 0) {
+          setExpandedBanks([keys[0]])
+        }
       }
-    })
-  }, [])
+      return data
+    }
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async ({ id, filePath }: { id: string; filePath: string }) => {
+      await deleteBankStatement(id, filePath)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bank-statements'] })
+    },
+    onError: (err) => {
+      console.error(err)
+      alert('Failed to delete statement')
+    }
+  })
 
   const handleDelete = async (e: React.MouseEvent, id: string, filePath: string) => {
     e.stopPropagation()
     if (!confirm('Are you sure you want to delete this statement and all its items? This will also remove the uploaded file.')) return
     
-    setDeletingId(id)
-    try {
-      await deleteBankStatement(id, filePath)
-      await fetchData()
-    } catch (err) {
-      alert('Failed to delete statement')
-    } finally {
-      setDeletingId(null)
-    }
+    deleteMutation.mutate({ id, filePath })
   }
 
   const toggleBank = (bank: string) => {
@@ -139,9 +136,13 @@ export default function BankStatementList() {
                         size="icon"
                         className="h-8 w-8 text-rose-500 hover:text-rose-700 hover:bg-rose-50"
                         onClick={(e) => handleDelete(e, statement.id, statement.file_path)}
-                        disabled={deletingId === statement.id}
+                        disabled={deleteMutation.isPending && deleteMutation.variables?.id === statement.id}
                       >
-                        {deletingId === statement.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                        {deleteMutation.isPending && deleteMutation.variables?.id === statement.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                       </Button>
                       <Button 
                         variant="ghost" 

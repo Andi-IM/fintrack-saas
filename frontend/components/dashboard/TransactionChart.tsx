@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { TrendingUp } from "lucide-react"
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useQueryState } from 'nuqs'
 import { Tables } from "@/lib/database.types"
 
 import { useMemo } from 'react'
@@ -13,22 +14,24 @@ import { formatCurrency, filterTransactionsByRange } from '@/lib/utils/transacti
 export function TransactionChart({ transactions, timeRange: initialRange }: { transactions: Tables<'transactions'>[], timeRange: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const pathname = usePathname()
   const [isMounted, setIsMounted] = useState(false)
+
+  const [range, setRange] = useQueryState('range', {
+    defaultValue: '1M',
+    shallow: false, // shallow: false triggers a server-side transition (re-run server fetch)
+  })
 
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
-  const handleRangeChange = (range: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    params.set('range', range)
-    router.push(`${pathname}?${params.toString()}`)
+  const handleRangeChange = (newRange: string) => {
+    setRange(newRange)
   }
 
   const timeFilteredTransactions = useMemo(() => {
-    return filterTransactionsByRange(transactions, initialRange)
-  }, [transactions, initialRange])
+    return filterTransactionsByRange(transactions, range)
+  }, [transactions, range])
 
   const chartData = useMemo(() => {
     const chartDataMap = timeFilteredTransactions.reduce((acc, tx) => {
@@ -55,9 +58,9 @@ export function TransactionChart({ transactions, timeRange: initialRange }: { tr
       <CardHeader className="border-b border-slate-100 flex flex-row items-center justify-between pb-3 pt-4 px-6">
         <CardTitle className="text-sm font-bold text-slate-800">Financial Overview</CardTitle>
         <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
-          {['1W', '1M', '3M', '1Y'].map(range => (
-            <button key={range} onClick={() => handleRangeChange(range)} className={["px-3 py-1 rounded-md text-[10px] font-bold transition-all", initialRange === range ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-500 hover:text-slate-700'].join(" ")}>
-              {range}
+          {['1W', '1M', '3M', '1Y'].map(r => (
+            <button key={r} onClick={() => handleRangeChange(r)} className={["px-3 py-1 rounded-md text-[10px] font-bold transition-all", range === r ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-500 hover:text-slate-700'].join(" ")}>
+              {r}
             </button>
           ))}
         </div>
