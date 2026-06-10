@@ -25,7 +25,9 @@ export class BankStatementParser implements IParser {
       }
     }
 
-    const lastParser = this.bankParsers[this.bankParsers.length - 1]
-    return lastParser.parse(text, timezoneOffset, filename)
+    throw new Error(
+      'Format bank statement tidak didukung. Bank yang didukung saat ini: ' +
+      this.bankParsers.map(p => p.bankName).join(', ')
+    )
   }
 }

@@ -4,7 +4,10 @@ export class DoctrOcrExtractor implements IExtractor {
   supportedMimeTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
 
   canHandle(mimeType: string, context: { filename?: string; routeToDoctr?: boolean }): boolean {
-    return this.supportedMimeTypes.includes(mimeType) && !!context.routeToDoctr;
+    if (!this.supportedMimeTypes.includes(mimeType)) return false
+    // Self-select: route Jago bank statements to docTR if the service is available
+    const isJago = context.filename?.toLowerCase().includes('jago') ?? false
+    return isJago && !!process.env.OCR_SERVICE_URL
   }
 
   async extractText(base64Data: string): Promise<string> {

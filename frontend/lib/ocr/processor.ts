@@ -11,7 +11,7 @@ import { BsiParser } from './banks/bsi-parser'
 import { DoctrOcrExtractor } from './doctr'
 
 export class DocumentProcessor {
-  private static instance: DocumentProcessor | null = null
+  private static readonly instance: DocumentProcessor = new DocumentProcessor()
   private extractors: IExtractor[] = []
   private parsers: IParser[] = []
 
@@ -31,9 +31,6 @@ export class DocumentProcessor {
   }
 
   public static getInstance(): DocumentProcessor {
-    if (!DocumentProcessor.instance) {
-      DocumentProcessor.instance = new DocumentProcessor()
-    }
     return DocumentProcessor.instance
   }
 
@@ -51,13 +48,9 @@ export class DocumentProcessor {
     const base64Data = Buffer.from(bytes).toString('base64')
     const mimeType = file.type || this.inferMimeType(file.name)
 
-    // 2. Select Extractor based on MIME type and Bank Jago check
-    // Jago filename format: "Jago_(nama_rekening)_History_(tanggal).pdf"
-    const isJago = file.name.toLowerCase().includes('jago')
-    const routeToDoctr = isJago && !!process.env.OCR_SERVICE_URL
-
-    const extractor = this.extractors.find(e => 
-      e.canHandle(mimeType, { filename: file.name, routeToDoctr })
+    // 2. Select Extractor — each extractor self-selects via canHandle()
+    const extractor = this.extractors.find(e =>
+      e.canHandle(mimeType, { filename: file.name })
     )
     if (!extractor) {
       throw new Error(`No OCR extractor found for file type: ${mimeType}`)

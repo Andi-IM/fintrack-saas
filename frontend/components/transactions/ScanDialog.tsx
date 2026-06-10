@@ -94,36 +94,29 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
       })
     }, 150)
     
-    try {
-      const formData = new FormData()
-      formData.append('file', fileToScan)
-      formData.append('context', scanContext)
-      
-      // Get browser timezone offset in ISO8601 format (e.g. +07:00)
-      const offsetMinutes = new Date().getTimezoneOffset()
-      const absOffset = Math.abs(offsetMinutes)
-      const hours = String(Math.floor(absOffset / 60)).padStart(2, '0')
-      const mins = String(absOffset % 60).padStart(2, '0')
-      const offsetStr = `${offsetMinutes <= 0 ? '+' : '-'}${hours}:${mins}`
-      formData.append('timezoneOffset', offsetStr)
-      
-      const result = await scanDocumentWithAI(formData)
-      
-      clearInterval(progressInterval)
-      setScanProgress(100)
-      
-      if (result) {
-        setScanResult(result)
-        setScanStatus('success')
-      } else {
-        throw new Error('AI returned an empty result.')
-      }
-    } catch (err) {
-      clearInterval(progressInterval)
+    const formData = new FormData()
+    formData.append('file', fileToScan)
+    formData.append('context', scanContext)
+    
+    // Get browser timezone offset in ISO8601 format (e.g. +07:00)
+    const offsetMinutes = new Date().getTimezoneOffset()
+    const absOffset = Math.abs(offsetMinutes)
+    const hours = String(Math.floor(absOffset / 60)).padStart(2, '0')
+    const mins = String(absOffset % 60).padStart(2, '0')
+    const offsetStr = `${offsetMinutes <= 0 ? '+' : '-'}${hours}:${mins}`
+    formData.append('timezoneOffset', offsetStr)
+    
+    const result = await scanDocumentWithAI(formData)
+    
+    clearInterval(progressInterval)
+    setScanProgress(100)
+    
+    if (result.success) {
+      setScanResult(result.data ?? null)
+      setScanStatus('success')
+    } else {
       setScanStatus('error')
-      const message = err instanceof Error ? err.message : 'Failed to process document with Google Cloud Vision.'
-      setErrorMessage(message)
-      console.error('OCR Client Error:', err)
+      setErrorMessage(result.error)
     }
   }
 
@@ -133,7 +126,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
     
     try {
       if (scanContext === 'Receipt') {
-        await insertTransaction({
+        const result = await insertTransaction({
           date: new Date().toISOString().split('T')[0],
           amount: scanResult.total || 0,
           category: scanResult.category || 'Other',
@@ -143,8 +136,13 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
           change: 0,
           items: receiptItems as unknown as Json
         })
+        if (!result.success) {
+          setScanStatus('error')
+          setErrorMessage(result.error)
+          return
+        }
       } else if (scanContext === 'BankStatement') {
-        await saveBankStatement({
+        const result = await saveBankStatement({
           bankName: scanResult.bank || 'Unknown Bank',
           statementPeriod: scanResult.statementPeriod || 'Unknown Period',
           openingBalance: scanResult.openingBalance,
@@ -152,6 +150,11 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
           items: bankTransactions,
           file: fileToScan
         })
+        if (!result.success) {
+          setScanStatus('error')
+          setErrorMessage(result.error)
+          return
+        }
       }
       
       resetScan()

@@ -1,33 +1,49 @@
 'use server'
 
+import { z } from 'zod'
 import { OCRResult } from '@/lib/ocr/types'
 import { documentProcessor } from '@/lib/ocr/processor'
+import { ActionResponse } from './types'
 
-export async function scanDocumentWithAI(formData: FormData): Promise<OCRResult | null> {
+const scanInputSchema = z.object({
+  context: z.enum(['Receipt', 'BankStatement']),
+  timezoneOffset: z.string().optional(),
+})
+
+export async function scanDocumentWithAI(formData: FormData): Promise<ActionResponse<OCRResult>> {
   const fileEntry = formData.get('file')
   const contextEntry = formData.get('context')
   const timezoneOffsetEntry = formData.get('timezoneOffset')
 
   if (!fileEntry || typeof fileEntry === 'string') {
-    console.error('OCR Error: No valid file provided')
-    throw new Error('No valid file provided')
+    return { success: false, error: 'No valid file provided' }
   }
 
-  if (contextEntry !== 'Receipt' && contextEntry !== 'BankStatement') {
-    console.error('OCR Error: Invalid context')
-    throw new Error('Invalid context')
+  const parsed = scanInputSchema.safeParse({
+    context: contextEntry,
+    timezoneOffset: typeof timezoneOffsetEntry === 'string' ? timezoneOffsetEntry : undefined,
+  })
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: 'Invalid input',
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    }
   }
 
   const file = fileEntry
-  const context = contextEntry
-  const timezoneOffset = typeof timezoneOffsetEntry === 'string' ? timezoneOffsetEntry : undefined
+  const { context, timezoneOffset } = parsed.data
 
   try {
-    // The orchestration is now handled by the documentProcessor
-    return await documentProcessor.process(file, context, timezoneOffset)
+    const result = await documentProcessor.process(file, context, timezoneOffset)
+    if (!result) {
+      return { success: false, error: 'AI returned an empty result.' }
+    }
+    return { success: true, data: result }
   } catch (error) {
     console.error('Error during OCR processing:', error)
     const message = error instanceof Error ? error.message : 'Failed to process document with OCR'
-    throw new Error(message)
+    return { success: false, error: message }
   }
 }
