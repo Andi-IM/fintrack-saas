@@ -68,7 +68,7 @@ export class DocumentProcessor {
     }
 
     // 5. Parse Text
-    return parser.parse(rawText, timezoneOffset)
+    return parser.parse(rawText, timezoneOffset, file.name)
   }
 
   private inferMimeType(filename: string): string {

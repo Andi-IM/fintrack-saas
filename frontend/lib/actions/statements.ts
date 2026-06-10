@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { STATEMENT_MONTH_MAP } from '@/lib/constants/ocr'
 import { revalidatePath } from 'next/cache'
 
 export async function getGroupedBankStatements() {
@@ -96,6 +97,60 @@ interface SaveStatementInput {
   file: File
 }
 
+interface MonthYear {
+  year: number
+  month: number
+}
+
+function parseMonthYear(monthStr: string, yearStr: string): MonthYear {
+  const cleanMonth = monthStr.toLowerCase().substring(0, 3)
+  const monthNum = parseInt(STATEMENT_MONTH_MAP[cleanMonth] || '01', 10)
+  const yearNum = parseInt(yearStr, 10)
+  return { month: monthNum, year: yearNum }
+}
+
+function getPeriodRange(period: string): { startVal: number; endVal: number } | null {
+  const rangeRegex = /\b([a-zA-Z]{3,9})\s+(\d{4})\s*-\s*([a-zA-Z]{3,9})\s+(\d{4})\b/i
+  const matchRange = period.match(rangeRegex)
+  if (matchRange) {
+    const start = parseMonthYear(matchRange[1], matchRange[2])
+    const end = parseMonthYear(matchRange[3], matchRange[4])
+    return {
+      startVal: start.year * 12 + start.month,
+      endVal: end.year * 12 + end.month
+    }
+  }
+
+  const singleRegex = /\b([a-zA-Z]{3,9})\s+(\d{4})\b/i
+  const matchSingle = period.match(singleRegex)
+  if (matchSingle) {
+    const single = parseMonthYear(matchSingle[1], matchSingle[2])
+    const val = single.year * 12 + single.month
+    return { startVal: val, endVal: val }
+  }
+
+  return null
+}
+
+function compareRanges(
+  newRange: { startVal: number; endVal: number },
+  oldRange: { startVal: number; endVal: number }
+): 'subset_or_duplicate' | 'superset' | 'overlap' | 'none' {
+  const { startVal: newStart, endVal: newEnd } = newRange
+  const { startVal: oldStart, endVal: oldEnd } = oldRange
+
+  if (newStart >= oldStart && newEnd <= oldEnd) {
+    return 'subset_or_duplicate'
+  }
+  if (newStart <= oldStart && newEnd >= oldEnd) {
+    return 'superset'
+  }
+  if (newStart <= oldEnd && oldStart <= newEnd) {
+    return 'overlap'
+  }
+  return 'none'
+}
+
 export async function saveBankStatement({ 
   bankName, 
   statementPeriod, 
@@ -106,7 +161,57 @@ export async function saveBankStatement({
 }: SaveStatementInput) {
   const supabase = await createClient()
 
-  // 1. Upload file to Supabase Storage
+  // 1. Check for duplicate or overlapping statements
+  const { data: existingStatements, error: checkError } = await supabase
+    .from('bank_statements')
+    .select('id, statement_period, file_path')
+    .eq('bank_name', bankName)
+
+  if (checkError) {
+    console.error('Error checking for duplicate statements:', checkError)
+  }
+
+  const newRange = getPeriodRange(statementPeriod)
+
+  if (existingStatements && existingStatements.length > 0) {
+    for (const existing of existingStatements) {
+      const oldRange = getPeriodRange(existing.statement_period)
+      
+      if (newRange && oldRange) {
+        const relation = compareRanges(newRange, oldRange)
+        
+        if (relation === 'subset_or_duplicate') {
+          throw new Error(`Laporan mutasi untuk ${bankName} dengan periode ${statementPeriod} sudah tercakup oleh laporan periode ${existing.statement_period} yang diunggah sebelumnya.`)
+        } else if (relation === 'superset') {
+          console.log(`Replacing existing statement ${existing.id} (${existing.statement_period}) with new statement (${statementPeriod})`)
+          
+          // Delete from database (cascade deletes items)
+          const { error: deleteDbError } = await supabase
+            .from('bank_statements')
+            .delete()
+            .eq('id', existing.id)
+
+          if (deleteDbError) {
+            console.error('Failed to delete duplicate statement from DB:', deleteDbError)
+          } else {
+            // Delete file from storage
+            await supabase.storage
+              .from('statements')
+              .remove([existing.file_path])
+          }
+        } else if (relation === 'overlap') {
+          throw new Error(`Laporan mutasi yang diunggah (${statementPeriod}) tumpang tindih dengan laporan periode ${existing.statement_period}. Harap periksa kembali berkas Anda untuk menghindari duplikasi transaksi.`)
+        }
+      } else {
+        // Fallback to simple string match if parsing fails
+        if (existing.statement_period === statementPeriod) {
+          throw new Error(`Laporan mutasi untuk ${bankName} dengan periode ${statementPeriod} sudah pernah diunggah sebelumnya.`)
+        }
+      }
+    }
+  }
+
+  // 2. Upload file to Supabase Storage
   const bytes = await file.arrayBuffer()
   const buffer = Buffer.from(bytes)
   
