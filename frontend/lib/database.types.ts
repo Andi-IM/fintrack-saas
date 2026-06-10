@@ -42,6 +42,7 @@ export type Database = {
       bank_statement_items: {
         Row: {
           amount: number
+          balance: number | null
           category: string | null
           date: string
           description: string
@@ -53,6 +54,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          balance?: number | null
           category?: string | null
           date: string
           description: string
@@ -64,6 +66,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          balance?: number | null
           category?: string | null
           date?: string
           description?: string
