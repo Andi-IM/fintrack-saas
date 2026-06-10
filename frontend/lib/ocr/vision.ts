@@ -3,6 +3,10 @@ import { IExtractor } from './interfaces'
 export class VisionExtractor implements IExtractor {
   supportedMimeTypes = ['image/jpeg', 'image/png', 'image/webp']
 
+  canHandle(mimeType: string, context: { filename?: string; routeToDoctr?: boolean }): boolean {
+    return this.supportedMimeTypes.includes(mimeType);
+  }
+
   async extractText(base64Data: string): Promise<string> {
     const apiKey = process.env.GOOGLE_CLOUD_API_KEY
     if (!apiKey) {

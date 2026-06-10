@@ -13,6 +13,14 @@ import { Input } from "@/components/ui/input"
 import { OCRResult, ReceiptItem, BankTransaction } from '@/lib/ocr/types'
 import { Json } from '@/lib/database.types'
 
+function isReceiptItem(item: ReceiptItem | BankTransaction): item is ReceiptItem {
+  return 'name' in item && 'amount' in item && !('date' in item);
+}
+
+function isBankTransaction(item: ReceiptItem | BankTransaction): item is BankTransaction {
+  return 'date' in item && 'amount' in item;
+}
+
 export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStatement' }) {
   const router = useRouter()
   const [fileToScan, setFileToScan] = useState<File | null>(null)
@@ -20,6 +28,14 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
   const [scanProgress, setScanProgress] = useState(0)
   const [scanResult, setScanResult] = useState<OCRResult | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const receiptItems = scanContext === 'Receipt' && scanResult && scanResult.items
+    ? (scanResult.items || []).filter(isReceiptItem)
+    : []
+
+  const bankTransactions = scanContext === 'BankStatement' && scanResult && scanResult.items
+    ? (scanResult.items || []).filter(isBankTransaction)
+    : []
 
   const handleUpdateItem = (index: number, field: string, value: string | number) => {
     setScanResult((prev) => {
@@ -137,7 +153,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
           note: `Receipt: ${scanResult.merchant || ''}`,
           paymentMethod: 'Cash',
           change: 0,
-          items: scanResult.items as unknown as Json
+          items: receiptItems as unknown as Json
         })
       } else if (scanContext === 'BankStatement') {
         await saveBankStatement({
@@ -145,7 +161,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
           statementPeriod: scanResult.statementPeriod || 'Unknown Period',
           openingBalance: scanResult.openingBalance,
           closingBalance: scanResult.closingBalance,
-          items: (scanResult.items || []) as BankTransaction[],
+          items: bankTransactions,
           file: fileToScan
         })
       }
@@ -294,7 +310,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3 space-y-2 border border-slate-100">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Identified Items</p>
-                    {((scanResult.items as ReceiptItem[]) || []).map((item, i) => (
+                    {receiptItems.map((item, i) => (
                       <div key={i} className="flex gap-2 items-center border-b border-slate-200 border-dashed pb-2 last:border-0 last:pb-0">
                         <Input 
                           value={item.name} 
@@ -357,7 +373,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                     </div>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-2 space-y-2 border border-slate-100 max-h-[220px] overflow-y-auto shadow-inner">
-                    {((scanResult.items as BankTransaction[]) || []).map((item, i) => (
+                    {bankTransactions.map((item, i) => (
                       <div key={i} className="bg-white p-2 rounded border border-slate-200 shadow-sm space-y-2 transition-all hover:border-indigo-200">
                         <div className="flex gap-2 items-center">
                           <Input 
