@@ -34,7 +34,7 @@ export class BniParser implements IBankParser {
     return firstLines.includes('bni')
   }
 
-  parse(text: string, timezoneOffset?: string): OCRResult {
+  parse(text: string, timezoneOffset?: string, filename?: string): OCRResult {
     const lines = splitIntoLines(text)
     const saldoAwal = this.parseSaldoAwal(text)
     const saldoAkhir = this.parseSaldoAkhir(text)

@@ -34,7 +34,7 @@ export class BsiParser implements IBankParser {
     )
   }
 
-  parse(text: string, timezoneOffset?: string): OCRResult {
+  parse(text: string, timezoneOffset?: string, filename?: string): OCRResult {
     const lines = splitIntoLines(text)
     const statementPeriod = parseStatementPeriod(text)
     const saldoAwal = this.parseSaldoAwal(text)

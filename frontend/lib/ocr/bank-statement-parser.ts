@@ -18,14 +18,14 @@ export class BankStatementParser implements IParser {
     ]
   }
 
-  parse(text: string, timezoneOffset?: string): OCRResult {
+  parse(text: string, timezoneOffset?: string, filename?: string): OCRResult {
     for (const bankParser of this.bankParsers) {
       if (bankParser.identify(text)) {
-        return bankParser.parse(text, timezoneOffset)
+        return bankParser.parse(text, timezoneOffset, filename)
       }
     }
 
     const lastParser = this.bankParsers[this.bankParsers.length - 1]
-    return lastParser.parse(text, timezoneOffset)
+    return lastParser.parse(text, timezoneOffset, filename)
   }
 }

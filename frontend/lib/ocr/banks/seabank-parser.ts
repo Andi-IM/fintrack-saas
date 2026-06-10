@@ -46,7 +46,7 @@ export class SeabankParser implements IBankParser {
     )
   }
 
-  parse(text: string, timezoneOffset?: string): OCRResult {
+  parse(text: string, timezoneOffset?: string, filename?: string): OCRResult {
     const statementPeriod = parseStatementPeriod(text)
     let saldoAwal = this.parseSaldoAwal(text)
     let saldoAkhir = this.parseSaldoAkhir(text)
