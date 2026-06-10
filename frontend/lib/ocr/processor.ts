@@ -8,6 +8,7 @@ import { SeabankParser } from './banks/seabank-parser'
 import { JagoParser } from './banks/jago-parser'
 import { BniParser } from './banks/bni-parser'
 import { BsiParser } from './banks/bsi-parser'
+import { DoctrOcrExtractor } from './doctr'
 
 export class DocumentProcessor {
   private extractors: IExtractor[] = []
@@ -15,6 +16,7 @@ export class DocumentProcessor {
 
   constructor() {
     // Register default strategies
+    this.registerExtractor(new DoctrOcrExtractor())
     this.registerExtractor(new VisionExtractor())
     this.registerExtractor(new OcrSpaceExtractor())
     
@@ -42,7 +44,12 @@ export class DocumentProcessor {
     const mimeType = file.type || this.inferMimeType(file.name)
 
     // 2. Select Extractor based on MIME type
-    const extractor = this.extractors.find(e => e.supportedMimeTypes.includes(mimeType))
+    const extractor = this.extractors.find(e => {
+      if (e instanceof DoctrOcrExtractor) {
+        return e.supportedMimeTypes.includes(mimeType) && !!process.env.OCR_SERVICE_URL
+      }
+      return e.supportedMimeTypes.includes(mimeType)
+    })
     if (!extractor) {
       throw new Error(`No OCR extractor found for file type: ${mimeType}`)
     }
