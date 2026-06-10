@@ -1,0 +1,29 @@
+# Python virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local configuration and environment files
+.env
+.env.local
+.env.*
+!.env.example
+
+# Local test outputs and temporary files
+ocr_result.json
+sample_docs.pdf
+.temp/
+temp/
+tmp/
+dist/
+build/
+*.egg-info/

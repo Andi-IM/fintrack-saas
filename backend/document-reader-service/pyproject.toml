@@ -1,0 +1,19 @@
+[project]
+name = "document-reader-service"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.136.3",
+    "httpx>=0.28.1",
+    "matplotlib>=3.10.9",
+    "modal>=1.5.0",
+    "mplcursors>=0.7.1",
+    "pypdfium2>=5.9.0",
+    "python-doctr[torch]>=1.0.1",
+    "python-multipart>=0.0.32",
+    "torch>=2.12.0",
+    "torchvision>=0.27.0",
+    "weasyprint>=69.0",
+]
