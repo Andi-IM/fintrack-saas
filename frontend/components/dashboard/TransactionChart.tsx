@@ -11,6 +11,8 @@ function formatCurrency(amount: number) {
   return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount)
 }
 
+import { useMemo } from 'react'
+
 export function TransactionChart({ transactions, timeRange: initialRange }: { transactions: Tables<'transactions'>[], timeRange: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -27,28 +29,32 @@ export function TransactionChart({ transactions, timeRange: initialRange }: { tr
     router.push(`${pathname}?${params.toString()}`)
   }
 
-  const timeFilteredTransactions = transactions.filter(tx => {
-    const txDate = new Date(tx.date)
-    const now = new Date()
-    const diffTime = Math.abs(now.getTime() - txDate.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    
-    if (initialRange === "1W" && diffDays > 7) return false
-    if (initialRange === "1M" && diffDays > 30) return false
-    if (initialRange === "3M" && diffDays > 90) return false
-    if (initialRange === "1Y" && diffDays > 365) return false
-    
-    return true
-  })
+  const timeFilteredTransactions = useMemo(() => {
+    return transactions.filter(tx => {
+      const txDate = new Date(tx.date)
+      const now = new Date()
+      const diffTime = Math.abs(now.getTime() - txDate.getTime())
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      
+      if (initialRange === "1W" && diffDays > 7) return false
+      if (initialRange === "1M" && diffDays > 30) return false
+      if (initialRange === "3M" && diffDays > 90) return false
+      if (initialRange === "1Y" && diffDays > 365) return false
+      
+      return true
+    })
+  }, [transactions, initialRange])
 
-  const chartDataMap = timeFilteredTransactions.reduce((acc, tx) => {
-    if (!acc[tx.date]) acc[tx.date] = { date: tx.date, income: 0, expense: 0 }
-    if (tx.type === "income") acc[tx.date].income += tx.amount
-    else acc[tx.date].expense += tx.amount
-    return acc
-  }, {} as Record<string, {date: string, income: number, expense: number}>)
-  
-  const chartData = (Object.values(chartDataMap) as Array<{date: string, income: number, expense: number}>).sort((a, b) => a.date.localeCompare(b.date))
+  const chartData = useMemo(() => {
+    const chartDataMap = timeFilteredTransactions.reduce((acc, tx) => {
+      if (!acc[tx.date]) acc[tx.date] = { date: tx.date, income: 0, expense: 0 }
+      if (tx.type === "income") acc[tx.date].income += tx.amount
+      else acc[tx.date].expense += tx.amount
+      return acc
+    }, {} as Record<string, {date: string, income: number, expense: number}>)
+    
+    return (Object.values(chartDataMap) as Array<{date: string, income: number, expense: number}>).sort((a, b) => a.date.localeCompare(b.date))
+  }, [timeFilteredTransactions])
 
   const handleChartClick = (data: unknown) => {
     const chartData = data as { activePayload?: { payload: { date: string } }[] } | null | undefined

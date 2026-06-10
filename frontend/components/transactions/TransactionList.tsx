@@ -2,6 +2,7 @@
 
 import { format } from "date-fns"
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -33,24 +34,28 @@ export function TransactionList({ transactions, dateFilter, timeRange }: { trans
     router.push(`/add?edit=${id}`)
   }
 
-  const timeFilteredTransactions = transactions.filter(tx => {
-    const txDate = new Date(tx.date)
-    const now = new Date()
-    const diffTime = Math.abs(now.getTime() - txDate.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    
-    if (timeRange === "1W" && diffDays > 7) return false
-    if (timeRange === "1M" && diffDays > 30) return false
-    if (timeRange === "3M" && diffDays > 90) return false
-    if (timeRange === "1Y" && diffDays > 365) return false
-    
-    return true
-  })
+  const timeFilteredTransactions = useMemo(() => {
+    return transactions.filter(tx => {
+      const txDate = new Date(tx.date)
+      const now = new Date()
+      const diffTime = Math.abs(now.getTime() - txDate.getTime())
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      
+      if (timeRange === "1W" && diffDays > 7) return false
+      if (timeRange === "1M" && diffDays > 30) return false
+      if (timeRange === "3M" && diffDays > 90) return false
+      if (timeRange === "1Y" && diffDays > 365) return false
+      
+      return true
+    })
+  }, [transactions, timeRange])
 
-  const filteredTransactions = timeFilteredTransactions.filter(tx => {
-    if (dateFilter && tx.date !== dateFilter) return false
-    return true
-  })
+  const filteredTransactions = useMemo(() => {
+    return timeFilteredTransactions.filter(tx => {
+      if (dateFilter && tx.date !== dateFilter) return false
+      return true
+    })
+  }, [timeFilteredTransactions, dateFilter])
 
   return (
     <Card className="shadow-sm border-slate-200 rounded-xl bg-white relative">
