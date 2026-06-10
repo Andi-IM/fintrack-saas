@@ -75,10 +75,15 @@ Uploads a document (PDF or Image) to be processed.
 
 #### **Request**
 - **Content-Type**: `multipart/form-data`
+- **Headers**:
+  - `X-API-Key`: `your_secure_random_key_here` **OR**
+  - `Authorization`: `Bearer your_secure_random_key_here`
 - **Body**:
   - `file`: The binary document file (PDF, PNG, JPG, or JPEG).
 
-#### **Response (200 OK)**
+#### **Responses**
+
+##### **200 OK**
 ```json
 {
   "status": "success",
@@ -109,10 +114,43 @@ Uploads a document (PDF or Image) to be processed.
 }
 ```
 
+##### **401 Unauthorized**
+Returned if the `X-API-Key` or Bearer token is missing, invalid, or mismatched.
+```json
+{
+  "detail": "Could not validate credentials. Missing or invalid API key."
+}
+```
+
+##### **500 Internal Server Error**
+Returned if the server is misconfigured (e.g. `OCR_API_KEY` is not set on the environment).
+```json
+{
+  "detail": "OCR_API_KEY environment variable is not configured on the server."
+}
+```
+
 ---
 
 ## 🧪 Testing the Endpoint
-You can use `curl` or any API client to test the deployed service:
-```bash
-curl -X POST -F "file=@/path/to/document.pdf" https://<your-username>-ocr-api.modal.run/
+To run/test locally or deploy to Modal, you **must** create a `.env` file in this folder:
+```env
+OCR_API_KEY=your_secure_random_key_here
 ```
+
+### Testing with curl (Bearer Token)
+```bash
+curl -X POST \
+  -H "Authorization: Bearer your_secure_random_key_here" \
+  -F "file=@/path/to/document.pdf" \
+  https://<your-username>-ocr-api.modal.run/
+```
+
+### Testing with curl (Custom Header)
+```bash
+curl -X POST \
+  -H "X-API-Key: your_secure_random_key_here" \
+  -F "file=@/path/to/document.pdf" \
+  https://<your-username>-ocr-api.modal.run/
+```
+
