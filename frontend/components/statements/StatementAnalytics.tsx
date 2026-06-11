@@ -6,6 +6,7 @@ import { getStatementAnalytics } from '@/lib/actions/statements'
 import type {
   StatementAnalytics as StatementAnalyticsData,
   DailyBalancePoint,
+  BankAnalyticsSummary,
 } from '@/lib/actions/statements'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -91,17 +92,81 @@ function OverviewCards({ data }: { data: StatementAnalyticsData }) {
 const RANGE_OPTIONS = ['1M', '3M', '6M', '1Y', 'ALL'] as const
 type TimeRange = typeof RANGE_OPTIONS[number]
 
-function filterByRange(history: DailyBalancePoint[], range: TimeRange): DailyBalancePoint[] {
-  if (range === 'ALL') return history
-  const now = Date.now()
-  const ms = {
-    '1M': 30 * 24 * 60 * 60 * 1000,
-    '3M': 90 * 24 * 60 * 60 * 1000,
-    '6M': 180 * 24 * 60 * 60 * 1000,
-    '1Y': 365 * 24 * 60 * 60 * 1000,
-  }[range]
-  const cutoff = now - ms
-  return history.filter(h => new Date(h.date).getTime() >= cutoff)
+interface ChartDataRow {
+  date: string
+  [bankName: string]: string | number | null
+}
+
+function getChartDataByRange(
+  history: DailyBalancePoint[],
+  bankSummaries: BankAnalyticsSummary[],
+  range: TimeRange
+) {
+  const allBanks = [...new Set(history.map(h => h.bankName))]
+  const txDates = [...new Set(history.map(h => h.date))].sort()
+  
+  const bankOpeningBalances = new Map<string, number>()
+  bankSummaries.forEach(s => {
+    bankOpeningBalances.set(s.bankName, s.openingBalance)
+  })
+
+  const now = new Date()
+  const todayStr = now.toISOString().slice(0, 10)
+  let cutoffStr: string | null = null
+  if (range !== 'ALL') {
+    const ms = {
+      '1M': 30 * 24 * 60 * 60 * 1000,
+      '3M': 90 * 24 * 60 * 60 * 1000,
+      '6M': 180 * 24 * 60 * 60 * 1000,
+      '1Y': 365 * 24 * 60 * 60 * 1000,
+    }[range]
+    cutoffStr = new Date(now.getTime() - ms).toISOString().slice(0, 10)
+  }
+
+  let datesToShow = txDates
+  if (cutoffStr) {
+    datesToShow = txDates.filter(d => d >= cutoffStr)
+    if (!datesToShow.includes(cutoffStr)) {
+      datesToShow.unshift(cutoffStr)
+    }
+  }
+  if (!datesToShow.includes(todayStr)) {
+    datesToShow.push(todayStr)
+  }
+  if (datesToShow.length < 2) {
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    if (!datesToShow.includes(yesterday)) {
+      datesToShow.unshift(yesterday)
+    }
+  }
+  datesToShow.sort()
+
+  const bankTimelines: Record<string, DailyBalancePoint[]> = {}
+  allBanks.forEach(b => {
+    bankTimelines[b] = history.filter(h => h.bankName === b)
+  })
+
+  const txMap = new Map<string, DailyBalancePoint['transactions']>()
+
+  const chartData: ChartDataRow[] = datesToShow.map(date => {
+    const entry: ChartDataRow = { date }
+    allBanks.forEach(bank => {
+      const timeline = bankTimelines[bank]
+      const point = [...timeline].reverse().find(p => p.date <= date)
+      const opening = bankOpeningBalances.get(bank) ?? 0
+      entry[bank] = point?.balance ?? opening
+      
+      if (point) {
+        const match = timeline.find(p => p.date === date && p.bankName === bank)
+        if (match) {
+          txMap.set(`${date}|${bank}`, match.transactions)
+        }
+      }
+    })
+    return entry
+  })
+
+  return { chartData, banks: allBanks, txLookup: txMap }
 }
 
 function BalanceChart({ data }: { data: StatementAnalyticsData }) {
@@ -110,37 +175,10 @@ function BalanceChart({ data }: { data: StatementAnalyticsData }) {
     new Set(data.balanceHistory.map(h => h.bankName))
   )
 
-  const filteredHistory = useMemo(
-    () => filterByRange(data.balanceHistory, range),
-    [data.balanceHistory, range],
+  const { chartData, banks, txLookup } = useMemo(
+    () => getChartDataByRange(data.balanceHistory, data.bankSummaries, range),
+    [data.balanceHistory, data.bankSummaries, range]
   )
-
-  const { chartData, banks, txLookup } = useMemo(() => {
-    const allBanks = [...new Set(filteredHistory.map(h => h.bankName))]
-    const allDates = [...new Set(filteredHistory.map(h => h.date))].sort()
-
-    const bankTimelines: Record<string, DailyBalancePoint[]> = {}
-    const txMap = new Map<string, DailyBalancePoint['transactions']>()
-    allBanks.forEach(b => {
-      bankTimelines[b] = filteredHistory.filter(h => h.bankName === b)
-    })
-
-    const rows = allDates.map(date => {
-      const entry: Record<string, string | number | null> = { date: date.slice(0, 10) }
-      allBanks.forEach(bank => {
-        const timeline = bankTimelines[bank]
-        const point = [...timeline].reverse().find(p => p.date <= date)
-        entry[bank] = point?.balance ?? null
-        if (point) {
-          const match = timeline.find(p => p.date === date && p.bankName === bank)
-          if (match) txMap.set(`${date}|${bank}`, match.transactions)
-        }
-      })
-      return entry
-    })
-
-    return { chartData: rows, banks: allBanks, txLookup: txMap }
-  }, [filteredHistory])
 
   const toggleBank = useCallback((bank: string) => {
     setVisibleBanks(prev => {
@@ -274,32 +312,19 @@ function BalanceChart({ data }: { data: StatementAnalyticsData }) {
 function TotalSaldoChart({ data }: { data: StatementAnalyticsData }) {
   const [range, setRange] = useState<TimeRange>('1Y')
 
-  const filteredHistory = useMemo(
-    () => filterByRange(data.balanceHistory, range),
-    [data.balanceHistory, range],
-  )
-
   const chartData = useMemo(() => {
-    const allDates = [...new Set(filteredHistory.map(h => h.date))].sort()
-    const banks = [...new Set(filteredHistory.map(h => h.bankName))]
-
-    const bankTimelines: Record<string, DailyBalancePoint[]> = {}
-    banks.forEach(b => {
-      bankTimelines[b] = filteredHistory.filter(h => h.bankName === b)
-    })
-
-    return allDates.map(date => {
-      const entry: Record<string, string | number> = { date: date.slice(0, 10), total: 0 }
+    const { chartData: baseData, banks } = getChartDataByRange(data.balanceHistory, data.bankSummaries, range)
+    return baseData.map(row => {
       let sum = 0
       banks.forEach(bank => {
-        const timeline = bankTimelines[bank]
-        const point = [...timeline].reverse().find(p => p.date <= date)
-        if (point?.balance != null) sum += point.balance
+        sum += (row[bank] as number) ?? 0
       })
-      entry.total = sum
-      return entry
+      return {
+        date: row.date.slice(0, 10),
+        total: sum
+      }
     })
-  }, [filteredHistory])
+  }, [data.balanceHistory, data.bankSummaries, range])
 
   if (chartData.length < 2) return null
 

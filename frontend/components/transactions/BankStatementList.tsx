@@ -252,6 +252,7 @@ export default function BankStatementList() {
                               <th className="px-4 py-2">Date</th>
                               <th className="px-4 py-2">Description</th>
                               <th className="px-4 py-2 text-right">Amount</th>
+                              <th className="px-4 py-2 text-right">Balance</th>
                               <th className="px-4 py-2 text-right w-16">Actions</th>
                             </tr>
                           </thead>
@@ -276,6 +277,13 @@ export default function BankStatementList() {
                                     {item.type === 'income' ? <ArrowDownLeft className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
                                     Rp {item.amount.toLocaleString('id-ID')}
                                   </div>
+                                </td>
+                                <td className="px-4 py-2.5 text-right whitespace-nowrap font-mono font-medium text-slate-600">
+                                  {item.balance !== null && item.balance !== undefined ? (
+                                    `Rp ${Number(item.balance).toLocaleString('id-ID')}`
+                                  ) : (
+                                    '-'
+                                  )}
                                 </td>
                                 <td className="px-4 py-2.5 text-right whitespace-nowrap">
                                   <div className="flex items-center justify-end gap-1">
@@ -346,6 +354,7 @@ export default function BankStatementList() {
           amount: editingItem.item.amount,
           type: editingItem.item.type as 'income' | 'expense',
           category: editingItem.item.category || '',
+          balance: editingItem.item.balance !== null && editingItem.item.balance !== undefined ? Number(editingItem.item.balance) : undefined,
         }}
         onSave={async (data) => {
           await updateItemMutation.mutateAsync({ itemId: editingItem.item.id, data })

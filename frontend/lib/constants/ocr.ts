@@ -35,7 +35,7 @@ export const STATEMENT_REF_REGEX = /^[A-Za-z0-9]{8,20}$/
 
 export const STATEMENT_MONTH_MAP: Record<string, string> = {
   'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'mei': '05', 'jun': '06',
-  'jul': '07', 'agu': '08', 'sep': '09', 'okt': '10', 'nov': '11', 'des': '12',
+  'jul': '07', 'agu': '08', 'agt': '08', 'ags': '08', 'sep': '09', 'okt': '10', 'nov': '11', 'des': '12',
   'januari': '01', 'februari': '02', 'maret': '03', 'april': '04', 'juni': '06',
   'juli': '07', 'agustus': '08', 'september': '09', 'oktober': '10', 'november': '11', 'desember': '12',
   'may': '05', 'aug': '08', 'oct': '10', 'dec': '12',
