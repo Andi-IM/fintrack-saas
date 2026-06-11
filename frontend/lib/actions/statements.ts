@@ -166,6 +166,7 @@ export interface BankAnalyticsSummary {
   statementsCount: number
   totalIncome: number
   totalExpense: number
+  openingBalance: number
 }
 
 export interface DailyTransaction {
@@ -256,6 +257,9 @@ export async function getStatementAnalytics(): Promise<ActionResponse<StatementA
     totalIncome += bankIncome
     totalExpense += bankExpense
 
+    const earliest = sortedAsc[0]
+    const openingBalance = earliest?.opening_balance ?? 0
+
     bankSummaries.push({
       bankName,
       latestBalance: latest.closing_balance || 0,
@@ -263,8 +267,8 @@ export async function getStatementAnalytics(): Promise<ActionResponse<StatementA
       statementsCount: stmts.length,
       totalIncome: bankIncome,
       totalExpense: bankExpense,
+      openingBalance: Number(openingBalance),
     })
-
     // Compute daily running balance timeline with transaction details
     let runningBalance = 0
     let isFirstStatement = true
@@ -272,7 +276,12 @@ export async function getStatementAnalytics(): Promise<ActionResponse<StatementA
     for (const stmt of sortedAsc) {
       const items = (stmt.bank_statement_items || [])
         .filter(i => i.date && i.amount != null && i.type)
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .sort((a, b) => {
+          const timeA = new Date(a.date).getTime()
+          const timeB = new Date(b.date).getTime()
+          if (timeA !== timeB) return timeA - timeB
+          return a.id.localeCompare(b.id)
+        })
 
       if (isFirstStatement) {
         runningBalance = stmt.opening_balance ?? 0
@@ -284,8 +293,12 @@ export async function getStatementAnalytics(): Promise<ActionResponse<StatementA
       for (const item of items) {
         const dateKey = item.date.slice(0, 10)
 
-        if (item.type === 'income') runningBalance += item.amount
-        else runningBalance -= item.amount
+        if (item.balance !== null && item.balance !== undefined) {
+          runningBalance = Number(item.balance)
+        } else {
+          if (item.type === 'income') runningBalance += item.amount
+          else runningBalance -= item.amount
+        }
 
         if (!dailyMap.has(dateKey)) {
           dailyMap.set(dateKey, { balance: runningBalance, transactions: [] })
@@ -482,6 +495,7 @@ const statementItemSchema = z.object({
   amount: z.number().positive('Amount must be greater than 0'),
   type: z.enum(['income', 'expense']),
   category: z.string().optional(),
+  balance: z.number().optional(),
 })
 
 async function recalculateStatementBalances(statementId: string): Promise<void> {
@@ -500,7 +514,7 @@ async function recalculateStatementBalances(statementId: string): Promise<void> 
 
   const { data: items, error: itemsErr } = await supabase
     .from('bank_statement_items')
-    .select('id, date, amount, type')
+    .select('id, date, amount, type, balance, metadata')
     .eq('statement_id', statementId)
     .order('date', { ascending: true })
     .order('id', { ascending: true })
@@ -515,8 +529,15 @@ async function recalculateStatementBalances(statementId: string): Promise<void> 
   let lastBalance = 0
 
   for (const item of items) {
-    if (item.type === 'income') runningBalance += item.amount
-    else runningBalance -= item.amount
+    const metadata = item.metadata as Record<string, unknown> | null
+    const isManual = metadata !== null && typeof metadata === 'object' && metadata.manual_balance === true
+
+    if (isManual && item.balance !== null && item.balance !== undefined) {
+      runningBalance = Number(item.balance)
+    } else {
+      if (item.type === 'income') runningBalance += item.amount
+      else runningBalance -= item.amount
+    }
     lastBalance = runningBalance
 
     const { error: updateErr } = await supabase
@@ -556,12 +577,19 @@ export async function updateStatementItem(
 
   const { data: item } = await supabase
     .from('bank_statement_items')
-    .select('statement_id')
+    .select('statement_id, balance, metadata')
     .eq('id', itemId)
     .single()
 
   if (!item) {
     return { success: false, error: 'Item not found' }
+  }
+
+  const metadata = (item.metadata as Record<string, unknown>) || {}
+  const newMetadata = { ...metadata }
+
+  if (parsed.data.balance !== undefined && Number(parsed.data.balance) !== (item.balance !== null ? Number(item.balance) : undefined)) {
+    newMetadata.manual_balance = true
   }
 
   const { error: updateErr } = await supabase
@@ -572,6 +600,8 @@ export async function updateStatementItem(
       amount: parsed.data.amount,
       type: parsed.data.type,
       category: parsed.data.category || null,
+      balance: parsed.data.balance !== undefined ? parsed.data.balance : item.balance,
+      metadata: newMetadata,
     })
     .eq('id', itemId)
 
@@ -630,6 +660,9 @@ export async function addStatementItem(
 
   const supabase = await createClient()
 
+  const isManual = parsed.data.balance !== undefined
+  const metadata = isManual ? { manual_balance: true } : {}
+
   const { error: insertErr } = await supabase
     .from('bank_statement_items')
     .insert({
@@ -639,7 +672,8 @@ export async function addStatementItem(
       amount: parsed.data.amount,
       type: parsed.data.type,
       category: parsed.data.category || null,
-      balance: 0,
+      balance: parsed.data.balance !== undefined ? parsed.data.balance : 0,
+      metadata: metadata,
     })
 
   if (insertErr) {

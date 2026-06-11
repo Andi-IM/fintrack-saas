@@ -16,6 +16,7 @@ export interface ItemFormData {
   amount: number
   type: 'income' | 'expense'
   category: string
+  balance?: number
 }
 
 interface ItemEditDialogProps {
@@ -46,6 +47,7 @@ export default function ItemEditDialog({
   const [amount, setAmount] = useState(initialData?.amount ?? 0)
   const [type, setType] = useState<'income' | 'expense'>(initialData?.type ?? 'expense')
   const [category, setCategory] = useState(initialData?.category ?? '')
+  const [balance, setBalance] = useState<number | undefined>(initialData?.balance)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({})
 
@@ -66,7 +68,7 @@ export default function ItemEditDialog({
       const MONTH_ABBRS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
       const monthStr = MONTH_ABBRS[parseInt(m!, 10) - 1] || 'jan'
       const date = formatISO8601Date(d!, monthStr, y!, timePart || '00:00', '+07:00')
-      await onSave({ date, description, amount, type, category })
+      await onSave({ date, description, amount, type, category, balance })
       onOpenChange(false)
     } catch {
       // error handled by parent
@@ -84,7 +86,7 @@ export default function ItemEditDialog({
             Make changes to the transaction item below.
           </DialogDescription>
         </DialogHeader>
-
+ 
         <div className="space-y-4">
           <div className="flex gap-3">
             <div className="flex-1 space-y-1.5">
@@ -107,7 +109,7 @@ export default function ItemEditDialog({
               />
             </div>
           </div>
-
+ 
           <div className="space-y-1.5">
             <Label htmlFor="item-desc">Description</Label>
             <Input
@@ -118,7 +120,7 @@ export default function ItemEditDialog({
             />
             {errors.description && <p className="text-xs text-rose-500">{errors.description}</p>}
           </div>
-
+ 
           <div className="space-y-1.5">
             <Label htmlFor="item-amount">Amount (IDR)</Label>
             <Input
@@ -132,6 +134,17 @@ export default function ItemEditDialog({
             {errors.amount && <p className="text-xs text-rose-500">{errors.amount}</p>}
           </div>
 
+          <div className="space-y-1.5">
+            <Label htmlFor="item-balance">Balance (IDR)</Label>
+            <Input
+              id="item-balance"
+              type="number"
+              value={balance === undefined ? '' : balance}
+              onChange={e => setBalance(e.target.value === '' ? undefined : Number(e.target.value))}
+              placeholder="Running balance after this transaction"
+            />
+          </div>
+ 
           <div className="space-y-1.5">
             <Label>Type</Label>
             <div className="flex gap-2">
@@ -155,7 +168,7 @@ export default function ItemEditDialog({
               </Button>
             </div>
           </div>
-
+ 
           <div className="space-y-1.5">
             <Label htmlFor="item-category">Category</Label>
             <Input
@@ -166,7 +179,7 @@ export default function ItemEditDialog({
             />
           </div>
         </div>
-
+ 
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
