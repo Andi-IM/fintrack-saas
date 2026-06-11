@@ -5,7 +5,6 @@ import {
   formatISO8601Date,
   classifyCategory,
   sanitizeTransactionName,
-  parseIndonesianAmount,
   splitIntoLines,
   buildBankResult,
 } from '../utils'
