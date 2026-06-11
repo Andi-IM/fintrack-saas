@@ -9,6 +9,8 @@ import { JagoParser } from './banks/jago-parser'
 import { BniParser } from './banks/bni-parser'
 import { BsiParser } from './banks/bsi-parser'
 import { DoctrOcrExtractor } from './doctr'
+import { AtmReceiptParser } from './receipts/atm-parser'
+import { ShoppingReceiptParser } from './receipts/shopping-parser'
 
 export class DocumentProcessor {
   private static readonly instance: DocumentProcessor = new DocumentProcessor()
@@ -21,7 +23,10 @@ export class DocumentProcessor {
     this.registerExtractor(new VisionExtractor())
     this.registerExtractor(new OcrSpaceExtractor())
     
-    this.registerParser(new ReceiptParser())
+    this.registerParser(new ReceiptParser([
+      new AtmReceiptParser(),
+      new ShoppingReceiptParser(),
+    ]))
     this.registerParser(new BankStatementParser([
       new BniParser(),
       new JagoParser(),

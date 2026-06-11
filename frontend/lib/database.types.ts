@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       bank_statement_items: {
@@ -128,6 +103,86 @@ export type Database = {
           total_items?: number | null
         }
         Relationships: []
+      }
+      receipts: {
+        Row: {
+          amount_paid: number | null
+          atm_id: string | null
+          change: number | null
+          created_at: string | null
+          date: string
+          fee: number | null
+          id: string
+          payment_method: string | null
+          store_address: string | null
+          store_name: string
+          total_price: number
+          transaction_type: string | null
+          type: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          atm_id?: string | null
+          change?: number | null
+          created_at?: string | null
+          date: string
+          fee?: number | null
+          id?: string
+          payment_method?: string | null
+          store_address?: string | null
+          store_name: string
+          total_price: number
+          transaction_type?: string | null
+          type?: string
+        }
+        Update: {
+          amount_paid?: number | null
+          atm_id?: string | null
+          change?: number | null
+          created_at?: string | null
+          date?: string
+          fee?: number | null
+          id?: string
+          payment_method?: string | null
+          store_address?: string | null
+          store_name?: string
+          total_price?: number
+          transaction_type?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
+      receipts_items: {
+        Row: {
+          id: string
+          price: number
+          product_name: string
+          quantity: number
+          receipt_id: string
+        }
+        Insert: {
+          id?: string
+          price: number
+          product_name: string
+          quantity: number
+          receipt_id: string
+        }
+        Update: {
+          id?: string
+          price?: number
+          product_name?: string
+          quantity?: number
+          receipt_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipts_items_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "receipts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transactions: {
         Row: {
@@ -316,9 +371,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

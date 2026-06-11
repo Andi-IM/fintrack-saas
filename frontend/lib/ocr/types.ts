@@ -8,11 +8,22 @@ export interface OCRResult {
   bank?: string
   openingBalance?: number
   closingBalance?: number
+  address?: string
+  date?: string
+  paymentMethod?: string
+  amountPaid?: number
+  change?: number
+  type?: 'shopping' | 'atm'
+  atmId?: string
+  transactionType?: 'withdrawal' | 'deposit' | 'transfer'
+  fee?: number
 }
 
 export interface ReceiptItem {
   name: string
   amount: number
+  quantity?: number
+  price?: number
 }
 
 export interface BankTransaction {

@@ -1,5 +1,5 @@
 import { STATEMENT_MONTHS, STATEMENT_MONTH_MAP, STATEMENT_CATEGORY_PATTERNS } from '@/lib/constants/ocr'
-import { BankTransaction, OCRResult } from './types'
+import { BankTransaction, OCRResult, ReceiptItem } from './types'
 
 export function cleanAndNormalizeAmount(line: string): string {
   let clean = line.trim()
@@ -166,5 +166,81 @@ export function buildBankResult(
     bank: bankName,
     openingBalance,
     closingBalance
+  }
+}
+
+export function extractReceiptDate(text: string, lines: string[], timezoneOffset?: string): string {
+  const dateRegex = /\b(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})\b/
+  const dateMatch = text.match(dateRegex)
+  const timeRegex = /\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b/
+  const timeMatch = text.match(timeRegex)
+
+  if (dateMatch) {
+    let day = parseInt(dateMatch[1], 10)
+    let month = parseInt(dateMatch[2], 10)
+    let year = parseInt(dateMatch[3], 10)
+    if (year < 100) year += 2000
+
+    if (month > 12 && day <= 12) {
+      const temp = day
+      day = month
+      month = temp
+    }
+
+    let hour = 12, minute = 0, second = 0
+    if (timeMatch) {
+      hour = parseInt(timeMatch[1], 10)
+      minute = parseInt(timeMatch[2], 10)
+      if (timeMatch[3]) second = parseInt(timeMatch[3], 10)
+    }
+
+    try {
+      const parsedDate = new Date(year, month - 1, day, hour, minute, second)
+      if (!isNaN(parsedDate.getTime())) {
+        return parsedDate.toISOString()
+      }
+    } catch (e) {
+      console.error('Error parsing date:', e)
+    }
+  }
+
+  return new Date().toISOString()
+}
+
+export function extractReceiptMerchant(lines: string[]): string {
+  return lines[0] || 'Unknown Merchant'
+}
+
+export function buildReceiptResult(
+  merchant: string,
+  items: ReceiptItem[],
+  total: number,
+  category: string,
+  date: string,
+  options: {
+    address?: string
+    paymentMethod?: string
+    amountPaid?: number
+    change?: number
+    type?: 'shopping' | 'atm'
+    atmId?: string
+    transactionType?: 'withdrawal' | 'deposit' | 'transfer'
+    fee?: number
+  } = {}
+): OCRResult {
+  return {
+    merchant,
+    items,
+    total,
+    category,
+    date,
+    address: options.address,
+    paymentMethod: options.paymentMethod,
+    amountPaid: options.amountPaid,
+    change: options.change,
+    type: options.type || 'shopping',
+    atmId: options.atmId,
+    transactionType: options.transactionType,
+    fee: options.fee,
   }
 }

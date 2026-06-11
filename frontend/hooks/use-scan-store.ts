@@ -17,6 +17,7 @@ interface ScanState {
   resetScan: () => void
   updateScanResultItem: (index: number, field: string, value: string | number) => void
   deleteScanResultItem: (index: number) => void
+  addScanResultItem: () => void
   updateScanResultField: (field: keyof OCRResult, value: string | number) => void
 }
 
@@ -59,6 +60,15 @@ export const useScanStore = create<ScanState>((set) => ({
     set((state) => {
       if (!state.scanResult || !state.scanResult.items) return {}
       const newItems = state.scanResult.items.filter((_, i) => i !== index)
+      return {
+        scanResult: { ...state.scanResult, items: newItems },
+      }
+    }),
+  addScanResultItem: () =>
+    set((state) => {
+      if (!state.scanResult) return {}
+      const newItem = { name: '', amount: 0, quantity: 1, price: 0 }
+      const newItems = [...(state.scanResult.items || []), newItem]
       return {
         scanResult: { ...state.scanResult, items: newItems },
       }
