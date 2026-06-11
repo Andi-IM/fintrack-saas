@@ -38,7 +38,6 @@ export function TransactionForm({ initialData }: { initialData?: Tables<'transac
   const {
     register,
     handleSubmit,
-    setValue,
     reset,
     formState: { errors },
   } = useForm<z.input<typeof transactionFormSchema>>({

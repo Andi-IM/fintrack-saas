@@ -1,7 +1,7 @@
 'use client'
 
 import { format } from "date-fns"
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useMemo, useState, useEffect } from 'react'
 import { useQueryState } from 'nuqs'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,7 +16,6 @@ import { formatCurrency, filterTransactionsByRange } from "@/lib/utils/transacti
 
 export function TransactionList({ transactions, dateFilter: propDateFilter, timeRange }: { transactions: Tables<'transactions'>[], dateFilter?: string, timeRange: string }) {
   const router = useRouter()
-  const searchParams = useSearchParams()
 
   const [dateFilter, setDateFilter] = useQueryState('date', {
     shallow: false,

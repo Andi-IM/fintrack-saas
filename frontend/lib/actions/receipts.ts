@@ -3,7 +3,6 @@
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { Tables } from '@/lib/database.types'
 import { ActionResponse } from './types'
 
 const receiptItemSchema = z.object({

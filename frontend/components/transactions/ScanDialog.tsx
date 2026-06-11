@@ -3,16 +3,14 @@
 import { useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useDropzone } from 'react-dropzone'
-import { UploadCloud, CheckCircle2, Loader2, Sparkles, AlertCircle, Trash2, Plus } from 'lucide-react'
-import { insertTransaction } from "@/lib/actions/transactions"
+import { UploadCloud, CheckCircle2, Sparkles, AlertCircle, Trash2, Plus } from 'lucide-react'
 import { saveReceipt } from "@/lib/actions/receipts"
 import { useRouter } from 'next/navigation'
 import { scanDocumentWithAI } from '@/lib/actions/ocr'
 import { saveBankStatement } from '@/lib/actions/statements'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { OCRResult, ReceiptItem, BankTransaction } from '@/lib/ocr/types'
-import { Json } from '@/lib/database.types'
+import { ReceiptItem, BankTransaction } from '@/lib/ocr/types'
 import { useScanStore } from '@/hooks/use-scan-store'
 
 function isReceiptItem(item: ReceiptItem | BankTransaction): item is ReceiptItem {
@@ -443,7 +441,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                           </div>
                         ))
                       ) : (
-                        <p className="text-[11px] text-slate-400 italic text-center py-2">Belum ada item terdeteksi. Klik "Tambah Item" untuk menambahkan.</p>
+                        <p className="text-[11px] text-slate-400 italic text-center py-2">Belum ada item terdeteksi. Klik &quot;Tambah Item&quot; untuk menambahkan.</p>
                       )}
                     </div>
                   )}
