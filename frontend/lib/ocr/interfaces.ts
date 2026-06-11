@@ -17,4 +17,8 @@ export interface IBankParser {
   parse(text: string, timezoneOffset?: string, filename?: string): OCRResult
 }
 
-
+export interface IReceiptParser {
+  identify(text: string): boolean
+  receiptName: string
+  parse(text: string, timezoneOffset?: string, filename?: string): OCRResult
+}

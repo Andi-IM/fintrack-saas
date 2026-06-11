@@ -3,8 +3,9 @@
 import { useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useDropzone } from 'react-dropzone'
-import { UploadCloud, CheckCircle2, Loader2, Sparkles, AlertCircle, Trash2 } from 'lucide-react'
+import { UploadCloud, CheckCircle2, Loader2, Sparkles, AlertCircle, Trash2, Plus } from 'lucide-react'
 import { insertTransaction } from "@/lib/actions/transactions"
+import { saveReceipt } from "@/lib/actions/receipts"
 import { useRouter } from 'next/navigation'
 import { scanDocumentWithAI } from '@/lib/actions/ocr'
 import { saveBankStatement } from '@/lib/actions/statements'
@@ -38,8 +39,10 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
     resetScan,
     updateScanResultItem,
     deleteScanResultItem,
+    addScanResultItem,
     updateScanResultField,
   } = useScanStore()
+
 
   const receiptItems = scanContext === 'Receipt' && scanResult && scanResult.items
     ? (scanResult.items || []).filter(isReceiptItem)
@@ -126,15 +129,23 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
     
     try {
       if (scanContext === 'Receipt') {
-        const result = await insertTransaction({
-          date: new Date().toISOString().split('T')[0],
-          amount: scanResult.total || 0,
-          category: scanResult.category || 'Other',
-          type: 'expense',
-          note: `Receipt: ${scanResult.merchant || ''}`,
-          paymentMethod: 'Cash',
-          change: 0,
-          items: receiptItems as unknown as Json
+        const result = await saveReceipt({
+          type: scanResult.type || 'shopping',
+          storeName: scanResult.merchant || 'Unknown Merchant',
+          storeAddress: scanResult.address || null,
+          date: scanResult.date || new Date().toISOString(),
+          totalPrice: scanResult.total || 0,
+          paymentMethod: scanResult.paymentMethod || 'Cash',
+          amountPaid: scanResult.amountPaid || scanResult.total || 0,
+          change: scanResult.change || 0,
+          atmId: scanResult.atmId || null,
+          transactionType: scanResult.transactionType || null,
+          fee: scanResult.fee || 0,
+          items: receiptItems.map(item => ({
+            productName: item.name,
+            quantity: item.quantity || 1,
+            price: item.price || item.amount || 0,
+          })),
         })
         if (!result.success) {
           setScanStatus('error')
@@ -280,48 +291,162 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Merchant</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Receipt Type</p>
+                      <select
+                        value={scanResult.type || 'shopping'}
+                        onChange={(e) => updateScanResultField('type', e.target.value as 'shopping' | 'atm')}
+                        className="h-8 w-full text-xs font-bold rounded-md border border-slate-200 bg-white px-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      >
+                        <option value="shopping">Belanja (Shopping)</option>
+                        <option value="atm">ATM (Withdrawal/Deposit)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Merchant / Bank</p>
                       <Input 
-                        value={scanResult.merchant} 
+                        value={scanResult.merchant || ''} 
                         onChange={(e) => updateScanResultField('merchant', e.target.value)}
                         className="h-8 text-sm font-bold"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Date & Time</p>
+                      <Input 
+                        type="datetime-local"
+                        value={scanResult.date ? scanResult.date.slice(0, 16) : ''} 
+                        onChange={(e) => updateScanResultField('date', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                        className="h-8 text-xs font-bold font-mono"
                       />
                     </div>
                     <div>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Total Amount</p>
                       <Input 
                         type="number"
-                        value={scanResult.total} 
-                        onChange={(e) => updateScanResultField('total', parseFloat(e.target.value))}
-                        className="h-8 text-sm font-bold text-right text-indigo-600"
+                        value={scanResult.total || 0} 
+                        onChange={(e) => updateScanResultField('total', parseFloat(e.target.value) || 0)}
+                        className="h-8 text-sm font-bold text-right text-indigo-600 font-mono"
                       />
                     </div>
+
+                    {(scanResult.type || 'shopping') === 'atm' ? (
+                      <>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">ATM ID / Terminal</p>
+                          <Input 
+                            value={scanResult.atmId || ''} 
+                            onChange={(e) => updateScanResultField('atmId', e.target.value)}
+                            className="h-8 text-xs font-bold"
+                            placeholder="e.g. ATM001"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Transaction Type</p>
+                          <select
+                            value={scanResult.transactionType || 'withdrawal'}
+                            onChange={(e) => updateScanResultField('transactionType', e.target.value as any)}
+                            className="h-8 w-full text-xs font-bold rounded-md border border-slate-200 bg-white px-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          >
+                            <option value="withdrawal">Penarikan (Withdrawal)</option>
+                            <option value="deposit">Setoran (Deposit)</option>
+                            <option value="transfer">Transfer</option>
+                          </select>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Admin Fee</p>
+                          <Input 
+                            type="number"
+                            value={scanResult.fee || 0} 
+                            onChange={(e) => updateScanResultField('fee', parseFloat(e.target.value) || 0)}
+                            className="h-8 text-xs font-bold font-mono"
+                          />
+                        </div>
+                        <div></div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="col-span-2">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Store Address</p>
+                          <Input 
+                            value={scanResult.address || ''} 
+                            onChange={(e) => updateScanResultField('address', e.target.value)}
+                            className="h-8 text-xs"
+                            placeholder="e.g. Jl. Raya Kemang No. 10"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Payment Method</p>
+                          <Input 
+                            value={scanResult.paymentMethod || 'Cash'} 
+                            onChange={(e) => updateScanResultField('paymentMethod', e.target.value)}
+                            className="h-8 text-xs font-bold"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Cash Paid</p>
+                          <Input 
+                            type="number"
+                            value={scanResult.amountPaid || scanResult.total || 0} 
+                            onChange={(e) => updateScanResultField('amountPaid', parseFloat(e.target.value) || 0)}
+                            className="h-8 text-xs font-bold text-right font-mono"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Change (Kembalian)</p>
+                          <Input 
+                            type="number"
+                            value={scanResult.change || 0} 
+                            onChange={(e) => updateScanResultField('change', parseFloat(e.target.value) || 0)}
+                            className="h-8 text-xs font-bold font-mono"
+                          />
+                        </div>
+                        <div></div>
+                      </>
+                    )}
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-3 space-y-2 border border-slate-100">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Identified Items</p>
-                    {receiptItems.map((item, i) => (
-                      <div key={i} className="flex gap-2 items-center border-b border-slate-200 border-dashed pb-2 last:border-0 last:pb-0">
-                        <Input 
-                          value={item.name} 
-                          onChange={(e) => updateScanResultItem(i, 'name', e.target.value)}
-                          className="h-7 text-[11px] flex-1 bg-transparent border-none focus-visible:ring-1"
-                        />
-                        <Input 
-                          type="number"
-                          value={item.amount} 
-                          onChange={(e) => updateScanResultItem(i, 'amount', parseFloat(e.target.value))}
-                          className="h-7 text-[11px] w-24 text-right bg-transparent border-none focus-visible:ring-1 font-mono"
-                        />
+
+                  {(scanResult.type || 'shopping') !== 'atm' && (
+                    <div className="bg-slate-50 rounded-lg p-3 space-y-2 border border-slate-100 max-h-[200px] overflow-y-auto shadow-inner">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Identified Items</p>
                         <button
-                          onClick={() => deleteScanResultItem(i)}
-                          className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded transition-colors"
-                          title="Hapus item ini"
+                          onClick={() => addScanResultItem()}
+                          className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-2 py-0.5 rounded transition-colors"
+                          title="Tambah item baru"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Plus className="w-3 h-3" />
+                          Tambah Item
                         </button>
                       </div>
-                    ))}
-                  </div>
+                      {receiptItems.length > 0 ? (
+                        receiptItems.map((item, i) => (
+                          <div key={i} className="flex gap-2 items-center border-b border-slate-200 border-dashed pb-2 last:border-0 last:pb-0">
+                            <Input 
+                              value={item.name} 
+                              onChange={(e) => updateScanResultItem(i, 'name', e.target.value)}
+                              className="h-7 text-[11px] flex-1 bg-transparent border-none focus-visible:ring-1"
+                              placeholder="Nama produk"
+                            />
+                            <Input 
+                              type="number"
+                              value={item.amount} 
+                              onChange={(e) => updateScanResultItem(i, 'amount', parseFloat(e.target.value))}
+                              className="h-7 text-[11px] w-24 text-right bg-transparent border-none focus-visible:ring-1 font-mono"
+                              placeholder="Harga"
+                            />
+                            <button
+                              onClick={() => deleteScanResultItem(i)}
+                              className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded transition-colors"
+                              title="Hapus item ini"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-[11px] text-slate-400 italic text-center py-2">Belum ada item terdeteksi. Klik "Tambah Item" untuk menambahkan.</p>
+                      )}
+                    </div>
+                  )}
                 </>
               ) : (
                 <>
