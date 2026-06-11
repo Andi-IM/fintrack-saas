@@ -10,7 +10,11 @@ import { BniParser } from './banks/bni-parser'
 import { BsiParser } from './banks/bsi-parser'
 import { DoctrOcrExtractor } from './doctr'
 import { AtmReceiptParser } from './receipts/atm-parser'
+import { RaudhahSwalayanReceiptParser } from './receipts/raudhah-parser'
 import { ShoppingReceiptParser } from './receipts/shopping-parser'
+import { AciakMartReceiptParser } from './receipts/aciak-parser'
+import { CitraSwalayanReceiptParser } from './receipts/citra-parser'
+import { MinaSwalayanReceiptParser } from './receipts/mina-parser'
 
 export class DocumentProcessor {
   private static readonly instance: DocumentProcessor = new DocumentProcessor()
@@ -25,6 +29,10 @@ export class DocumentProcessor {
     
     this.registerParser(new ReceiptParser([
       new AtmReceiptParser(),
+      new RaudhahSwalayanReceiptParser(),
+      new AciakMartReceiptParser(),
+      new CitraSwalayanReceiptParser(),
+      new MinaSwalayanReceiptParser(),
       new ShoppingReceiptParser(),
     ]))
     this.registerParser(new BankStatementParser([
@@ -53,17 +61,45 @@ export class DocumentProcessor {
     const base64Data = Buffer.from(bytes).toString('base64')
     const mimeType = file.type || this.inferMimeType(file.name)
 
-    // 2. Select Extractor — each extractor self-selects via canHandle()
-    const extractor = this.extractors.find(e =>
+    // 2. Filter capable extractors
+    const capableExtractors = this.extractors.filter(e =>
       e.canHandle(mimeType, { filename: file.name })
     )
-    if (!extractor) {
+
+    if (capableExtractors.length === 0) {
       throw new Error(`No OCR extractor found for file type: ${mimeType}`)
     }
 
-    // 3. Extract Text
-    const rawText = await extractor.extractText(base64Data)
-    console.log(`Text extracted using ${extractor.constructor.name}:`, rawText)
+    let rawText = ''
+    let lastError: Error | null = null
+
+    // 3. Try each capable extractor until one succeeds
+    for (const extractor of capableExtractors) {
+      try {
+        console.log(`Attempting text extraction with ${extractor.constructor.name}...`)
+        rawText = await extractor.extractText(base64Data)
+        
+        if (rawText && rawText.trim().length > 0) {
+          console.log(`Text extracted successfully using ${extractor.constructor.name}:`)
+          console.log('--- START RAW TEXT ---')
+          console.log(rawText)
+          console.log('--- END RAW TEXT ---')
+          break // Success!
+        }
+      } catch (error) {
+        console.error(`Extractor ${extractor.constructor.name} failed:`, error)
+        lastError = error instanceof Error ? error : new Error(String(error))
+        continue // Try next one
+      }
+    }
+
+    if (!rawText || rawText.trim().length === 0) {
+      throw new Error(
+        `Failed to extract text from file. ${lastError ? `Last error: ${lastError.message}` : 'All extractors returned empty result.'}`
+      )
+    }
+
+    console.log(`Final raw text length: ${rawText.length}`)
 
     // 4. Select Parser based on context
     const parser = this.parsers.find(p => p.context === context)

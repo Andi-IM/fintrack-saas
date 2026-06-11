@@ -7,6 +7,8 @@ import {
   sanitizeTransactionName,
   splitIntoLines,
   buildBankResult,
+  getMarkdownTableRows,
+  extractAmountByKeywords,
 } from '../utils'
 
 const MONTH_NUM_MAP: Record<string, string> = {
@@ -64,29 +66,13 @@ export class BniParser implements IBankParser {
   }
 
   private parseSaldoAwal(text: string): number {
-    const match = text.match(/saldo awal\s*(?::|rp)?\s*([\d,.]+)/i)
-    if (match) {
-      return this.parseBniAmount(match[1]) || 0
-    }
-    // New format might use "Saldo Awal (IDR)"
-    const matchNew = text.match(/Saldo Awal\s*\(IDR\)\s*([\d,.]+)/i)
-    if (matchNew) {
-      return this.parseBniAmount(matchNew[1]) || 0
-    }
-    return 0
+    const lines = splitIntoLines(text)
+    return extractAmountByKeywords(text, [/saldo\s+awal/i, /saldo\s+awal\s*\(idr\)/i], lines)
   }
 
   private parseSaldoAkhir(text: string): number {
-    const match = text.match(/saldo akhir\s*(?::|rp)?\s*([\d,.]+)/i)
-    if (match) {
-      return this.parseBniAmount(match[1]) || 0
-    }
-    // New format might use "Saldo Akhir (IDR)"
-    const matchNew = text.match(/Saldo Akhir\s*\(IDR\)\s*([\d,.]+)/i)
-    if (matchNew) {
-      return this.parseBniAmount(matchNew[1]) || 0
-    }
-    return 0
+    const lines = splitIntoLines(text)
+    return extractAmountByKeywords(text, [/saldo\s+akhir/i, /saldo\s+akhir\s*\(idr\)/i], lines)
   }
 
   private parseNewBniPeriod(text: string): string {
@@ -521,18 +507,10 @@ export class BniParser implements IBankParser {
     const items: BankTransaction[] = []
     let currentDate = ''
 
-    for (const line of lines) {
-      const trimmed = line.trim()
-      if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) continue
-      if (trimmed.includes('---|') || trimmed.includes(':---|')) continue
-      
-      const lower = trimmed.toLowerCase()
-      if (lower.includes('tgl. trans') || lower.includes('uraian mutasi') || lower.includes('saldo awal')) continue
-      if (lower.includes('jumlah transaksi') || lower.includes('saldo tertinggi') || lower.includes('saldo terendah')) continue
+    const skipKeywords = ['tgl. trans', 'uraian mutasi', 'saldo awal', 'jumlah transaksi', 'saldo tertinggi', 'saldo terendah']
+    const rows = getMarkdownTableRows(lines, skipKeywords)
 
-      const rawCells = trimmed.split('|').map(c => c.trim())
-      const cells = rawCells.slice(1, rawCells.length - 1)
-
+    for (const cells of rows) {
       if (cells.length < 5) continue
 
       const dateRaw = cells[0].trim()

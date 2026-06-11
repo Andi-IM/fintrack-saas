@@ -1,9 +1,9 @@
-import { RECEIPT_CATEGORY_PATTERNS } from '@/lib/constants/ocr'
 import { OCRResult, ReceiptItem } from '../types'
 import { IReceiptParser } from '../interfaces'
 import {
   extractReceiptDate,
   buildReceiptResult,
+  classifyReceiptCategory,
 } from '../utils'
 
 export class AtmReceiptParser implements IReceiptParser {
@@ -75,14 +75,8 @@ export class AtmReceiptParser implements IReceiptParser {
     }
 
     // 8. Category
-    let category = 'ATM'
-    const textLower = text.toLowerCase()
-    for (const pattern of RECEIPT_CATEGORY_PATTERNS) {
-      if (pattern.regex.test(textLower)) {
-        category = pattern.category
-        break
-      }
-    }
+    const detectedCategory = classifyReceiptCategory(text)
+    const category = detectedCategory === 'Other' ? 'ATM' : detectedCategory
 
     // ATM receipts have no line items
     const items: ReceiptItem[] = [{

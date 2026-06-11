@@ -23,12 +23,14 @@ export default async function AddTransactionPage({
         </h1>
       </div>
       
-      <div className={["grid gap-6", scan === "Receipt" ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"].join(" ")}>
-        {scan && (
-          <ScanDialog scanContext={scan as 'Receipt' | 'BankStatement'} />
+      <div className="grid gap-6 grid-cols-1">
+        {scan === 'BankStatement' && (
+          <ScanDialog scanContext="BankStatement" />
         )}
 
-        <TransactionForm initialData={initialData} />
+        {scan !== 'BankStatement' && (
+          <TransactionForm initialData={initialData} scanMode={scan === 'Receipt'} />
+        )}
       </div>
     </>
   )

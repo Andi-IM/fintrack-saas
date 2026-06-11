@@ -1,10 +1,13 @@
-import { RECEIPT_TOTAL_KEYWORDS, RECEIPT_CATEGORY_PATTERNS } from '@/lib/constants/ocr'
+import { RECEIPT_TOTAL_KEYWORDS } from '@/lib/constants/ocr'
 import { OCRResult, ReceiptItem } from '../types'
 import { IReceiptParser } from '../interfaces'
 import {
   extractReceiptDate,
   extractReceiptMerchant,
   buildReceiptResult,
+  classifyReceiptCategory,
+  extractNumberFromLine,
+  parseIndonesianAmount,
 } from '../utils'
 
 export class ShoppingReceiptParser implements IReceiptParser {
@@ -30,14 +33,7 @@ export class ShoppingReceiptParser implements IReceiptParser {
     }
 
     // 3. Category matching based on keywords
-    let category = 'Other'
-    const textLower = text.toLowerCase()
-    for (const pattern of RECEIPT_CATEGORY_PATTERNS) {
-      if (pattern.regex.test(textLower)) {
-        category = pattern.category
-        break
-      }
-    }
+    const category = classifyReceiptCategory(text)
 
     // 4. Extract address
     let address = ''
@@ -134,71 +130,23 @@ export class ShoppingReceiptParser implements IReceiptParser {
    * Handles: "10.600", "10,600", "9.000,00", "51000", "Rp. 10.600"
    */
   private extractNumber(line: string): number | null {
-    // Remove currency prefix
-    const cleaned = line.replace(/rp\.?\s*/gi, '').trim()
-
-    // Match numbers with optional thousands separators and decimals
-    const matches = cleaned.match(/\d[\d.,]*/g)
-    if (!matches || matches.length === 0) return null
-
-    // Take the last (usually rightmost) number
-    const numStr = matches[matches.length - 1]
-    return this.parseReceiptAmount(numStr)
-  }
-
-  /**
-   * Parse Indonesian receipt amount formats:
-   * - "9.000" → 9000 (dot = thousands)
-   * - "6,400" → 6400 (comma = thousands when 3 digits after)
-   * - "9.000,00" → 9000 (mixed format, ,00 = decimal)
-   * - "51000" → 51000
-   */
-  private parseReceiptAmount(raw: string): number | null {
-    let clean = raw.trim()
-
-    // Remove trailing ",00" or ".00" (decimal zero)
-    clean = clean.replace(/[.,]00$/, '')
-
-    // If contains both . and , determine which is thousands/decimal
-    if (clean.includes('.') && clean.includes(',')) {
-      const lastDot = clean.lastIndexOf('.')
-      const lastComma = clean.lastIndexOf(',')
-      if (lastComma > lastDot) {
-        // "9.000,50" → comma is decimal (rare in receipts), dots are thousands
-        clean = clean.replace(/\./g, '').replace(/,/, '.')
-      } else {
-        // "10,600.00" → dot is decimal, commas are thousands
-        clean = clean.replace(/,/g, '')
-      }
-    } else if (clean.includes('.')) {
-      // Check if dot is thousands separator: "9.000" (3 digits after dot)
-      const parts = clean.split('.')
-      if (parts.length >= 2 && parts[parts.length - 1].length === 3) {
-        clean = clean.replace(/\./g, '') // thousands separator
-      }
-      // else: "6.5" = decimal (keep as-is)
-    } else if (clean.includes(',')) {
-      // Check if comma is thousands separator: "6,400" (3 digits after comma)
-      const parts = clean.split(',')
-      if (parts.length >= 2 && parts[parts.length - 1].length === 3) {
-        clean = clean.replace(/,/g, '') // thousands separator
-      } else {
-        clean = clean.replace(/,/, '.') // decimal separator
-      }
-    }
-
-    const val = parseFloat(clean)
-    return isNaN(val) || val <= 0 ? null : Math.round(val)
+    return extractNumberFromLine(line)
   }
 
   /**
    * Extract largest Rp-prefixed amount from lines as fallback.
+   * Excludes numbers that look like phone/fax numbers.
    */
   private extractLargestRpAmount(lines: string[]): number {
     let max = 0
     for (const line of lines) {
+      // Skip lines that look like phone/fax/address
+      if (/telp|fax|phone|jl\.|jalan|no\.|rt\d|rw\d/i.test(line)) continue
+      
       const val = this.extractNumber(line)
-      if (val && val > max && val < 10_000_000) {
+      // Heuristic: ignore values that are too large (likely not a simple grocery total)
+      // or values that look like dates/sequences
+      if (val && val > max && val < 5_000_000) {
         max = val
       }
     }
@@ -236,12 +184,13 @@ export class ShoppingReceiptParser implements IReceiptParser {
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]
 
-      const qtyMatch = line.match(/\bx\s*(\d+)\b/i)
+      // Support both 'x' and multiplication sign '×'
+      const qtyMatch = line.match(/(?:\bx|[×])\s*(\d+)\b/i)
       if (!qtyMatch) continue
       const qty = parseInt(qtyMatch[1], 10)
 
       // Try: "NAME PRICE xQTY"
-      const fullMatch = line.match(/^(.*?)\s*(\d{1,3}(?:\.\d{3})+|\d+)\s*x\s*(\d+)/i)
+      const fullMatch = line.match(/^(.*?)\s*(\d{1,3}(?:\.\d{3})+|\d+)\s*(?:x|[×])\s*(\d+)/i)
       if (fullMatch) {
         let name = fullMatch[1].trim()
         const priceStr = fullMatch[2].replace(/\./g, '')
@@ -255,7 +204,7 @@ export class ShoppingReceiptParser implements IReceiptParser {
       }
 
       // Try: line starts with "x" or is "xQTY" — name is 2 lines back, price is 1 line back
-      if (line.toLowerCase().startsWith('x') || line.toLowerCase() === `x${qty}`) {
+      if (line.toLowerCase().startsWith('x') || line.startsWith('×') || line.toLowerCase() === `x${qty}` || line === `×${qty}`) {
         if (i > 0) {
           const prevLine = lines[i - 1]
           const price = parseInt(prevLine.replace(/\./g, '').replace(/,/g, ''), 10)
@@ -293,7 +242,7 @@ export class ShoppingReceiptParser implements IReceiptParser {
       // Look for price on the next line
       if (i + 1 < lines.length) {
         const priceLine = lines[i + 1]
-        const price = this.parseReceiptAmount(priceLine)
+        const price = parseIndonesianAmount(priceLine)
         if (price && price > 0) {
           items.push({ name, amount: price, quantity: qty, price: Math.round(price / qty) })
           i++ // skip price line
@@ -328,7 +277,7 @@ export class ShoppingReceiptParser implements IReceiptParser {
 
       // Parse qty — "1.000" = 1, "5.000" = 5 (thousands separator in qty)
       const rawQty = qtyMatch[1]
-      let qty = this.parseReceiptAmount(rawQty)
+      let qty = parseIndonesianAmount(rawQty)
       if (!qty || qty <= 0) continue
       // Quantities like "1.000" in Indonesian = 1 unit (not 1000)
       // But "5.000" could be 5 or 5000. Heuristic: if qty > 100, it's likely thousands-formatted
@@ -344,13 +293,13 @@ export class ShoppingReceiptParser implements IReceiptParser {
 
       // Price is on the next line (unit price)
       if (i + 1 >= lines.length) continue
-      const unitPrice = this.parseReceiptAmount(lines[i + 1])
+      const unitPrice = parseIndonesianAmount(lines[i + 1])
       if (!unitPrice || unitPrice <= 0) continue
 
       // Subtotal may be on the line after price (skip it)
       let subtotal = unitPrice * qty
       if (i + 2 < lines.length) {
-        const possibleSubtotal = this.parseReceiptAmount(lines[i + 2])
+        const possibleSubtotal = parseIndonesianAmount(lines[i + 2])
         if (possibleSubtotal && possibleSubtotal > 0) {
           subtotal = possibleSubtotal
           i += 2 // skip price + subtotal lines

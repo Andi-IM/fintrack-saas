@@ -1,4 +1,4 @@
-import { STATEMENT_MONTHS, STATEMENT_MONTH_MAP, STATEMENT_CATEGORY_PATTERNS } from '@/lib/constants/ocr'
+import { STATEMENT_MONTHS, STATEMENT_MONTH_MAP, STATEMENT_CATEGORY_PATTERNS, RECEIPT_CATEGORY_PATTERNS } from '@/lib/constants/ocr'
 import { BankTransaction, OCRResult, ReceiptItem } from './types'
 
 export function cleanAndNormalizeAmount(line: string): string {
@@ -170,21 +170,46 @@ export function buildBankResult(
 }
 
 export function extractReceiptDate(text: string, lines: string[], timezoneOffset?: string): string {
-  const dateRegex = /\b(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})\b/
-  const dateMatch = text.match(dateRegex)
+  // 1. Try to find a line with a date keyword first for higher accuracy
+  // Patterns like: "Tanggal: 10/11/2024", "Date: 10-11-2024", "Tgl: 29.03.26"
+  const dateKeywordRegex = /(?:tanggal|date|tgl|transaksi)[\s:]*(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/i
+  const keywordMatch = text.match(dateKeywordRegex)
+  
   const timeRegex = /\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b/
   const timeMatch = text.match(timeRegex)
 
-  if (dateMatch) {
-    let day = parseInt(dateMatch[1], 10)
-    let month = parseInt(dateMatch[2], 10)
-    let year = parseInt(dateMatch[3], 10)
+  let day = 0, month = 0, year = 0
+
+  if (keywordMatch) {
+    day = parseInt(keywordMatch[1], 10)
+    month = parseInt(keywordMatch[2], 10)
+    year = parseInt(keywordMatch[3], 10)
+  } else {
+    // 2. Fallback to general date search if no keyword found
+    const dateRegex = /(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/
+    const dateMatch = text.match(dateRegex)
+    if (dateMatch) {
+      day = parseInt(dateMatch[1], 10)
+      month = parseInt(dateMatch[2], 10)
+      year = parseInt(dateMatch[3], 10)
+    }
+  }
+
+  if (day > 0) {
     if (year < 100) year += 2000
 
+    // Heuristic: if month > 12, it's likely DD-MM-YYYY instead of MM-DD-YYYY
     if (month > 12 && day <= 12) {
       const temp = day
       day = month
       month = temp
+    }
+
+    // Heuristic for YYYY-MM-DD (e.g. 2024-12-16)
+    if (day > 1000 && month <= 12 && year <= 31) {
+       const tempDay = day
+       day = year
+       year = tempDay
     }
 
     let hour = 12, minute = 0, second = 0
@@ -243,4 +268,80 @@ export function buildReceiptResult(
     transactionType: options.transactionType,
     fee: options.fee,
   }
+}
+
+export function getMarkdownTableRows(lines: string[], skipKeywords: string[] = []): string[][] {
+  const rows: string[][] = []
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) continue
+    if (trimmed.includes('---|') || trimmed.includes(':---|')) continue
+
+    const lower = trimmed.toLowerCase()
+    if (skipKeywords.some(keyword => lower.includes(keyword.toLowerCase()))) continue
+
+    const rawCells = trimmed.split('|').map(c => c.trim())
+    // Remove empty outer cells
+    const cells = rawCells.slice(1, rawCells.length - 1)
+    rows.push(cells)
+  }
+  return rows
+}
+
+export function classifyReceiptCategory(text: string): string {
+  const textLower = text.toLowerCase()
+  for (const pattern of RECEIPT_CATEGORY_PATTERNS) {
+    if (pattern.regex.test(textLower)) {
+      return pattern.category
+    }
+  }
+  return 'Other'
+}
+
+export function extractNumberFromLine(line: string): number | null {
+  const cleaned = line.replace(/rp\.?\s*/gi, '').trim()
+
+  // Match numbers with optional thousands separators and decimals
+  const matches = cleaned.match(/\b\d{1,3}(?:\.\d{3})*(?:,\d{2})?\b|\b\d+\b/g)
+  if (!matches || matches.length === 0) return null
+
+  // Take the last number that can be parsed as a valid amount
+  for (let i = matches.length - 1; i >= 0; i--) {
+    const numStr = matches[i]
+    const parsed = parseIndonesianAmount(numStr)
+    if (parsed !== null && parsed > 0) {
+      return parsed
+    }
+  }
+  return null
+}
+
+export function extractAmountByKeywords(
+  text: string,
+  keywords: RegExp[],
+  lines: string[]
+): number {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].toLowerCase()
+    if (keywords.some(kw => kw.test(line))) {
+      // Check same line first
+      for (const kw of keywords) {
+        const match = lines[i].match(new RegExp(`(?:${kw.source})[\\s:|rRpPiIdD\\.]*([\\d.,\\-+oO]+)`, 'i'))
+        if (match) {
+          const val = parseIndonesianAmount(match[1])
+          if (val !== null && val > 0) return val
+        }
+      }
+      // Check next 5 lines
+      for (let j = 1; j <= 5; j++) {
+        if (i + j >= lines.length) break
+        const nextLine = lines[i + j]
+        if (/mutasi|saldo|saido/i.test(nextLine)) continue
+        const cleanLine = nextLine.replace(/rp/gi, '').replace(/idr/gi, '').trim()
+        const val = parseIndonesianAmount(cleanLine)
+        if (val !== null && val > 0) return val
+      }
+    }
+  }
+  return 0
 }
