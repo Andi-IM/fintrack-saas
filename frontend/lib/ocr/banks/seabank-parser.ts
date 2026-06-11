@@ -10,6 +10,8 @@ import {
   splitIntoPages,
   splitIntoLines,
   buildBankResult,
+  getMarkdownTableRows,
+  extractAmountByKeywords,
 } from '../utils'
 import { STATEMENT_TIME_REGEX } from '@/lib/constants/ocr'
 
@@ -135,27 +137,18 @@ export class SeabankParser implements IBankParser {
   }
 
   private parseSaldoAwal(text: string): number {
-    const match = text.match(/saldo awal\s*(?:\(idr\))?\s*([\d.]+)/i)
-    if (match) {
-      const val = parseInt(match[1].replace(/\./g, ''), 10)
-      if (val > 100) return val
-    }
+    const lines = splitIntoLines(text)
+    const val = extractAmountByKeywords(text, [/saldo\s+awal/i, /saldo\s+awal\s*\(idr\)/i], lines)
+    if (val > 100) return val
     const ringkasan = this.parseRingkasanBalances(text)
     if (ringkasan.saldoAwal > 100) return ringkasan.saldoAwal
     return 0
   }
 
   private parseSaldoAkhir(text: string): number {
-    const match = text.match(/saldo akhir\s*(?:\(idr\))?\s*([\d.]+)/i)
-    if (match) {
-      const val = parseInt(match[1].replace(/\./g, ''), 10)
-      if (val > 100) return val
-    }
-    const matchTotal = text.match(/total:\s*([\d.]+)/i)
-    if (matchTotal) {
-      const val = parseInt(matchTotal[1].replace(/\./g, ''), 10)
-      if (val > 100) return val
-    }
+    const lines = splitIntoLines(text)
+    const val = extractAmountByKeywords(text, [/saldo\s+akhir/i, /saldo\s+akhir\s*\(idr\)/i, /total:/i], lines)
+    if (val > 100) return val
     const ringkasan = this.parseRingkasanBalances(text)
     if (ringkasan.saldoAkhir > 100) return ringkasan.saldoAkhir
     return 0
@@ -406,20 +399,11 @@ export class SeabankParser implements IBankParser {
   ): { items: BankTransaction[]; lastBalance: number | null } {
     const items: BankTransaction[] = []
     let lastBalance: number | null = initialBalance
- 
-    for (const line of lines) {
-      const trimmed = line.trim()
-      if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) continue
-      if (trimmed.includes('---|') || trimmed.includes(':---|')) continue
- 
-      const lower = trimmed.toLowerCase()
-      if (lower.includes('tanggal') || lower.includes('saldo awal') || lower.includes('saldo akhir') || lower.includes('ringkasan') || lower.includes('rekening')) {
-        continue
-      }
- 
-      const rawCells = trimmed.split('|').map(c => c.trim())
-      const cells = rawCells.slice(1, rawCells.length - 1)
- 
+
+    const skipKeywords = ['tanggal', 'saldo awal', 'saldo akhir', 'ringkasan', 'rekening']
+    const rows = getMarkdownTableRows(lines, skipKeywords)
+
+    for (const cells of rows) {
       if (cells.length < 5) continue
  
       const dateRaw = cells[0].trim()

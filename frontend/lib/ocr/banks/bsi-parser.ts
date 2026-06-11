@@ -14,6 +14,8 @@ import {
   parseIndonesianAmount,
   splitIntoLines,
   buildBankResult,
+  getMarkdownTableRows,
+  extractAmountByKeywords,
 } from '../utils'
 
 interface DateEntry {
@@ -56,67 +58,12 @@ export class BsiParser implements IBankParser {
 
   private parseSaldoAwal(text: string): number {
     const lines = splitIntoLines(text)
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].toLowerCase()
-      if (line.includes('saldo awal') || line.includes('saldo bulan lalu')) {
-        // Check same line first
-        const match = lines[i].match(/(?:saldo\s+awal|saldo\s+bulan\s+lalu)\s*(?::|rp)?\s*([\d.,\-+oO]+)/i)
-        if (match) {
-          const val = parseIndonesianAmount(match[1])
-          if (val !== null && val > 0) return val
-        }
-        // Check next 5 lines for a line containing the amount
-        for (let j = 1; j <= 5; j++) {
-          if (i + j >= lines.length) break
-          const nextLine = lines[i + j]
-          if (
-            nextLine.toLowerCase().includes('mutasi') ||
-            nextLine.toLowerCase().includes('saldo') ||
-            nextLine.toLowerCase().includes('saido')
-          ) {
-            continue
-          }
-          const cleanLine = nextLine.replace(/rp/gi, '').replace(/idr/gi, '').trim()
-          const val = parseIndonesianAmount(cleanLine)
-          if (val !== null && val > 0) {
-            return val
-          }
-        }
-      }
-    }
-    return 0
+    return extractAmountByKeywords(text, [/saldo\s+awal/i, /saldo\s+bulan\s+lalu/i], lines)
   }
 
   private parseSaldoAkhir(text: string): number {
     const lines = splitIntoLines(text)
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].toLowerCase()
-      if (line.includes('saldo akhir') || line.includes('saldo saat ini')) {
-        // Check same line first
-        const match = lines[i].match(/(?:saldo\s+akhir|saldo\s+saat\s+ini)\s*(?::|rp)?\s*([\d.,\-+oO]+)/i)
-        if (match) {
-          const val = parseIndonesianAmount(match[1])
-          if (val !== null && val > 0) return val
-        }
-        // Check next 5 lines for a line containing the amount
-        for (let j = 1; j <= 5; j++) {
-          if (i + j >= lines.length) break
-          const nextLine = lines[i + j]
-          if (
-            nextLine.toLowerCase().includes('mutasi') ||
-            nextLine.toLowerCase().includes('saldo')
-          ) {
-            continue
-          }
-          const cleanLine = nextLine.replace(/rp/gi, '').replace(/idr/gi, '').trim()
-          const val = parseIndonesianAmount(cleanLine)
-          if (val !== null && val > 0) {
-            return val
-          }
-        }
-      }
-    }
-    return 0
+    return extractAmountByKeywords(text, [/saldo\s+akhir/i, /saldo\s+saat\s+ini/i], lines)
   }
 
   private extractDates(lines: string[], timezoneOffset?: string): DateEntry[] {
@@ -523,27 +470,10 @@ export class BsiParser implements IBankParser {
   private parseMarkdownTable(lines: string[], timezoneOffset?: string): BankTransaction[] {
     const items: BankTransaction[] = []
 
-    for (const line of lines) {
-      const trimmed = line.trim()
-      // A valid markdown table row starts and ends with '|'
-      if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) continue
-      // Skip the header separator row (e.g. |---|---|...)
-      if (trimmed.includes('---|') || trimmed.includes(':---|')) continue
-      // Skip the header itself
-      if (trimmed.toLowerCase().includes('date & time') || trimmed.toLowerCase().includes('detail transaksi')) continue
-      // Skip summary rows
-      if (trimmed.toLowerCase().includes('saldo awal') || 
-          trimmed.toLowerCase().includes('mutasi debit') || 
-          trimmed.toLowerCase().includes('mutasi kredit') || 
-          trimmed.toLowerCase().includes('saldo akhir')) {
-        continue
-      }
+    const skipKeywords = ['date & time', 'detail transaksi', 'saldo awal', 'mutasi debit', 'mutasi kredit', 'saldo akhir']
+    const rows = getMarkdownTableRows(lines, skipKeywords)
 
-      // Split row by '|' and clean empty cells at the start and end
-      const rawCells = trimmed.split('|').map(c => c.trim())
-      const cells = rawCells.slice(1, rawCells.length - 1)
-
-      // A valid row must have at least 5 cells (Date, Desc, Debit, Kredit, Saldo)
+    for (const cells of rows) {
       if (cells.length < 5) continue
 
       const dateRaw = cells[0].replace(/<br\s*\/?>/gi, ' ').trim()

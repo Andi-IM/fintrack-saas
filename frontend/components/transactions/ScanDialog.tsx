@@ -7,6 +7,7 @@ import { UploadCloud, CheckCircle2, Sparkles, AlertCircle, Trash2, Plus } from '
 import { saveReceipt } from "@/lib/actions/receipts"
 import { useRouter } from 'next/navigation'
 import { scanDocumentWithAI } from '@/lib/actions/ocr'
+import { compressImageIfNeeded } from '@/lib/ocr/compress-image'
 import { saveBankStatement } from '@/lib/actions/statements'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -50,9 +51,9 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
     ? (scanResult.items || []).filter(isBankTransaction)
     : []
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
-      const file = acceptedFiles[0]
+      let file = acceptedFiles[0]
       const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
       
       if (isPdf && file.size > 1024 * 1024) {
@@ -60,6 +61,10 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
         setScanStatus('error')
         setFileToScan(null)
         return
+      }
+
+      if (!isPdf && file.size > 1024 * 1024) {
+        file = await compressImageIfNeeded(file)
       }
 
       setFileToScan(file)
@@ -144,6 +149,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
             quantity: item.quantity || 1,
             price: item.price || item.amount || 0,
           })),
+          file: fileToScan,
         })
         if (!result.success) {
           setScanStatus('error')

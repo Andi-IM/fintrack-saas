@@ -10,11 +10,11 @@ export const RECEIPT_TOTAL_KEYWORDS = [
 ]
 
 export const RECEIPT_CATEGORY_PATTERNS = [
-  { category: 'Food', regex: /makan|minum|food|beverage|resto|cafe|coffee|kopi|nasi|mie|teh/i },
-  { category: 'Transport', regex: /trans|ojek|grab|gojek|taxi|taksi|bensin|fuel|pertamina/i },
-  { category: 'Utilities', regex: /pln|listrik|pdam|air|telkom|wifi|internet|pulsa/i },
+  { category: 'Food', regex: /makan|minum|food|beverage|resto|cafe|coffee|kopi|nasi|mie|teh|susu|milk|pocari|milo|aqua|vit|mineral/i },
+  { category: 'Transport', regex: /trans|ojek|grab|gojek|taxi|taksi|bensin|fuel|pertamina|shell|bp/i },
+  { category: 'Utilities', regex: /pln|listrik|pdam|air|telkom|wifi|internet|pulsa|top\s*up/i },
   { category: 'Entertainment', regex: /bioskop|cinema|tiket|fun|game|nonton/i },
-  { category: 'Shopping', regex: /baju|celana|shop|mall|store|tokopedia|shopee/i }
+  { category: 'Shopping', regex: /baju|celana|shop|mall|store|tokopedia|shopee|lazada|minimarket|alfamart|indomaret|supermarket/i }
 ]
 
 export const STATEMENT_MONTHS = [
