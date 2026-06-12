@@ -7,7 +7,9 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function login() {
   const supabase = await createClient()
-  const origin = (await headers()).get('origin') || 'http://localhost:3000'
+  const host = (await headers()).get('host')
+  const protocol = host?.includes('localhost') ? 'http' : 'https'
+  const origin = process.env.APP_URL || (host ? `${protocol}://${host}` : 'http://localhost:3000')
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
