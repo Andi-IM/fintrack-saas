@@ -144,7 +144,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
           atmId: scanResult.atmId || null,
           transactionType: scanResult.transactionType || null,
           fee: scanResult.fee || 0,
-          referenceNumber: scanResult.referenceNumber || null,
+          bankStatementItemId: null,
           items: receiptItems.map(item => ({
             productName: item.name,
             quantity: item.quantity || 1,

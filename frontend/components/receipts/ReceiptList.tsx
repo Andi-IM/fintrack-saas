@@ -397,7 +397,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                     <div>
                       <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Nomor Referensi</p>
                       <p className="font-bold text-slate-800 mt-0.5 font-mono">
-                        {selectedReceipt.reference_number || '-'}
+                        {selectedReceipt.bank_statement_item_id || '-'}
                       </p>
                     </div>
                     <div>

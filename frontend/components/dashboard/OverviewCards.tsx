@@ -4,14 +4,14 @@ import { Tables } from "@/lib/database.types"
 import { useMemo } from 'react'
 import { formatCurrency, filterTransactionsByRange } from "@/lib/utils/transaction"
 
-export function OverviewCards({ transactions, timeRange }: { transactions: Tables<'transactions'>[], timeRange: string }) {
+export function OverviewCards({ transactions, timeRange }: { transactions: Tables<'cash_flow'>[], timeRange: string }) {
   const timeFilteredTransactions = useMemo(() => {
     return filterTransactionsByRange(transactions, timeRange)
   }, [transactions, timeRange])
 
   const { totalIncome, totalExpense } = useMemo(() => {
-    const income = timeFilteredTransactions.filter(t => t.type === "income").reduce((acc, t) => acc + t.amount, 0)
-    const expense = timeFilteredTransactions.filter(t => t.type === "expense").reduce((acc, t) => acc + t.amount, 0)
+    const income = timeFilteredTransactions.reduce((acc, t) => acc + Number(t.income || 0), 0)
+    const expense = timeFilteredTransactions.reduce((acc, t) => acc + Number(t.expense || 0), 0)
     return { totalIncome: income, totalExpense: expense }
   }, [timeFilteredTransactions])
 

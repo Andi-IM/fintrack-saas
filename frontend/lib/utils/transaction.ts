@@ -12,12 +12,12 @@ export function formatCurrency(amount: number): string {
 }
 
 /**
- * Filters an array of transactions based on a specified time range.
+ * Filters an array of cash flow entries based on a specified time range.
  */
 export function filterTransactionsByRange(
-  transactions: Tables<'transactions'>[],
+  transactions: Tables<'cash_flow'>[],
   timeRange: string
-): Tables<'transactions'>[] {
+): Tables<'cash_flow'>[] {
   return transactions.filter(tx => {
     const txDate = new Date(tx.date)
     const now = new Date()

@@ -11,7 +11,7 @@ import { Tables } from "@/lib/database.types"
 import { useMemo } from 'react'
 import { formatCurrency, filterTransactionsByRange } from '@/lib/utils/transaction'
 
-export function TransactionChart({ transactions, timeRange: initialRange }: { transactions: Tables<'transactions'>[], timeRange: string }) {
+export function TransactionChart({ transactions, timeRange: initialRange }: { transactions: Tables<'cash_flow'>[], timeRange: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isMounted, setIsMounted] = useState(false)
@@ -35,12 +35,14 @@ export function TransactionChart({ transactions, timeRange: initialRange }: { tr
 
   const chartData = useMemo(() => {
     const chartDataMap = timeFilteredTransactions.reduce((acc, tx) => {
-      if (!acc[tx.date]) acc[tx.date] = { date: tx.date, income: 0, expense: 0 }
-      if (tx.type === "income") acc[tx.date].income += tx.amount
-      else acc[tx.date].expense += tx.amount
+      // Get only the date part YYYY-MM-DD
+      const dateKey = tx.date.split('T')[0]
+      if (!acc[dateKey]) acc[dateKey] = { date: dateKey, income: 0, expense: 0 }
+      acc[dateKey].income += Number(tx.income || 0)
+      acc[dateKey].expense += Number(tx.expense || 0)
       return acc
     }, {} as Record<string, {date: string, income: number, expense: number}>)
-    
+
     return (Object.values(chartDataMap) as Array<{date: string, income: number, expense: number}>).sort((a, b) => a.date.localeCompare(b.date))
   }, [timeFilteredTransactions])
 
@@ -68,7 +70,7 @@ export function TransactionChart({ transactions, timeRange: initialRange }: { tr
       <CardContent className="h-[320px] pt-4 px-2">
         {isMounted && chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-            <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
+            <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 20, bottom: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
               <defs>
                 <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
@@ -81,7 +83,7 @@ export function TransactionChart({ transactions, timeRange: initialRange }: { tr
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
               <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} dy={10} />
-              <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} dx={-10} tickFormatter={(val) => formatCurrency(val).replace(",00", "")} />
+              <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} width={85} tickFormatter={(val) => formatCurrency(val).replace(",00", "")} />
               <Tooltip 
                 contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 formatter={(value: unknown) => value !== undefined && value !== null ? formatCurrency(Number(value)) : ''}
