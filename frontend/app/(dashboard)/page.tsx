@@ -1,4 +1,4 @@
-import { getTransactions } from '@/lib/actions/transactions'
+import { getCashFlow } from '@/lib/actions/cash_flow'
 import { OverviewCards } from '@/components/dashboard/OverviewCards'
 import { TransactionChart } from '@/components/dashboard/TransactionChart'
 
@@ -8,7 +8,7 @@ export default async function DashboardPage({
   searchParams: Promise<{ range?: string }>
 }) {
   const { range = '1M' } = await searchParams
-  const transactions = await getTransactions()
+  const transactions = await getCashFlow()
 
   return (
     <>
