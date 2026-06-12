@@ -251,6 +251,7 @@ export function buildReceiptResult(
     atmId?: string
     transactionType?: 'withdrawal' | 'deposit' | 'transfer'
     fee?: number
+    referenceNumber?: string
   } = {}
 ): OCRResult {
   return {
@@ -267,6 +268,7 @@ export function buildReceiptResult(
     atmId: options.atmId,
     transactionType: options.transactionType,
     fee: options.fee,
+    referenceNumber: options.referenceNumber,
   }
 }
 

@@ -17,6 +17,7 @@ export interface OCRResult {
   atmId?: string
   transactionType?: 'withdrawal' | 'deposit' | 'transfer'
   fee?: number
+  referenceNumber?: string
 }
 
 export interface ReceiptItem {

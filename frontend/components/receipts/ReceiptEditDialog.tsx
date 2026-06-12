@@ -1,26 +1,27 @@
 'use client'
 
 import { useEffect, useTransition } from 'react'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { 
   Plus, 
   Trash2, 
   Save, 
-  X, 
-  Loader2, 
-  Calendar, 
-  MapPin, 
+  X,
+  Loader2,
+  Calendar,
+  MapPin,
   CreditCard,
   Hash,
-  ShieldAlert
+  ShieldAlert,
+  Link as LinkIcon
 } from 'lucide-react'
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog"
@@ -29,6 +30,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { updateReceipt, deleteReceipt, ReceiptWithItems } from "@/lib/actions/receipts"
 import { formatCurrency } from "@/lib/utils/transaction"
+import { StatementItemSelect } from './StatementItemSelect'
 
 const receiptItemSchema = z.object({
   productName: z.string().min(1, 'Nama barang harus diisi'),
@@ -66,6 +68,7 @@ const receiptEditSchema = z.object({
     (val) => (val === '' || val === null || val === undefined ? 0 : Number(val)),
     z.number().nonnegative('Biaya admin tidak boleh negatif').nullable().optional()
   ),
+  bankStatementItemId: z.string().uuid().nullable().optional(),
   items: z.array(receiptItemSchema).optional().default([]),
 })
 
@@ -118,6 +121,7 @@ export function ReceiptEditDialog({ receipt, open, onOpenChange, onSuccess }: Re
       atmId: receipt.atm_id || '',
       transactionType: (receipt.transaction_type as 'withdrawal' | 'deposit' | 'transfer') || null,
       fee: receipt.fee !== null ? Number(receipt.fee) : 0,
+      bankStatementItemId: receipt.bank_statement_item_id || null,
       items: receipt.receipts_items.map(item => ({
         productName: item.product_name,
         quantity: Number(item.quantity),
@@ -140,6 +144,7 @@ export function ReceiptEditDialog({ receipt, open, onOpenChange, onSuccess }: Re
       atmId: receipt.atm_id || '',
       transactionType: (receipt.transaction_type as 'withdrawal' | 'deposit' | 'transfer') || null,
       fee: receipt.fee !== null ? Number(receipt.fee) : 0,
+      bankStatementItemId: receipt.bank_statement_item_id || null,
       items: receipt.receipts_items.map(item => ({
         productName: item.product_name,
         quantity: Number(item.quantity),
@@ -190,6 +195,7 @@ export function ReceiptEditDialog({ receipt, open, onOpenChange, onSuccess }: Re
         atmId: parsed.data.atmId || null,
         transactionType: parsed.data.transactionType || null,
         fee: parsed.data.fee,
+        bankStatementItemId: parsed.data.bankStatementItemId || null,
         items: parsed.data.type === 'shopping' ? parsed.data.items : [],
       }
 
@@ -220,7 +226,7 @@ export function ReceiptEditDialog({ receipt, open, onOpenChange, onSuccess }: Re
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
+      <DialogContent
         className="max-w-md md:max-w-2xl p-0 overflow-hidden bg-slate-50 rounded-3xl border border-slate-200 shadow-2xl"
         aria-describedby={undefined}
       >
@@ -235,7 +241,7 @@ export function ReceiptEditDialog({ receipt, open, onOpenChange, onSuccess }: Re
           {/* Section 1: Basic Metadata */}
           <div className="space-y-4 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Informasi Utama</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="type" className="text-xs font-semibold text-slate-700">Tipe Struk</Label>
@@ -275,6 +281,29 @@ export function ReceiptEditDialog({ receipt, open, onOpenChange, onSuccess }: Re
                   className="h-10 text-sm"
                 />
                 {errors.storeName && <p className="text-[11px] text-rose-500">{errors.storeName.message}</p>}
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="bankStatementItemId" className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                  <LinkIcon className="w-3.5 h-3.5 text-slate-400" />
+                  Kaitkan dengan Mutasi Rekening
+                </Label>
+                <Controller
+                  name="bankStatementItemId"
+                  control={control}
+                  render={({ field }) => (
+                    <StatementItemSelect 
+                      value={field.value} 
+                      onChange={field.onChange}
+                      filterBankName={watch('storeName')}
+                      onSelect={(item) => {
+                        if (type === 'atm' && item.bankName) {
+                          setValue('storeName', item.bankName)
+                        }
+                      }}
+                    />
+                  )}
+                />
               </div>
 
               <div className="space-y-2 md:col-span-2">

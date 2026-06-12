@@ -144,6 +144,7 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
           atmId: scanResult.atmId || null,
           transactionType: scanResult.transactionType || null,
           fee: scanResult.fee || 0,
+          referenceNumber: scanResult.referenceNumber || null,
           items: receiptItems.map(item => ({
             productName: item.name,
             quantity: item.quantity || 1,
@@ -364,7 +365,15 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                             className="h-8 text-xs font-bold font-mono"
                           />
                         </div>
-                        <div></div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nomor Referensi</p>
+                          <Input 
+                            value={scanResult.referenceNumber || ''} 
+                            onChange={(e) => updateScanResultField('referenceNumber', e.target.value)}
+                            className="h-8 text-xs font-bold font-mono"
+                            placeholder="e.g. Ref No"
+                          />
+                        </div>
                       </>
                     ) : (
                       <>
@@ -403,7 +412,15 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
                             className="h-8 text-xs font-bold font-mono"
                           />
                         </div>
-                        <div></div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nomor Referensi</p>
+                          <Input 
+                            value={scanResult.referenceNumber || ''} 
+                            onChange={(e) => updateScanResultField('referenceNumber', e.target.value)}
+                            className="h-8 text-xs font-bold font-mono"
+                            placeholder="e.g. Ref No"
+                          />
+                        </div>
                       </>
                     )}
                   </div>
