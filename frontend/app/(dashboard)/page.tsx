@@ -1,6 +1,7 @@
 import { getCashFlow } from '@/lib/actions/cash_flow'
 import { OverviewCards } from '@/components/dashboard/OverviewCards'
 import { TransactionChart } from '@/components/dashboard/TransactionChart'
+import { FinancialInsights } from '@/components/dashboard/FinancialInsights'
 
 export default async function DashboardPage({
   searchParams,
@@ -22,6 +23,7 @@ export default async function DashboardPage({
 
       <OverviewCards transactions={transactions} timeRange={range} />
       <TransactionChart transactions={transactions} timeRange={range} />
+      <FinancialInsights transactions={transactions} />
     </>
   )
 }
