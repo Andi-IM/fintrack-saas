@@ -154,9 +154,9 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
           {/* Mobile View (Cards) */}
           <div className="grid grid-cols-1 gap-4 md:hidden">
             {filteredReceipts.map((receipt) => (
-              <Card 
-                key={receipt.id} 
-                className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+              <Card
+                key={receipt.id}
+                className="overflow-hidden hover:shadow-lg hover:border-slate-300 transition-all cursor-pointer"
                 onClick={() => handleSelectReceipt(receipt)}
               >
                 <CardContent className="p-4 space-y-3">
@@ -242,9 +242,9 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
               </TableHeader>
               <TableBody>
                 {filteredReceipts.map((receipt) => (
-                  <TableRow 
+                  <TableRow
                     key={receipt.id}
-                    className="cursor-pointer hover:bg-slate-50/50"
+                    className="cursor-pointer hover:bg-slate-100 transition-colors"
                     onClick={() => handleSelectReceipt(receipt)}
                   >
                     <TableCell className="font-medium text-slate-600 text-xs">
@@ -390,6 +390,79 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                     </div>
                   </div>
                 )}
+
+                {/* Reconciliation & Reference Info */}
+                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+                  <div className="flex justify-between items-center text-xs">
+                    <div>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Nomor Referensi</p>
+                      <p className="font-bold text-slate-800 mt-0.5 font-mono">
+                        {selectedReceipt.reference_number || '-'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold text-right">Status Rekonsiliasi</p>
+                      <div className="mt-1 text-right">
+                        {selectedReceipt.bank_statement_items ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Terkonsiliasi
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-500 border border-slate-100">
+                            Belum Terkait
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Linked Bank Statement Item Details */}
+                  {selectedReceipt.bank_statement_items && (
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs space-y-2 mt-2">
+                      <p className="font-bold text-slate-700 flex items-center gap-1">
+                        <CreditCard className="w-3.5 h-3.5 text-indigo-500" />
+                        Transaksi Bank Terkait
+                      </p>
+                      <div className="grid grid-cols-2 gap-y-1.5 text-[11px]">
+                        <div>
+                          <span className="text-slate-400">Bank:</span>
+                          <p className="font-semibold text-slate-700">
+                            {selectedReceipt.bank_statement_items.bank_statements?.bank_name || 'Unknown Bank'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">Tanggal Mutasi:</span>
+                          <p className="font-semibold text-slate-700 font-mono">
+                            {format(new Date(selectedReceipt.bank_statement_items.date), 'dd MMM yyyy')}
+                          </p>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-slate-400">Deskripsi:</span>
+                          <p className="font-semibold text-slate-700 line-clamp-2 leading-tight">
+                            {selectedReceipt.bank_statement_items.description}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">Nominal Mutasi:</span>
+                          <p className="font-bold text-slate-800 font-mono">
+                            {formatCurrency(Number(selectedReceipt.bank_statement_items.amount))}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">Jenis Mutasi:</span>
+                          <span className={`inline-block px-1.5 py-0.2 rounded text-[9px] font-bold uppercase ${
+                            selectedReceipt.bank_statement_items.type === 'income'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                              : 'bg-rose-50 text-rose-700 border border-rose-100'
+                          }`}>
+                            {selectedReceipt.bank_statement_items.type === 'income' ? 'Masuk (Cr)' : 'Keluar (Db)'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {selectedReceipt.type === 'shopping' ? (
                   <>

@@ -74,6 +74,12 @@ export class AtmReceiptParser implements IReceiptParser {
       fee = feeFromMap
     }
 
+    // 7b. Extract reference number
+    const referenceNumber = this.extractValueFromMap(labelValueMap, [
+      'no referensi', 'ref no', 'no. referensi', 'no. ref', 'ref. no',
+      'no resi', 'resi', 'no. resi', 'receipt no'
+    ])
+
     // 8. Category
     const detectedCategory = classifyReceiptCategory(text)
     const category = detectedCategory === 'Other' ? 'ATM' : detectedCategory
@@ -93,6 +99,7 @@ export class AtmReceiptParser implements IReceiptParser {
       atmId: atmId || undefined,
       transactionType,
       fee: fee || undefined,
+      referenceNumber: referenceNumber || undefined,
     })
   }
 

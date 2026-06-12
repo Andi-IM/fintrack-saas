@@ -24,6 +24,7 @@ const saveReceiptSchema = z.object({
   atmId: z.string().optional().nullable(),
   transactionType: z.enum(['withdrawal', 'deposit', 'transfer']).optional().nullable(),
   fee: z.number().nonnegative().optional().nullable(),
+  bankStatementItemId: z.string().uuid().optional().nullable(),
   items: z.array(receiptItemSchema).optional().default([]),
 })
 
@@ -50,7 +51,7 @@ export async function saveReceipt(input: SaveReceiptInput): Promise<ActionRespon
     try {
       const bytes = await file.arrayBuffer()
       const buffer = Buffer.from(bytes)
-      
+
       const fileExt = file.name.split('.').pop() || 'jpg'
       const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`
       const folder = parsed.data.storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
@@ -89,6 +90,7 @@ export async function saveReceipt(input: SaveReceiptInput): Promise<ActionRespon
       transaction_type: parsed.data.transactionType || null,
       fee: parsed.data.fee ?? 0,
       file_path: filePath,
+      bank_statement_item_id: parsed.data.bankStatementItemId || null,
     })
     .select()
     .single()
@@ -131,6 +133,9 @@ export async function saveReceipt(input: SaveReceiptInput): Promise<ActionRespon
 
 export type ReceiptWithItems = Tables<'receipts'> & {
   receipts_items: Tables<'receipts_items'>[]
+  bank_statement_items?: (Tables<'bank_statement_items'> & {
+    bank_statements: Pick<Tables<'bank_statements'>, 'bank_name'> | null
+  }) | null
 }
 
 export async function getReceipts(): Promise<ActionResponse<ReceiptWithItems[]>> {
@@ -140,7 +145,13 @@ export async function getReceipts(): Promise<ActionResponse<ReceiptWithItems[]>>
     .from('receipts')
     .select(`
       *,
-      receipts_items (*)
+      receipts_items (*),
+      bank_statement_items (
+        *,
+        bank_statements (
+          bank_name
+        )
+      )
     `)
     .order('date', { ascending: false })
 
@@ -240,6 +251,7 @@ export async function updateReceipt(
       atm_id: parsed.data.atmId || null,
       transaction_type: parsed.data.transactionType || null,
       fee: parsed.data.fee ?? 0,
+      bank_statement_item_id: parsed.data.bankStatementItemId || null,
     })
     .eq('id', id)
     .select()
