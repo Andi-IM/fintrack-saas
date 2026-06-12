@@ -8,7 +8,7 @@ export default async function TransactionsPage({
 }: {
   searchParams: Promise<{ date?: string, range?: string }>
 }) {
-  const { date, range = '1M' } = await searchParams
+  const { date, range = 'ALL' } = await searchParams
   const transactions = await getCashFlow()
 
   return (
