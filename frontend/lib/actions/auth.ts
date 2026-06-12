@@ -7,9 +7,16 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function login() {
   const supabase = await createClient()
-  const host = (await headers()).get('host')
-  const protocol = host?.includes('localhost') ? 'http' : 'https'
-  const origin = process.env.APP_URL || (host ? `${protocol}://${host}` : 'http://localhost:3000')
+  let origin = process.env.APP_URL
+  if (!origin && process.env.NEXT_PUBLIC_VERCEL_URL) {
+    origin = `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+  }
+  if (!origin) {
+    const headersList = await headers()
+    const host = headersList.get('x-forwarded-host') || headersList.get('host') || 'localhost:3000'
+    const proto = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https')
+    origin = `${proto}://${host}`
+  }
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
