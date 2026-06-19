@@ -40,7 +40,7 @@ graph TD
 For frontend validation, we use **Vitest** combined with **React Testing Library (RTL)**.
 
 ### Architectural Decisions (ADR)
-For details on the testing setup, configuration, and coverage thresholds, see [ADR-030: Adopt Vitest and React Testing Library for Frontend Testing](file:///D:/01_Projects/fintrack-saas/docs/decisions/030-adopt-vitest-and-react-testing-library-for-frontend-testing.md).
+For details on the testing setup, configuration, and coverage thresholds, see [ADR-030: Adopt Vitest and React Testing Library for Frontend Testing](decisions/030-adopt-vitest-and-react-testing-library-for-frontend-testing.md).
 
 ### Coverage Threshold Guidelines
 - **Global Thresholds:** Initially set to `10%` statements and `9%` functions to accommodate initial setup and roll out incremental test cases without blocking the build pipelines.
