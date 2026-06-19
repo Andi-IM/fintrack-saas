@@ -2,11 +2,11 @@
 
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
 import { Tables } from '@/lib/database.types'
 import { ActionResponse } from './types'
+import { getCashFlowRepository } from '@/lib/repositories/cash_flow'
 
-const cashFlowSchema = z.object({
+export const cashFlowSchema = z.object({
   date: z.string().min(1, 'Date is required'),
   income: z.number().nonnegative().optional().default(0),
   expense: z.number().nonnegative().optional().default(0),
@@ -19,17 +19,13 @@ const cashFlowSchema = z.object({
 
 // Data-fetching action - called from Server Components, returns raw data.
 export async function getCashFlow(): Promise<Tables<'cash_flow'>[]> {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('cash_flow')
-    .select('*')
-    .order('date', { ascending: false })
-
-  if (error) {
+  try {
+    const repo = getCashFlowRepository()
+    return await repo.findAll()
+  } catch (error: any) {
     console.error("Error fetching cash flow:", error)
     return []
   }
-  return data || []
 }
 
 export async function insertCashFlow(
@@ -44,20 +40,18 @@ export async function insertCashFlow(
     }
   }
 
-  const supabase = await createClient()
-  const { data: insertedData, error } = await supabase
-    .from('cash_flow')
-    .insert({ ...parsed.data, date: parsed.data.date || new Date().toISOString() })
-    .select()
-    .single()
-
-  if (error) {
+  try {
+    const repo = getCashFlowRepository()
+    const insertedData = await repo.create({
+      ...parsed.data,
+      date: parsed.data.date || new Date().toISOString()
+    })
+    revalidatePath('/')
+    return { success: true, data: insertedData }
+  } catch (error: any) {
     console.error("Error inserting cash flow:", error)
-    return { success: false, error: error.message }
+    return { success: false, error: error.message || 'Database error occurred' }
   }
-
-  revalidatePath('/')
-  return { success: true, data: insertedData }
 }
 
 export async function updateCashFlow(
@@ -73,33 +67,25 @@ export async function updateCashFlow(
     }
   }
 
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from('cash_flow')
-    .update(parsed.data)
-    .eq('id', id)
-
-  if (error) {
+  try {
+    const repo = getCashFlowRepository()
+    await repo.update(id, parsed.data)
+    revalidatePath('/')
+    return { success: true }
+  } catch (error: any) {
     console.error("Error updating cash flow:", error)
-    return { success: false, error: error.message }
+    return { success: false, error: error.message || 'Database error occurred' }
   }
-
-  revalidatePath('/')
-  return { success: true }
 }
 
 export async function deleteCashFlow(id: string): Promise<ActionResponse<void>> {
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from('cash_flow')
-    .delete()
-    .eq('id', id)
-
-  if (error) {
+  try {
+    const repo = getCashFlowRepository()
+    await repo.delete(id)
+    revalidatePath('/')
+    return { success: true }
+  } catch (error: any) {
     console.error("Error deleting cash flow:", error)
-    return { success: false, error: error.message }
+    return { success: false, error: error.message || 'Database error occurred' }
   }
-
-  revalidatePath('/')
-  return { success: true }
 }
