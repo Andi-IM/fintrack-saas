@@ -1,0 +1,60 @@
+name: Test & Coverage
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: 11.7.0
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: 'pnpm'
+        cache-dependency-path: frontend/pnpm-lock.yaml
+
+    - name: Set up Next.js build cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ github.workspace }}/frontend/.next/cache
+        # Generate a new cache whenever packages or source files change.
+        key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+        # If source files change, rebuild on top of the last package cache.
+        restore-keys: |
+          ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+      working-directory: frontend
+
+    - name: Run tests with coverage
+      run: pnpm test
+      working-directory: frontend
+
+    - name: Run build with Bundle Analysis
+      run: pnpm build
+      working-directory: frontend
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        NEXT_TELEMETRY_DISABLED: 1
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: frontend/coverage/lcov.info
+        flags: frontend
+        fail_ci_if_error: true

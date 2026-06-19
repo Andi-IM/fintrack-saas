@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "verify:adr-018": "bash scripts/verify-adr-018.sh",
-    "test": "vitest run",
+    "test": "vitest run --coverage",
     "test:watch": "vitest",
     "clean": "next clean"
   },
@@ -46,6 +46,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@codecov/nextjs-webpack-plugin": "^2.0.1",
     "@next/eslint-plugin-next": "^15.5.19",
     "@tailwindcss/postcss": "4.1.11",
     "@tailwindcss/typography": "^0.5.19",
@@ -56,6 +57,7 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
+    "@vitest/coverage-v8": "^4.1.9",
     "eslint": "^8.57.1",
     "eslint-config-next": "15.1.0",
     "firebase-tools": "^13.13.3",
