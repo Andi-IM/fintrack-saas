@@ -18,6 +18,10 @@ We will adopt **Vitest** as our test runner and **React Testing Library** for co
 1. **Runner selection**: Vitest will be used instead of Jest because of its native ES module support, out-of-the-box TypeScript parsing, and significantly faster execution speeds using Vite compilation.
 2. **Component Testing**: React Testing Library (RTL) will be used to simulate user interactions on forms and transactional components (e.g. `CashFlowForm`, `ItemEditDialog`), verifying that layout flows work without blocking errors.
 3. **Mocking**: Supabase clients, Next.js routers, and external OCR action API requests will be mocked to prevent side-effects in testing environments.
+4. **Coverage Targets & Safety Thresholds**: We enforce code coverage thresholds on files that directly implement critical actions/logic:
+   - **Target Paths**: `frontend/lib/actions/` (Server Actions), `frontend/lib/utils/` (Parsers & localizers), and `frontend/components/transactions/` (Forms).
+   - **Threshold Gates**: Minimum **80% Statement and Function coverage** is required on these core paths to guarantee no unexpected runtime exceptions block user transactions.
+5. **Codecov Integration**: Code coverage reports will be compiled into `lcov` format using `@vitest/coverage-v8` and uploaded to **Codecov** via a GitHub actions workflow to prevent PRs from dropping test safety margins.
 
 ### Non-Goals
 * Reaching 100% test coverage across all minor components.
@@ -28,6 +32,7 @@ We will adopt **Vitest** as our test runner and **React Testing Library** for co
 
 * **Good**: Core features (cash flow submissions, statement actions) are guarded against regressions; developers receive rapid feedback via `npm run test`.
 * **Good**: Faster compilation and test-watching using Vitest.
+* **Good**: Codecov tracks test health directly on PR checks, preventing regression leakage.
 * **Bad**: Overhead of writing and maintaining mock interfaces for Next.js app navigation and Supabase server actions.
 
 ## Implementation Plan
