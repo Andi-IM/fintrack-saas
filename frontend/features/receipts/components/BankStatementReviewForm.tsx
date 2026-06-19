@@ -1,0 +1,125 @@
+import { CheckCircle2, Trash2 } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { useScanStore } from '@/features/receipts/hooks/use-scan-store'
+import { useSubmitScannedData } from '@/features/receipts/hooks/use-submit-scanned-data'
+import { isBankTransaction } from '../utils/scan-mapper'
+
+export function BankStatementReviewForm() {
+  const {
+    scanResult,
+    updateScanResultItem,
+    deleteScanResultItem,
+    updateScanResultField,
+    resetScan,
+  } = useScanStore()
+
+  const { handleSaveScannedItems } = useSubmitScannedData('BankStatement')
+
+  if (!scanResult) return null
+
+  const bankTransactions = scanResult.items
+    ? (scanResult.items || []).filter(isBankTransaction)
+    : []
+
+  return (
+    <div className="bg-white border border-emerald-100 rounded-xl p-0 overflow-hidden shadow-sm">
+      <div className="bg-emerald-50 px-4 py-3 border-b border-emerald-100 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+          <p className="text-sm font-bold text-emerald-800">Extraction Successful - Review & Edit</p>
+        </div>
+      </div>
+      <div className="p-4 space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Bank Name</p>
+            <Input
+              value={scanResult.bank || ''}
+              onChange={(e) => updateScanResultField('bank', e.target.value)}
+              className="h-8 text-xs font-bold"
+            />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Period</p>
+            <Input
+              value={scanResult.statementPeriod || ''}
+              onChange={(e) => updateScanResultField('statementPeriod', e.target.value)}
+              className="h-8 text-xs font-bold text-right"
+            />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Saldo Awal</p>
+            <Input
+              type="number"
+              value={scanResult.openingBalance ?? 0}
+              onChange={(e) => updateScanResultField('openingBalance', parseFloat(e.target.value) || 0)}
+              className="h-8 text-xs font-bold font-mono"
+            />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Saldo Akhir</p>
+            <Input
+              type="number"
+              value={scanResult.closingBalance ?? 0}
+              onChange={(e) => updateScanResultField('closingBalance', parseFloat(e.target.value) || 0)}
+              className="h-8 text-xs font-bold text-right font-mono text-indigo-600"
+            />
+          </div>
+        </div>
+
+        <div className="bg-slate-50 rounded-lg p-2 space-y-2 border border-slate-100 max-h-[220px] overflow-y-auto shadow-inner">
+          {bankTransactions.map((item, i) => (
+            <div key={i} className="bg-white p-2 rounded border border-slate-200 shadow-sm space-y-2 transition-all hover:border-indigo-200">
+              <div className="flex gap-2 items-center">
+                <Input
+                  value={item.name}
+                  onChange={(e) => updateScanResultItem(i, 'name', e.target.value)}
+                  className="h-7 text-[11px] font-bold flex-1"
+                />
+                <select
+                  value={item.type}
+                  onChange={(e) => updateScanResultItem(i, 'type', e.target.value)}
+                  className={`h-7 w-20 text-[10px] font-bold rounded-md border border-slate-200 bg-white px-1 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${item.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}
+                >
+                  <option value="income">INCOME</option>
+                  <option value="expense">EXPENSE</option>
+                </select>
+              </div>
+              <div className="flex gap-2 items-center">
+                <Input
+                  type="datetime-local"
+                  value={item.date ? item.date.slice(0, 16) : ''}
+                  onChange={(e) => updateScanResultItem(i, 'date', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                  className="h-7 text-[10px] flex-1"
+                />
+                <Input
+                  type="number"
+                  value={item.amount}
+                  onChange={(e) => updateScanResultItem(i, 'amount', parseFloat(e.target.value))}
+                  className="h-7 text-[11px] w-24 text-right font-mono font-bold"
+                />
+                <button
+                  onClick={() => deleteScanResultItem(i)}
+                  className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded transition-colors"
+                  title="Hapus transaksi ini"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="pt-2 flex gap-3">
+          <Button variant="outline" className="flex-1 font-bold h-10 shadow-sm" onClick={resetScan}>
+            Discard
+          </Button>
+          <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 shadow-md shadow-emerald-100" onClick={handleSaveScannedItems}>
+            Confirm & Save
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}

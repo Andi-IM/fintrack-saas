@@ -1,5 +1,5 @@
-import { getCashFlow } from '@/lib/actions/cash_flow'
-import { CashFlowList } from '@/components/transactions/CashFlowList'
+import { getCashFlow } from '@/features/cash-flow/actions/cash_flow'
+import { CashFlowList } from '@/features/cash-flow/components/CashFlowList'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 

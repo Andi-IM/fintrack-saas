@@ -19,19 +19,30 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
       thresholds: {
-        // Enforce progressive safety thresholds globally across core files
-        perFile: false,
-        autoUpdate: false,
+        // High coverage targets for active critical pathway files
+        'features/cash-flow/actions/cash_flow.ts': {
+          statements: 80,
+          functions: 80,
+        },
+        'lib/utils/transaction.ts': {
+          statements: 80,
+          functions: 80,
+        },
+        'features/cash-flow/hooks/use-cash-flow-controller.ts': {
+          statements: 80,
+          functions: 80,
+        },
+        // Low global threshold fallback for other components during rollout
         statements: 10,
         functions: 9,
       },
       include: [
-        'lib/actions/**/*.ts',
+        'features/**/*.ts',
+        'features/**/*.tsx',
         'lib/utils/**/*.ts',
-        'components/transactions/**/*.tsx',
       ],
       exclude: [
-        'components/transactions/__tests__/**',
+        'features/**/__tests__/**',
       ],
     },
   },
