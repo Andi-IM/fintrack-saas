@@ -38,24 +38,6 @@ export function Sidebar() {
           <Camera className="w-5 h-5" />
           Receipts
         </Link>
-
-        <div className="my-4 border-t border-slate-100"></div>
-        <h4 className="text-xs font-bold text-slate-400 mb-2 px-4 uppercase tracking-wider">TOOLS</h4>
-        
-        <Link 
-          href="/add?scan=BankStatement"
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50 hover:text-slate-700 w-full text-left"
-        >
-          <FileText className="w-5 h-5" />
-          Bank Statement
-        </Link>
-        <Link 
-          href="/add?scan=Receipt"
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50 hover:text-slate-700 w-full text-left"
-        >
-          <Camera className="w-5 h-5" />
-          Scan Receipt
-        </Link>
       </nav>
     </aside>
   )
