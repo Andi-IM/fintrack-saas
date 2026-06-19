@@ -1,6 +1,7 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { CashFlowList } from '../components/CashFlowList'
+import { useCashFlowController } from '@/features/cash-flow/hooks/use-cash-flow-controller'
 import React from 'react'
 
 // Mock next/navigation
@@ -11,9 +12,9 @@ vi.mock('next/navigation', () => ({
   }),
 }))
 
-// Mock actions
-vi.mock('@/features/cash-flow/actions/cash_flow', () => ({
-  deleteCashFlow: vi.fn().mockResolvedValue({ success: true }),
+// Mock controller hook
+vi.mock('@/features/cash-flow/hooks/use-cash-flow-controller', () => ({
+  useCashFlowController: vi.fn(),
 }))
 
 // Dummy transactions
@@ -49,6 +50,42 @@ const mockTransactions = [
 ]
 
 describe('CashFlowList Component', () => {
+  const mockControllerReturn = {
+    activeMobileTx: null,
+    setActiveMobileTx: vi.fn(),
+    search: '',
+    category: 'all',
+    payment: 'all',
+    source: 'all',
+    range: 'ALL',
+    dateFilter: null,
+    handleClearDateFilter: vi.fn(),
+    handleDelete: vi.fn(),
+    handleSearchChange: vi.fn(),
+    handleCategoryChange: vi.fn(),
+    handlePaymentChange: vi.fn(),
+    handleSourceChange: vi.fn(),
+    handlePageChange: vi.fn(),
+    handlePageSizeChange: vi.fn(),
+    handleRangeChange: vi.fn(),
+    handleResetFilters: vi.fn(),
+    uniqueCategories: ['Makanan & Minuman', 'Gaji'],
+    uniquePaymentMethods: ['Gopay', 'Transfer Bank'],
+    paginatedTransactions: mockTransactions,
+    hasActiveFilters: false,
+    pageNumbers: [1, 2],
+    validPage: 1,
+    limit: 10,
+    startIndex: 0,
+    totalItems: 2,
+    totalPages: 2,
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(useCashFlowController).mockReturnValue(mockControllerReturn as any)
+  })
+
   it('renders transactions successfully on desktop view', () => {
     render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
 
@@ -76,8 +113,7 @@ describe('CashFlowList Component', () => {
       fireEvent.click(cardElement)
     }
 
-    expect(screen.getByText('Kelola Transaksi')).toBeInTheDocument()
-    expect(screen.getByText('Hapus Transaksi')).toBeInTheDocument()
+    expect(mockControllerReturn.setActiveMobileTx).toHaveBeenCalledWith(mockTransactions[0])
   })
 
   it('triggers search filter changes', async () => {
@@ -86,20 +122,148 @@ describe('CashFlowList Component', () => {
     const searchInput = screen.getByPlaceholderText('Cari deskripsi / kategori...')
     fireEvent.change(searchInput, { target: { value: 'Gaji' } })
     
-    // Check that we can type into the input element successfully
-    expect(searchInput).toBeTruthy()
+    expect(mockControllerReturn.handleSearchChange).toHaveBeenCalledWith('Gaji')
   })
 
-  it('allows clicking cancel inside drawer', () => {
+  it('calls router.push when edit button is clicked on desktop', () => {
+    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    const editBtn = screen.getAllByRole('button').find(btn => btn.className.includes('text-indigo-700'))!
+    fireEvent.click(editBtn)
+    expect(mockPush).toHaveBeenCalledWith('/add?edit=tx-1')
+  })
+
+  it('calls handleClearDateFilter when date filter button is clicked', () => {
+    vi.mocked(useCashFlowController).mockReturnValue({
+      ...mockControllerReturn,
+      dateFilter: '2026-06-19',
+    } as any)
+    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    const dateFilterBtn = screen.getByText(/Filter Tanggal/i)
+    fireEvent.click(dateFilterBtn)
+    expect(mockControllerReturn.handleClearDateFilter).toHaveBeenCalled()
+  })
+
+  it('calls handleResetFilters when Bersihkan Filter button is clicked', () => {
+    vi.mocked(useCashFlowController).mockReturnValue({
+      ...mockControllerReturn,
+      hasActiveFilters: true,
+    } as any)
+    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    const clearBtn = screen.getByText(/Bersihkan Filter/i)
+    fireEvent.click(clearBtn)
+    expect(mockControllerReturn.handleResetFilters).toHaveBeenCalled()
+  })
+
+  it('calls handleSearchChange("") when search clear button is clicked', () => {
+    vi.mocked(useCashFlowController).mockReturnValue({
+      ...mockControllerReturn,
+      search: 'Kopi',
+    } as any)
+    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    const clearBtn = screen.getByRole('textbox').nextSibling! as HTMLElement
+    fireEvent.click(clearBtn)
+    expect(mockControllerReturn.handleSearchChange).toHaveBeenCalledWith('')
+  })
+
+  it('calls filter handlers on select change', () => {
+    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    
+    const selects = screen.getAllByRole('combobox')
+    
+    // Category select
+    fireEvent.change(selects[0], { target: { value: 'Gaji' } })
+    expect(mockControllerReturn.handleCategoryChange).toHaveBeenCalledWith('Gaji')
+    
+    // Payment select
+    fireEvent.change(selects[1], { target: { value: 'Gopay' } })
+    expect(mockControllerReturn.handlePaymentChange).toHaveBeenCalledWith('Gopay')
+    
+    // Source select
+    fireEvent.change(selects[2], { target: { value: 'receipt' } })
+    expect(mockControllerReturn.handleSourceChange).toHaveBeenCalledWith('receipt')
+    
+    // Range select
+    fireEvent.change(selects[3], { target: { value: '1W' } })
+    expect(mockControllerReturn.handleRangeChange).toHaveBeenCalledWith('1W')
+  })
+
+  it('calls page handlers when page size and page buttons are clicked', () => {
+    vi.mocked(useCashFlowController).mockReturnValue({
+      ...mockControllerReturn,
+      pageNumbers: [1, '...', 5],
+      validPage: 2,
+      totalPages: 5,
+    } as any)
     render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
 
-    const mobileHeading = screen.getAllByText('Beli Kopi Susu').find(el => el.tagName === 'H4')
-    const cardElement = mobileHeading?.closest('.cursor-pointer')
-    if (cardElement) fireEvent.click(cardElement)
+    // Page size change
+    const pageSizeSelect = screen.getByDisplayValue('10')
+    fireEvent.change(pageSizeSelect, { target: { value: '25' } })
+    expect(mockControllerReturn.handlePageSizeChange).toHaveBeenCalledWith('25')
 
-    const cancelButton = screen.getByText('Batal')
-    fireEvent.click(cancelButton)
+    // Page number click
+    const page5Btn = screen.getByText('5')
+    fireEvent.click(page5Btn)
+    expect(mockControllerReturn.handlePageChange).toHaveBeenCalledWith(5)
 
-    expect(screen.queryByText('Kelola Transaksi')).not.toBeInTheDocument()
+    // Prev page click
+    const prevBtn = screen.getAllByRole('button').find(btn => btn.querySelector('.lucide-chevron-left'))!
+    fireEvent.click(prevBtn)
+    expect(mockControllerReturn.handlePageChange).toHaveBeenCalledWith(1) // validPage - 1
+
+    // Next page click
+    const nextBtn = screen.getAllByRole('button').find(btn => btn.querySelector('.lucide-chevron-right'))!
+    fireEvent.click(nextBtn)
+    expect(mockControllerReturn.handlePageChange).toHaveBeenCalledWith(3) // validPage + 1
+  })
+
+  it('handles mobile drawer actions correctly', () => {
+    const activeMobileTx = mockTransactions[0]
+    vi.mocked(useCashFlowController).mockReturnValue({
+      ...mockControllerReturn,
+      activeMobileTx,
+    } as any)
+    
+    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+
+    // Click Edit in mobile drawer
+    const editBtn = screen.getByText(/Edit Transaksi/i)
+    fireEvent.click(editBtn)
+    expect(mockPush).toHaveBeenCalledWith(`/add?edit=${activeMobileTx.id}`)
+    expect(mockControllerReturn.setActiveMobileTx).toHaveBeenCalledWith(null)
+
+    // Click Delete in mobile drawer
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const deleteBtn = screen.getByText(/Hapus Transaksi/i)
+    fireEvent.click(deleteBtn)
+    expect(mockControllerReturn.handleDelete).toHaveBeenCalledWith(activeMobileTx.id)
+    expect(mockControllerReturn.setActiveMobileTx).toHaveBeenCalledWith(null)
+    
+    // Dialog onOpenChange trigger / Batal button click
+    const dialogCloseBtn = screen.getByText('Batal')
+    fireEvent.click(dialogCloseBtn)
+    expect(mockControllerReturn.setActiveMobileTx).toHaveBeenCalledWith(null)
+
+    // Trigger onOpenChange via Escape key
+    fireEvent.keyDown(document.body, { key: 'Escape', code: 'Escape' })
+    expect(mockControllerReturn.setActiveMobileTx).toHaveBeenCalledWith(null)
+  })
+
+  it('handles desktop delete transaction click', () => {
+    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    const deleteBtn = screen.getAllByRole('button').find(btn => btn.className.includes('text-rose-700'))!
+    fireEvent.click(deleteBtn)
+    expect(mockControllerReturn.handleDelete).toHaveBeenCalledWith('tx-1')
+  })
+
+  it('renders ellipse placeholder in pagination when page number is "..."', () => {
+    vi.mocked(useCashFlowController).mockReturnValue({
+      ...mockControllerReturn,
+      pageNumbers: [1, '...', 5],
+      validPage: 1,
+      totalPages: 5,
+    } as any)
+    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    expect(screen.getByText('...')).toBeInTheDocument()
   })
 })

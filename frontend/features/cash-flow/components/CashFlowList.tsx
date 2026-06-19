@@ -415,7 +415,7 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
       </CardContent>
 
       {/* Mobile Transaction Management Drawer */}
-      <Dialog open={!!activeMobileTx} onOpenChange={(open) => { if (!open) setActiveMobileTx(null) }}>
+      <Dialog open={!!activeMobileTx} onOpenChange={() => setActiveMobileTx(null)}>
         <DialogContent 
           showCloseButton={false}
           className="fixed bottom-0 top-auto left-0 right-0 translate-y-0 translate-x-0 w-full max-w-full rounded-t-2xl rounded-b-none border-t border-slate-200 p-6 gap-4 bg-white pb-8 focus:outline-none focus-visible:ring-0 data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-bottom-full data-closed:animate-out data-closed:fade-out-0 data-closed:slide-out-to-bottom-full duration-200 ease-out"
