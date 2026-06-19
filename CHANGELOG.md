@@ -1,3 +1,10 @@
+# [1.0.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.0.0-rc.1...v1.0.0-rc.2) (2026-06-19)
+
+
+### Bug Fixes
+
+* statically polyfill process.version in webpack configs to resolve supabase edge runtime warning ([16a2d59](https://github.com/Andi-IM/fintrack-saas/commit/16a2d59dac4d39f4623c44875de1d8064156ea12))
+
 # 1.0.0-rc.1 (2026-06-19)
 
 
