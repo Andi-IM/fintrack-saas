@@ -1,3 +1,10 @@
+# [1.1.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.1.0-rc.1...v1.1.0-rc.2) (2026-06-19)
+
+
+### Bug Fixes
+
+* persist recalculated item balances and scope delete pending state ([82532ae](https://github.com/Andi-IM/fintrack-saas/commit/82532ae5dd10e98c605d71374a5fac7200899184))
+
 # [1.1.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.0.0...v1.1.0-rc.1) (2026-06-19)
 
 
