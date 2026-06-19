@@ -1,4 +1,4 @@
-import BankStatementList from '@/components/transactions/BankStatementList'
+import BankStatementList from '@/features/bank-statements/components/BankStatementList'
 import StatementAnalytics from '@/components/statements/StatementAnalytics'
 import Link from 'next/link'
 import { FileText } from 'lucide-react'

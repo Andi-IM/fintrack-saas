@@ -28,7 +28,7 @@ import {
   DialogDescription
 } from "@/components/ui/dialog"
 import { formatCurrency } from "@/lib/utils/transaction"
-import { deleteReceipt, getReceiptFileUrl, ReceiptWithItems } from "@/lib/actions/receipts"
+import { deleteReceipt, getReceiptFileUrl, ReceiptWithItems } from "@/features/receipts/actions/receipts"
 
 interface ReceiptListProps {
   receipts: ReceiptWithItems[]

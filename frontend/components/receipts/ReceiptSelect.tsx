@@ -17,8 +17,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { getReceipts, ReceiptWithItems } from "@/lib/actions/receipts"
-import { getCashFlow } from "@/lib/actions/cash_flow"
+import { getReceipts, ReceiptWithItems } from "@/features/receipts/actions/receipts"
+import { getCashFlow } from "@/features/cash-flow/actions/cash_flow"
+import { Tables } from "@/lib/database.types"
 import { formatCurrency } from "@/lib/utils/transaction"
 import { format } from "date-fns"
 import { id } from "date-fns/locale"
@@ -47,13 +48,13 @@ export function ReceiptSelect({ value, onChange, onSelect, disabled }: ReceiptSe
           // Get all receipt IDs that are already linked in cash_flow
           const linkedReceiptIds = new Set(
             cashFlows
-              .filter(cf => cf.receipt_id)
-              .map(cf => cf.receipt_id)
+              .filter((cf: Tables<'cash_flow'>) => cf.receipt_id)
+              .map((cf: Tables<'cash_flow'>) => cf.receipt_id)
           )
           
           // Filter out linked receipts, but always keep the currently selected one
           const availableReceipts = receiptsRes.data.filter(
-            receipt => !linkedReceiptIds.has(receipt.id) || receipt.id === value
+            (receipt: ReceiptWithItems) => !linkedReceiptIds.has(receipt.id) || receipt.id === value
           )
           
           setReceipts(availableReceipts)
