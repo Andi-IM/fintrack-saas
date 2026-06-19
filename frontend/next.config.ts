@@ -30,23 +30,18 @@ const nextConfig: NextConfig = {
   webpack: (config, options) => {
     const { dev, isServer } = options;
 
-    // HMR is disabled in AI Studio via DISABLE_HMR env var.
-    // Do not modify—file watching is disabled to prevent flickering during agent edits.
+    // 1. HMR config for local agent editing sandbox
     if (dev && process.env.DISABLE_HMR === 'true') {
-      config.watchOptions = {
-        ignored: /.*/,
-      };
+      config.watchOptions = { ignored: /.*/ };
     }
-    // Suppress "Serializing big strings" cache warnings from large type files (e.g. lucide-react).
+
+    // 2. Webpack caching & logging configurations
     if (config.cache && typeof config.cache === 'object') {
       (config.cache as Record<string, unknown>).maxMemoryGenerations = 0;
     }
-    // Solusi 1: Meredam warning infrastruktur Webpack (serialisasi string besar)
-    config.infrastructureLogging = {
-      level: 'error',
-    };
+    config.infrastructureLogging = { level: 'error' };
 
-    // Solusi 3: Mock/stub modul Node.js (process) agar tidak memicu warning Edge Runtime di browser/edge bundler
+    // 3. Mock/stub node modules for browser build to satisfy Edge Runtime requirements
     if (!isServer) {
       config.resolve = config.resolve || {};
       config.resolve.fallback = {
@@ -55,7 +50,7 @@ const nextConfig: NextConfig = {
       };
     }
 
-    // Inject Codecov Bundle Analysis Webpack Plugin in production builds
+    // 4. Inject Codecov Bundle Analysis Webpack Plugin in production
     if (!dev && !isServer && process.env.CODECOV_TOKEN) {
       config.plugins.push(
         codecovNextJSWebpackPlugin({
@@ -63,7 +58,7 @@ const nextConfig: NextConfig = {
           bundleName: "fintrack-frontend",
           uploadToken: process.env.CODECOV_TOKEN,
           webpack: options.webpack,
-          telemetry: false, // Solusi 2: Matikan telemetry Codecov
+          telemetry: false,
         })
       );
     }
