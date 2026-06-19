@@ -9,10 +9,10 @@ export async function login() {
   const supabase = await createClient()
   let origin: string | undefined
 
-  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
-    origin = `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-  } else if (process.env.APP_URL) {
+  if (process.env.APP_URL) {
     origin = process.env.APP_URL
+  } else if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+    origin = `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
   } else {
     const headersList = await headers()
     const host = headersList.get('x-forwarded-host') || headersList.get('host') || 'localhost:3000'
