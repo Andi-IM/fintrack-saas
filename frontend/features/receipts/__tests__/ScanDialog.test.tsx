@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { ScanDialog } from '../components/ScanDialog'
 import { useScanStore } from '../hooks/use-scan-store'
+import { ScanProgressIndicator } from '../components/ScanProgressIndicator'
 import React from 'react'
 
 // Mock next router
@@ -21,6 +22,9 @@ vi.mock('@/features/receipts/actions/ocr', () => ({
 }))
 vi.mock('@/features/bank-statements/actions/statements', () => ({
   saveBankStatement: vi.fn(),
+}))
+vi.mock('@/lib/ocr/compress-image', () => ({
+  compressImageIfNeeded: vi.fn((file) => Promise.resolve(file)),
 }))
 
 // Mock Zustand store
@@ -273,5 +277,78 @@ describe('ScanDialog Component', () => {
     const itemNameInput = screen.getByDisplayValue('Transfer in')
     fireEvent.change(itemNameInput, { target: { value: 'Salary' } })
     expect(mockStore.updateScanResultItem).toHaveBeenCalledWith(0, 'name', 'Salary')
+  })
+
+  it('handles drop/select file correctly', async () => {
+    render(<ScanDialog scanContext="Receipt" />)
+    const file = new File(['hello'], 'hello.png', { type: 'image/png' })
+    const inputEl = document.querySelector('input[type="file"]')!
+    Object.defineProperty(inputEl, 'files', {
+      value: [file]
+    })
+    fireEvent.change(inputEl)
+    
+    await waitFor(() => {
+      expect(mockStore.setFileToScan).toHaveBeenCalledWith(file)
+      expect(mockStore.setScanStatus).toHaveBeenCalledWith('idle')
+    })
+  })
+
+  it('rejects PDF file larger than 1MB', async () => {
+    render(<ScanDialog scanContext="Receipt" />)
+    const file = new File(['a'.repeat(1024 * 1024 + 1)], 'hello.pdf', { type: 'application/pdf' })
+    const inputEl = document.querySelector('input[type="file"]')!
+    Object.defineProperty(inputEl, 'files', {
+      value: [file]
+    })
+    fireEvent.change(inputEl)
+    
+    await waitFor(() => {
+      expect(mockStore.setErrorMessage).toHaveBeenCalledWith('File size exceeds the 1MB limit for PDFs.')
+      expect(mockStore.setScanStatus).toHaveBeenCalledWith('error')
+    })
+  })
+
+  it('compresses non-PDF file larger than 1MB', async () => {
+    const { compressImageIfNeeded } = await import('@/lib/ocr/compress-image')
+    render(<ScanDialog scanContext="Receipt" />)
+    const file = new File(['a'.repeat(1024 * 1024 + 1)], 'large-image.png', { type: 'image/png' })
+    const inputEl = document.querySelector('input[type="file"]')!
+    Object.defineProperty(inputEl, 'files', {
+      value: [file]
+    })
+    fireEvent.change(inputEl)
+    
+    await waitFor(() => {
+      expect(compressImageIfNeeded).toHaveBeenCalledWith(file)
+      expect(mockStore.setFileToScan).toHaveBeenCalled()
+    })
+  })
+
+  it('calls setFileToScan(null) when Remove button is clicked', () => {
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      fileToScan: new File([''], 'test-receipt.jpg', { type: 'image/jpeg' }),
+      scanStatus: 'idle'
+    } as any)
+
+    render(<ScanDialog scanContext="Receipt" />)
+    const removeBtn = screen.getByRole('button', { name: /Remove/i })
+    fireEvent.click(removeBtn)
+    expect(mockStore.setFileToScan).toHaveBeenCalledWith(null)
+  })
+})
+
+describe('ScanProgressIndicator Component', () => {
+  it('returns null when scanStatus is not scanning or error', () => {
+    const { container } = render(
+      <ScanProgressIndicator
+        scanStatus={'idle' as any}
+        scanProgress={0}
+        errorMessage={null}
+        onRetry={vi.fn()}
+      />
+    )
+    expect(container.firstChild).toBeNull()
   })
 })
