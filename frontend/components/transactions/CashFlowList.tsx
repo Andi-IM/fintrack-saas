@@ -16,6 +16,11 @@ import {
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog"
+import { deleteCashFlow } from "@/lib/actions/cash_flow"
+import { Tables } from "@/lib/database.types"
+import { formatCurrency, filterTransactionsByRange } from "@/lib/utils/transaction"
+import { Edit2, Trash2, FileText, Plus, Minus, Receipt, Link as LinkIcon, Search, X, ChevronLeft, ChevronRight, Filter } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export function CashFlowList({ transactions, dateFilter: propDateFilter, timeRange }: { transactions: Tables<'cash_flow'>[], dateFilter?: string, timeRange: string }) {
   const router = useRouter()
