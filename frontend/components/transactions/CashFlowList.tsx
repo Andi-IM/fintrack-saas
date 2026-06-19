@@ -8,12 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Edit2, Trash2, FileText, Plus, Minus, Receipt, Link as LinkIcon, Search, X, ChevronLeft, ChevronRight, Filter } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { deleteCashFlow } from "@/lib/actions/cash_flow"
-import { Tables } from "@/lib/database.types"
-
-import { formatCurrency, filterTransactionsByRange } from "@/lib/utils/transaction"
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog"
 
 export function CashFlowList({ transactions, dateFilter: propDateFilter, timeRange }: { transactions: Tables<'cash_flow'>[], dateFilter?: string, timeRange: string }) {
   const router = useRouter()
@@ -21,6 +23,9 @@ export function CashFlowList({ transactions, dateFilter: propDateFilter, timeRan
   const [dateFilter, setDateFilter] = useQueryState('date', {
     shallow: false,
   })
+
+  // Mobile Drawer State
+  const [activeMobileTx, setActiveMobileTx] = useState<Tables<'cash_flow'> | null>(null)
 
   // URL-synchronized query states for search and filters
   const [search, setSearch] = useQueryState('search', {
@@ -339,7 +344,76 @@ export function CashFlowList({ transactions, dateFilter: propDateFilter, timeRan
       </CardHeader>
       
       <CardContent className="p-0">
-        <div className="overflow-hidden">
+        {/* Mobile View (Cards) */}
+        <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
+          {paginatedTransactions.length === 0 ? (
+            <div className="text-center text-slate-500 py-8">
+              <FileText className="w-8 h-8 text-slate-200 mx-auto mb-2" />
+              <p className="text-xs">Tidak ada transaksi yang cocok dengan filter.</p>
+            </div>
+          ) : (
+            paginatedTransactions.map((tx) => {
+              const isIncome = Number(tx.income) > 0;
+              const nominal = isIncome ? Number(tx.income) : Number(tx.expense);
+
+              return (
+                <Card 
+                  key={tx.id} 
+                  className="overflow-hidden border border-slate-100 shadow-none bg-white hover:border-indigo-100 hover:bg-slate-50/30 transition-all cursor-pointer active:scale-[0.99]"
+                  onClick={() => setActiveMobileTx(tx)}
+                >
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-500">
+                          {format(new Date(tx.date), "dd MMM yyyy, HH:mm")}
+                        </p>
+                        <h4 className="font-bold text-slate-800 text-sm mt-1 leading-relaxed break-words">
+                          {tx.description || "Tanpa Deskripsi"}
+                        </h4>
+                      </div>
+                      <span className={cn(
+                        "font-bold font-mono text-sm whitespace-nowrap",
+                        isIncome ? "text-emerald-600" : "text-rose-600"
+                      )}>
+                        {isIncome ? "+" : "-"} {formatCurrency(nominal)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-block px-2 py-0.5 bg-slate-100 rounded text-[10px] text-slate-600 border border-slate-200 font-bold uppercase tracking-tight">
+                        {tx.main_category}
+                      </span>
+                      {tx.sub_category && (
+                        <span className="text-[10px] text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
+                          {tx.sub_category}
+                        </span>
+                      )}
+                      {tx.payment_method && (
+                        <span className="text-[10px] text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                          {tx.payment_method}
+                        </span>
+                      )}
+                      {tx.receipt_id && (
+                        <span className="flex items-center gap-1 text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
+                          <Receipt className="w-2.5 h-2.5" /> Resit
+                        </span>
+                      )}
+                      {tx.source_item_id && (
+                        <span className="flex items-center gap-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                          <LinkIcon className="w-2.5 h-2.5" /> Mutasi
+                        </span>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })
+          )}
+        </div>
+
+        {/* Desktop View (Table) */}
+        <div className="hidden md:block overflow-hidden">
           <Table className="w-full text-left">
             <TableHeader className="bg-slate-50 text-[10px] uppercase text-slate-400 font-bold border-b border-slate-100">
               <TableRow>
@@ -383,17 +457,17 @@ export function CashFlowList({ transactions, dateFilter: propDateFilter, timeRan
                             </span>
                           )}
                           {tx.payment_method && (
-                            <span className="text-[10px] text-indigo-500 font-medium bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                            <span className="text-[10px] text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
                               {tx.payment_method}
                             </span>
                           )}
                           {tx.receipt_id && (
-                            <span className="flex items-center gap-1 text-[10px] text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-100" title="Terkait dengan Resit">
+                            <span className="flex items-center gap-1 text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-100" title="Terkait dengan Resit">
                               <Receipt className="w-2.5 h-2.5" /> Resit
                             </span>
                           )}
                           {tx.source_item_id && (
-                            <span className="flex items-center gap-1 text-[10px] text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100" title="Terkait dengan Mutasi Bank">
+                            <span className="flex items-center gap-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100" title="Terkait dengan Mutasi Bank">
                               <LinkIcon className="w-2.5 h-2.5" /> Mutasi
                             </span>
                           )}
@@ -407,10 +481,10 @@ export function CashFlowList({ transactions, dateFilter: propDateFilter, timeRan
                       </TableCell>
                       <TableCell className="px-6 py-4 text-center whitespace-nowrap align-top">
                         <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(tx.id)} className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50">
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(tx.id)} className="h-8 w-8 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50">
                             <Edit2 className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(tx.id)} className="h-8 w-8 text-slate-400 hover:text-rose-600 hover:bg-rose-50">
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(tx.id)} className="h-8 w-8 text-rose-700 hover:text-rose-800 hover:bg-rose-50">
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -506,6 +580,83 @@ export function CashFlowList({ transactions, dateFilter: propDateFilter, timeRan
           </div>
         )}
       </CardContent>
+
+      {/* Mobile Transaction Management Drawer */}
+      <Dialog open={!!activeMobileTx} onOpenChange={(open) => { if (!open) setActiveMobileTx(null) }}>
+        <DialogContent 
+          showCloseButton={false}
+          className="fixed bottom-0 top-auto left-0 right-0 translate-y-0 translate-x-0 w-full max-w-full rounded-t-2xl rounded-b-none border-t border-slate-200 p-6 gap-4 bg-white pb-8 focus:outline-none focus-visible:ring-0 data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-bottom-full data-closed:animate-out data-closed:fade-out-0 data-closed:slide-out-to-bottom-full duration-200 ease-out"
+        >
+          <div className="mx-auto w-12 h-1.5 bg-slate-200 rounded-full mb-2" />
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Kelola Transaksi
+            </DialogTitle>
+            <DialogDescription className="text-slate-900 font-bold text-base mt-1.5 leading-relaxed">
+              {activeMobileTx?.description || "Tanpa Deskripsi"}
+            </DialogDescription>
+          </DialogHeader>
+
+          {activeMobileTx && (
+            <div className="space-y-4 my-2">
+              <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <span className="text-xs text-slate-500 font-medium">Nominal Transaksi</span>
+                <span className={cn(
+                  "font-bold font-mono text-base",
+                  Number(activeMobileTx.income) > 0 ? "text-emerald-600" : "text-rose-600"
+                )}>
+                  {Number(activeMobileTx.income) > 0 ? "+" : "-"} {formatCurrency(Number(activeMobileTx.income) > 0 ? Number(activeMobileTx.income) : Number(activeMobileTx.expense))}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs text-slate-505">
+                <div>
+                  <span className="block text-[10px] text-slate-400 uppercase font-bold tracking-tight">Kategori</span>
+                  <span className="font-bold text-slate-800 mt-0.5 block">{activeMobileTx.main_category}</span>
+                </div>
+                <div>
+                  <span className="block text-[10px] text-slate-400 uppercase font-bold tracking-tight">Tanggal</span>
+                  <span className="font-bold text-slate-800 mt-0.5 block">
+                    {format(new Date(activeMobileTx.date), "dd MMM yyyy, HH:mm")}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2">
+            <Button
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 flex items-center justify-center gap-2 rounded-xl"
+              onClick={() => {
+                if (activeMobileTx) {
+                  handleEdit(activeMobileTx.id)
+                  setActiveMobileTx(null)
+                }
+              }}
+            >
+              <Edit2 className="w-4 h-4" /> Edit Transaksi
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800 font-bold h-11 flex items-center justify-center gap-2 rounded-xl"
+              onClick={() => {
+                if (activeMobileTx && window.confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) {
+                  handleDelete(activeMobileTx.id)
+                  setActiveMobileTx(null)
+                }
+              }}
+            >
+              <Trash2 className="w-4 h-4" /> Hapus Transaksi
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full text-slate-500 hover:bg-slate-100 font-bold h-11 rounded-xl"
+              onClick={() => setActiveMobileTx(null)}
+            >
+              Batal
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }
