@@ -1,3 +1,15 @@
+# [1.0.0-rc.5](https://github.com/Andi-IM/fintrack-saas/compare/v1.0.0-rc.4...v1.0.0-rc.5) (2026-06-19)
+
+
+### Bug Fixes
+
+* **frontend:** resolve compilation errors and finalize auth/datalayer decoupling ([c3d8fc0](https://github.com/Andi-IM/fintrack-saas/commit/c3d8fc02c785aeb313d90a5723f708dfaac17ca6))
+
+
+### Features
+
+* **frontend:** migrate codebase to feature-based architecture (ADR-033) ([8e1f1f1](https://github.com/Andi-IM/fintrack-saas/commit/8e1f1f1a3a0002627952bf0394f5ebaa91c1d22a))
+
 # [1.0.0-rc.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.0.0-rc.3...v1.0.0-rc.4) (2026-06-19)
 
 
