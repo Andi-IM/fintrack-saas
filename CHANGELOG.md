@@ -1,3 +1,17 @@
+# [1.1.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.0.0...v1.1.0-rc.1) (2026-06-19)
+
+
+### Bug Fixes
+
+* **frontend:** resolve compilation errors and finalize auth/datalayer decoupling ([c3d8fc0](https://github.com/Andi-IM/fintrack-saas/commit/c3d8fc02c785aeb313d90a5723f708dfaac17ca6))
+
+
+### Features
+
+* abstract state management into useCashFlowController hook and implement repository pattern for database actions ([4dcc38e](https://github.com/Andi-IM/fintrack-saas/commit/4dcc38e908277a819ac22f8a175405f229df16cb))
+* **frontend:** migrate codebase to feature-based architecture (ADR-033) ([8e1f1f1](https://github.com/Andi-IM/fintrack-saas/commit/8e1f1f1a3a0002627952bf0394f5ebaa91c1d22a))
+* implement ADR-032 and configure folder-specific coverage gates for critical pathways ([f375531](https://github.com/Andi-IM/fintrack-saas/commit/f3755311f69f0b8ef98b7d376bf1a7399ce5f67c))
+
 # 1.0.0 (2026-06-19)
 
 
