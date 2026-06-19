@@ -6,6 +6,14 @@ import { getGroupedBankStatements, getFileUrl, deleteBankStatement, updateStatem
 import type { Tables } from '@/lib/database.types'
 import { Card, CardContent } from '@/components/ui/card'
 import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog'
+import { 
   ChevronDown, 
   ChevronRight, 
   Building2, 
@@ -35,6 +43,7 @@ export default function BankStatementList() {
   const [expandedPeriods, setExpandedPeriods] = useState<string[]>([])
   const [editingItem, setEditingItem] = useState<{ statementId: string; item: Tables<'bank_statement_items'> } | null>(null)
   const [addingToStatement, setAddingToStatement] = useState<string | null>(null)
+  const [activeMobileItem, setActiveMobileItem] = useState<{ statementId: string; item: Tables<'bank_statement_items'> } | null>(null)
 
   const queryOptions = {
     queryKey: ['bank-statements'] as const,
@@ -245,7 +254,8 @@ export default function BankStatementList() {
                         </div>
                       </div>
 
-                      <div className="rounded-lg border border-slate-200 bg-white overflow-hidden shadow-sm">
+                      {/* Desktop Table View */}
+                      <div className="hidden md:block rounded-lg border border-slate-200 bg-white overflow-hidden shadow-sm">
                         <table className="w-full text-left text-xs">
                           <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
                             <tr>
@@ -290,7 +300,7 @@ export default function BankStatementList() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-7 w-7 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                      className="h-7 w-7 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50"
                                       onClick={(e) => {
                                         e.stopPropagation()
                                         setEditingItem({ statementId: statement.id, item })
@@ -301,7 +311,7 @@ export default function BankStatementList() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-7 w-7 text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                                      className="h-7 w-7 text-rose-700 hover:text-rose-800 hover:bg-rose-50"
                                       onClick={(e) => handleDeleteItem(e, item.id)}
                                       disabled={deleteItemMutation.isPending}
                                     >
@@ -331,6 +341,62 @@ export default function BankStatementList() {
                             Add Item
                           </Button>
                         </div>
+                      </div>
+
+                      {/* Mobile Card List View */}
+                      <div className="md:hidden space-y-3">
+                        {statement.bank_statement_items.map((item) => (
+                          <div 
+                            key={item.id} 
+                            className="bg-white rounded-lg border border-slate-200 p-3.5 space-y-2 shadow-none hover:border-indigo-100 hover:bg-slate-50/30 transition-all cursor-pointer active:scale-[0.99]"
+                            onClick={() => setActiveMobileItem({ statementId: statement.id, item })}
+                          >
+                            <div className="flex justify-between items-start gap-2">
+                              <div>
+                                <p className="text-[10px] font-bold text-slate-500">
+                                  {new Date(item.date).toLocaleString('id-ID', { 
+                                    day: '2-digit', 
+                                    month: '2-digit', 
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </p>
+                                <p className="font-bold text-slate-800 text-xs mt-1 leading-normal break-words">
+                                  {item.description}
+                                </p>
+                                {item.category && (
+                                  <span className="inline-block mt-1 text-[9px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                                    {item.category}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                <div className={`flex items-center justify-end gap-0.5 font-mono font-bold text-xs ${item.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                  {item.type === 'income' ? <ArrowDownLeft className="w-2.5 h-2.5" /> : <ArrowUpRight className="w-2.5 h-2.5" />}
+                                  Rp {item.amount.toLocaleString('id-ID')}
+                                </div>
+                                {item.balance !== null && item.balance !== undefined && (
+                                  <p className="text-[9px] text-slate-400 font-mono mt-0.5">
+                                    Saldo: Rp {Number(item.balance).toLocaleString('id-ID')}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full h-8 text-xs text-indigo-600 border-indigo-200 hover:bg-indigo-50 font-bold flex items-center justify-center gap-1.5 rounded-lg"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setAddingToStatement(statement.id)
+                          }}
+                        >
+                          <Plus className="w-3.5 h-3.5" /> Add Item
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -373,6 +439,86 @@ export default function BankStatementList() {
         }}
       />
     )}
+
+    {/* Mobile Action Drawer Dialog */}
+    <Dialog open={!!activeMobileItem} onOpenChange={(open) => { if (!open) setActiveMobileItem(null) }}>
+      <DialogContent 
+        showCloseButton={false}
+        className="fixed bottom-0 top-auto left-0 right-0 translate-y-0 translate-x-0 w-full max-w-full rounded-t-2xl rounded-b-none border-t border-slate-200 p-6 gap-4 bg-white pb-8 focus:outline-none focus-visible:ring-0 data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-bottom-full data-closed:animate-out data-closed:fade-out-0 data-closed:slide-out-to-bottom-full duration-200 ease-out"
+      >
+        <div className="mx-auto w-12 h-1.5 bg-slate-200 rounded-full mb-2" />
+        <DialogHeader className="text-left">
+          <DialogTitle className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            Kelola Item Mutasi
+          </DialogTitle>
+          <DialogDescription className="text-slate-900 font-bold text-base mt-1.5 leading-relaxed">
+            {activeMobileItem?.item.description || "Tanpa Deskripsi"}
+          </DialogDescription>
+        </DialogHeader>
+
+        {activeMobileItem && (
+          <div className="space-y-4 my-2">
+            <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
+              <span className="text-xs text-slate-500 font-medium">Nominal Mutasi</span>
+              <span className={`font-bold font-mono text-base ${activeMobileItem.item.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                {activeMobileItem.item.type === 'income' ? "+" : "-"} Rp {activeMobileItem.item.amount.toLocaleString('id-ID')}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs text-slate-500">
+              <div>
+                <span className="block text-[10px] text-slate-400 uppercase font-bold tracking-tight">Kategori</span>
+                <span className="font-bold text-slate-800 mt-0.5 block">{activeMobileItem.item.category || "-"}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] text-slate-400 uppercase font-bold tracking-tight">Tanggal</span>
+                <span className="font-bold text-slate-800 mt-0.5 block">
+                  {new Date(activeMobileItem.item.date).toLocaleString('id-ID', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-2">
+          <Button
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 flex items-center justify-center gap-2 rounded-xl"
+            onClick={() => {
+              if (activeMobileItem) {
+                setEditingItem({ statementId: activeMobileItem.statementId, item: activeMobileItem.item })
+                setActiveMobileItem(null)
+              }
+            }}
+          >
+            <Pencil className="w-4 h-4" /> Edit Item
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800 font-bold h-11 flex items-center justify-center gap-2 rounded-xl"
+            onClick={async (e) => {
+              if (activeMobileItem && confirm('Delete this transaction item?')) {
+                await deleteItemMutation.mutateAsync(activeMobileItem.item.id)
+                setActiveMobileItem(null)
+              }
+            }}
+          >
+            <Trash2 className="w-4 h-4" /> Hapus Item
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full text-slate-500 hover:bg-slate-100 font-bold h-11 rounded-xl"
+            onClick={() => setActiveMobileItem(null)}
+          >
+            Batal
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
     </>
 )
 }

@@ -198,8 +198,9 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                           e.stopPropagation()
                           handleSelectReceipt(receipt)
                         }}
+                        className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50"
                       >
-                        <Eye className="w-4 h-4 text-slate-500" />
+                        <Eye className="w-4 h-4" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -208,15 +209,16 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                           e.stopPropagation()
                           setEditingReceipt(receipt)
                         }}
+                        className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50"
                       >
-                        <Pencil className="w-4 h-4 text-slate-500" />
+                        <Pencil className="w-4 h-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon-sm"
                         disabled={isPending}
                         onClick={(e) => handleDelete(receipt.id, e)}
-                        className="text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                        className="text-rose-700 hover:text-rose-800 hover:bg-rose-50"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -254,7 +256,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                       {receipt.store_name}
                     </TableCell>
                     <TableCell>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                         receipt.type === 'atm' 
                           ? 'bg-blue-50 text-blue-700 border border-blue-100' 
                           : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
@@ -262,20 +264,21 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                         {receipt.type === 'atm' ? 'ATM' : 'Shopping'}
                       </span>
                     </TableCell>
-                    <TableCell className="text-slate-500 max-w-[200px] truncate text-xs">
+                    <TableCell className="text-xs text-slate-500 max-w-[200px] truncate">
                       {receipt.store_address || '-'}
                     </TableCell>
-                    <TableCell className="text-right font-bold text-indigo-700 font-mono text-sm">
+                    <TableCell className="text-right font-bold text-slate-900 font-mono text-sm">
                       {formatCurrency(Number(receipt.total_price))}
                     </TableCell>
                     <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex justify-center items-center gap-1">
+                      <div className="flex items-center justify-center gap-1">
                         <Button
                           variant="ghost"
                           size="icon-sm"
                           onClick={() => handleSelectReceipt(receipt)}
+                          className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50"
                         >
-                          <Eye className="w-4 h-4 text-slate-500" />
+                          <Eye className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -284,15 +287,16 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                             e.stopPropagation()
                             setEditingReceipt(receipt)
                           }}
+                          className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50"
                         >
-                          <Pencil className="w-4 h-4 text-slate-500" />
+                          <Pencil className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon-sm"
                           disabled={isPending}
                           onClick={(e) => handleDelete(receipt.id, e)}
-                          className="text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                          className="text-rose-700 hover:text-rose-800 hover:bg-rose-50"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -315,7 +319,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
           {selectedReceipt && (
             <>
               {/* Header card with receipt metadata */}
-              <div className="bg-gradient-to-br from-indigo-700 to-indigo-900 text-white p-6 relative">
+              <div className="bg-indigo-900 text-white p-6 relative">
                 <div className="flex justify-between items-start mb-4">
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white border border-white/10`}>
                     {selectedReceipt.type === 'atm' ? 'Struk ATM' : 'Struk Belanja'}
