@@ -9,9 +9,11 @@ vi.mock('../hooks/use-scan-store', () => ({
   useScanStore: vi.fn()
 }))
 
+const mockHandleSaveScannedItems = vi.fn()
+
 vi.mock('../hooks/use-submit-scanned-data', () => ({
   useSubmitScannedData: vi.fn(() => ({
-    handleSaveScannedItems: vi.fn()
+    handleSaveScannedItems: mockHandleSaveScannedItems
   }))
 }))
 
@@ -32,6 +34,20 @@ describe('BankStatementReviewForm Component', () => {
   it('returns null if scanResult is null', () => {
     const { container } = render(<BankStatementReviewForm />)
     expect(container.firstChild).toBeNull()
+  })
+
+  it('renders correctly when scanResult.items is undefined', () => {
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      scanResult: {
+        bank: 'BCA',
+        statementPeriod: 'May 2026',
+        openingBalance: 100000,
+        closingBalance: 200000
+      }
+    } as any)
+    render(<BankStatementReviewForm />)
+    expect(screen.getByDisplayValue('BCA')).toBeInTheDocument()
   })
 
   it('renders and allows editing of bank statement fields and transactions', () => {
@@ -106,5 +122,45 @@ describe('BankStatementReviewForm Component', () => {
     const deleteBtn = screen.getByRole('button', { name: /Hapus transaksi ini/i })
     fireEvent.click(deleteBtn)
     expect(mockStore.deleteScanResultItem).toHaveBeenCalledWith(0)
+  })
+
+  it('calls resetScan when Discard button is clicked', () => {
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      scanResult: {
+        bank: 'BCA',
+        statementPeriod: 'May 2026',
+        openingBalance: 100000,
+        closingBalance: 200000,
+        items: [
+          { name: 'Transfer in', amount: 50000, type: 'income', date: '2026-05-01T10:00:00.000Z' }
+        ]
+      }
+    } as any)
+
+    render(<BankStatementReviewForm />)
+    const discardBtn = screen.getByText('Discard')
+    fireEvent.click(discardBtn)
+    expect(mockStore.resetScan).toHaveBeenCalled()
+  })
+
+  it('calls handleSaveScannedItems when Confirm & Save button is clicked', () => {
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      scanResult: {
+        bank: 'BCA',
+        statementPeriod: 'May 2026',
+        openingBalance: 100000,
+        closingBalance: 200000,
+        items: [
+          { name: 'Transfer in', amount: 50000, type: 'income', date: '2026-05-01T10:00:00.000Z' }
+        ]
+      }
+    } as any)
+
+    render(<BankStatementReviewForm />)
+    const saveBtn = screen.getByText('Confirm & Save')
+    fireEvent.click(saveBtn)
+    expect(mockHandleSaveScannedItems).toHaveBeenCalled()
   })
 })
