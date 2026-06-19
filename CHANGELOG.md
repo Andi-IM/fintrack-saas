@@ -1,3 +1,10 @@
+# [1.0.0-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.0.0-rc.2...v1.0.0-rc.3) (2026-06-19)
+
+
+### Features
+
+* implement ADR-032 and configure folder-specific coverage gates for critical pathways ([f375531](https://github.com/Andi-IM/fintrack-saas/commit/f3755311f69f0b8ef98b7d376bf1a7399ce5f67c))
+
 # [1.0.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.0.0-rc.1...v1.0.0-rc.2) (2026-06-19)
 
 
