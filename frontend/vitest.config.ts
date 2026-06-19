@@ -19,9 +19,20 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
       thresholds: {
-        // Enforce progressive safety thresholds globally across core files
-        perFile: false,
-        autoUpdate: false,
+        // High coverage targets for critical pathways
+        'lib/actions/**/*.ts': {
+          statements: 80,
+          functions: 80,
+        },
+        'lib/utils/**/*.ts': {
+          statements: 80,
+          functions: 80,
+        },
+        'components/transactions/**/*.tsx': {
+          statements: 80,
+          functions: 80,
+        },
+        // Low global threshold fallback for other components during rollout
         statements: 10,
         functions: 9,
       },
