@@ -1,3 +1,11 @@
+# [1.2.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.1.0...v1.2.0-rc.1) (2026-06-19)
+
+
+### Features
+
+* add @vercel/analytics for web analytics ([7787adc](https://github.com/Andi-IM/fintrack-saas/commit/7787adcd2e190f3ca3bd8e6f3fedd77ed6d73051))
+* add @vercel/speed-insights to monitor web performance ([373ae58](https://github.com/Andi-IM/fintrack-saas/commit/373ae58d2ec8b49181aefbafd7fc2b5c33a06f90))
+
 # [1.1.0-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.1.0-rc.2...v1.1.0-rc.3) (2026-06-19)
 
 
