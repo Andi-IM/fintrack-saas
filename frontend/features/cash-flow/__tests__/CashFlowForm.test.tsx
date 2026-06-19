@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { CashFlowForm } from '../CashFlowForm'
+import { CashFlowForm } from '../components/CashFlowForm'
 import React from 'react'
-import { insertCashFlow, updateCashFlow } from '@/lib/actions/cash_flow'
+import { insertCashFlow, updateCashFlow } from '@/features/cash-flow/actions/cash_flow'
 
 // Mock sub-components to keep form test isolated and lightweight
 vi.mock('@/components/receipts/StatementItemSelect', () => ({
@@ -14,7 +14,7 @@ vi.mock('@/components/receipts/ReceiptSelect', () => ({
 }))
 
 // Mock actions
-vi.mock('@/lib/actions/cash_flow', () => ({
+vi.mock('@/features/cash-flow/actions/cash_flow', () => ({
   insertCashFlow: vi.fn(),
   updateCashFlow: vi.fn(),
 }))

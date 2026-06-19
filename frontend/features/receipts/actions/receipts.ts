@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { invalidateCache } from '@/lib/cache'
 import { getReceiptRepository } from '@/lib/repositories/receipts'
 import { Tables } from '@/lib/database.types'
-import { ActionResponse } from './types'
+import { ActionResponse } from '@/lib/actions/types'
 
 const receiptItemSchema = z.object({
   productName: z.string().min(1, 'Product name is required'),

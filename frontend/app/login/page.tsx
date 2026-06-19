@@ -1,4 +1,4 @@
-import { login } from '@/lib/actions/auth'
+import { login } from '@/features/auth/actions/auth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Github, LockIcon } from 'lucide-react'

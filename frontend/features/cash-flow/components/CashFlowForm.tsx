@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { insertCashFlow, updateCashFlow } from "@/lib/actions/cash_flow"
+import { insertCashFlow, updateCashFlow } from "@/features/cash-flow/actions/cash_flow"
 import { useRouter } from 'next/navigation'
 import { Tables } from '@/lib/database.types'
 import { Loader2, Plus, Minus, Receipt, Link as LinkIcon } from 'lucide-react'

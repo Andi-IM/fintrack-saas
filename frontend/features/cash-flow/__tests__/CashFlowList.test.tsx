@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { CashFlowList } from '../CashFlowList'
+import { CashFlowList } from '../components/CashFlowList'
 import React from 'react'
 
 // Mock next/navigation
@@ -12,7 +12,7 @@ vi.mock('next/navigation', () => ({
 }))
 
 // Mock actions
-vi.mock('@/lib/actions/cash_flow', () => ({
+vi.mock('@/features/cash-flow/actions/cash_flow', () => ({
   deleteCashFlow: vi.fn().mockResolvedValue({ success: true }),
 }))
 

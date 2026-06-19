@@ -4,15 +4,15 @@ import { useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useDropzone } from 'react-dropzone'
 import { UploadCloud, CheckCircle2, Sparkles, AlertCircle, Trash2, Plus } from 'lucide-react'
-import { saveReceipt } from "@/lib/actions/receipts"
+import { saveReceipt } from "@/features/receipts/actions/receipts"
 import { useRouter } from 'next/navigation'
-import { scanDocumentWithAI } from '@/lib/actions/ocr'
+import { scanDocumentWithAI } from '@/features/receipts/actions/ocr'
 import { compressImageIfNeeded } from '@/lib/ocr/compress-image'
-import { saveBankStatement } from '@/lib/actions/statements'
+import { saveBankStatement } from '@/features/bank-statements/actions/statements'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ReceiptItem, BankTransaction } from '@/lib/ocr/types'
-import { useScanStore } from '@/hooks/use-scan-store'
+import { useScanStore } from '@/features/receipts/hooks/use-scan-store'
 
 function isReceiptItem(item: ReceiptItem | BankTransaction): item is ReceiptItem {
   return 'name' in item && 'amount' in item && !('date' in item);

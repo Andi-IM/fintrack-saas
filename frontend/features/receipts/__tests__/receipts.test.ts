@@ -6,7 +6,7 @@ import {
   getReceiptFileUrl,
   updateReceipt,
   SaveReceiptInput,
-} from '../receipts'
+} from '../actions/receipts'
 import { setReceiptRepository, ReceiptRepository } from '@/lib/repositories/receipts'
 import { Tables } from '@/lib/database.types'
 

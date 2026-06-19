@@ -17,8 +17,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { getGroupedBankStatements, BankStatementWithItems } from "@/lib/actions/statements"
-import { getCashFlow } from "@/lib/actions/cash_flow"
+import { getGroupedBankStatements, BankStatementWithItems } from "@/features/bank-statements/actions/statements"
+import { getCashFlow } from "@/features/cash-flow/actions/cash_flow"
+import { Tables } from "@/lib/database.types"
 import { formatCurrency } from "@/lib/utils/transaction"
 import { format } from "date-fns"
 import { id } from "date-fns/locale"
@@ -47,21 +48,21 @@ export function StatementItemSelect({ value, onChange, onSelect, disabled, filte
         if (statementsRes.success && statementsRes.data) {
           const linkedItemIds = new Set(
             cashFlows
-              .filter(cf => cf.source_item_id)
-              .map(cf => cf.source_item_id)
+              .filter((cf: Tables<'cash_flow'>) => cf.source_item_id)
+              .map((cf: Tables<'cash_flow'>) => cf.source_item_id)
           )
 
           // Deep filter the grouped statements
           const availableStatements: Record<string, BankStatementWithItems[]> = {}
           
           Object.entries(statementsRes.data).forEach(([bankName, bankStatements]) => {
-            const filteredBankStatements = bankStatements.map(stmt => {
+            const filteredBankStatements = (bankStatements as BankStatementWithItems[]).map((stmt: BankStatementWithItems) => {
               // Filter out linked items, keeping the currently selected one
               const availableItems = stmt.bank_statement_items.filter(
-                item => !linkedItemIds.has(item.id) || item.id === value
+                (item: Tables<'bank_statement_items'>) => !linkedItemIds.has(item.id) || item.id === value
               )
               return { ...stmt, bank_statement_items: availableItems }
-            }).filter(stmt => stmt.bank_statement_items.length > 0) // Only keep statements that still have items
+            }).filter((stmt: BankStatementWithItems) => stmt.bank_statement_items.length > 0) // Only keep statements that still have items
 
             if (filteredBankStatements.length > 0) {
               availableStatements[bankName] = filteredBankStatements

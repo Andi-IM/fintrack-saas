@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
-import BankStatementList from '../BankStatementList'
+import BankStatementList from '../components/BankStatementList'
 import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { getGroupedBankStatements } from '@/lib/actions/statements'
+import { getGroupedBankStatements } from '@/features/bank-statements/actions/statements'
 
 // Mock actions
-vi.mock('@/lib/actions/statements', () => ({
+vi.mock('@/features/bank-statements/actions/statements', () => ({
   getGroupedBankStatements: vi.fn(),
   getFileUrl: vi.fn(),
   deleteBankStatement: vi.fn(),

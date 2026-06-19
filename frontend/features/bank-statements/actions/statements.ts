@@ -5,7 +5,7 @@ import { invalidateCache } from '@/lib/cache'
 import { getStatementRepository } from '@/lib/repositories/statements'
 import { STATEMENT_MONTH_MAP } from '@/lib/constants/ocr'
 import { Tables } from '@/lib/database.types'
-import { ActionResponse } from './types'
+import { ActionResponse } from '@/lib/actions/types'
 
 export type BankStatementWithItems = Tables<'bank_statements'> & {
   bank_statement_items: Tables<'bank_statement_items'>[]

@@ -28,7 +28,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { updateReceipt, deleteReceipt, ReceiptWithItems } from "@/lib/actions/receipts"
+import { updateReceipt, deleteReceipt, ReceiptWithItems } from "@/features/receipts/actions/receipts"
 import { formatCurrency } from "@/lib/utils/transaction"
 import { StatementItemSelect } from './StatementItemSelect'
 

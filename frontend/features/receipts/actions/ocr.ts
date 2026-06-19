@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { OCRResult } from '@/lib/ocr/types'
 import { documentProcessor } from '@/lib/ocr/processor'
-import { ActionResponse } from './types'
+import { ActionResponse } from '@/lib/actions/types'
 
 const scanInputSchema = z.object({
   context: z.enum(['Receipt', 'BankStatement']),

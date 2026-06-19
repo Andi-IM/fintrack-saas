@@ -1,7 +1,7 @@
 # ADR-001: Auth & Data Layer Decoupling Strategy
 
 ## Status
-Proposed
+Accepted
 
 ## Context
 Codebase saat ini memiliki tight coupling yang masif ke Next.js runtime (`redirect`, `revalidatePath`, `headers`, `cookies`) dan Supabase server client. Lebih dari 80 coupling points di 30+ file. Hanya `lib/repositories/cash_flow.ts` yang sudah di-abstraksi via Repository Pattern + DI (`getCashFlowRepository()` / `setCashFlowRepository()`). 

@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useQueryState } from 'nuqs'
 import { Tables } from '@/lib/database.types'
-import { deleteCashFlow } from '@/lib/actions/cash_flow'
+import { deleteCashFlow } from '@/features/cash-flow/actions/cash_flow'
 import { filterTransactionsByRange } from '@/lib/utils/transaction'
 
 export interface UseCashFlowControllerProps {
