@@ -20,7 +20,7 @@ export default defineConfig({
       reporter: ['text', 'json', 'html', 'lcov'],
       thresholds: {
         // High coverage targets for active critical pathway files
-        'lib/actions/cash_flow.ts': {
+        'features/cash-flow/actions/cash_flow.ts': {
           statements: 80,
           functions: 80,
         },
@@ -28,7 +28,7 @@ export default defineConfig({
           statements: 80,
           functions: 80,
         },
-        'hooks/use-cash-flow-controller.ts': {
+        'features/cash-flow/hooks/use-cash-flow-controller.ts': {
           statements: 80,
           functions: 80,
         },
@@ -37,13 +37,12 @@ export default defineConfig({
         functions: 9,
       },
       include: [
-        'lib/actions/**/*.ts',
+        'features/**/*.ts',
+        'features/**/*.tsx',
         'lib/utils/**/*.ts',
-        'components/transactions/**/*.tsx',
-        'hooks/**/*.ts',
       ],
       exclude: [
-        'components/transactions/__tests__/**',
+        'features/**/__tests__/**',
       ],
     },
   },
