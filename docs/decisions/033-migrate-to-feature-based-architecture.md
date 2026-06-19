@@ -1,7 +1,7 @@
 # ADR-033: Migrate Frontend to Feature-Based Architecture
 
 ## Status
-Proposed
+Accepted
 
 ## Context
 The current frontend codebase utilizes a layer-based structure (e.g., `components/`, `hooks/`, `lib/actions/`). While easy to start with, this setup leads to:

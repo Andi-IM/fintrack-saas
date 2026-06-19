@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useScanStore } from '../use-scan-store'
+import { useScanStore } from '../hooks/use-scan-store'
 import { OCRResult } from '@/lib/ocr/types'
 
 describe('useScanStore', () => {

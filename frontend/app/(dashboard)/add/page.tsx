@@ -1,6 +1,6 @@
-import { getCashFlow } from '@/lib/actions/cash_flow'
-import { CashFlowForm } from '@/components/transactions/CashFlowForm'
-import { ScanDialog } from '@/components/transactions/ScanDialog'
+import { getCashFlow } from '@/features/cash-flow/actions/cash_flow'
+import { CashFlowForm } from '@/features/cash-flow/components/CashFlowForm'
+import { ScanDialog } from '@/features/receipts/components/ScanDialog'
 
 export default async function AddTransactionPage({
   searchParams,

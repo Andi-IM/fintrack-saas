@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getCashFlow, insertCashFlow, updateCashFlow, deleteCashFlow } from '../cash_flow'
+import { getCashFlow, insertCashFlow, updateCashFlow, deleteCashFlow } from '../actions/cash_flow'
 import { setCashFlowRepository, CashFlowRepository } from '@/lib/repositories/cash_flow'
 import { Tables } from '@/lib/database.types'
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { ScanDialog } from '../ScanDialog'
-import { useScanStore } from '@/hooks/use-scan-store'
+import { ScanDialog } from '../components/ScanDialog'
+import { useScanStore } from '../hooks/use-scan-store'
 import React from 'react'
 
 // Mock next router
@@ -13,18 +13,18 @@ vi.mock('next/navigation', () => ({
 }))
 
 // Mock API actions
-vi.mock('@/lib/actions/receipts', () => ({
+vi.mock('@/features/receipts/actions/receipts', () => ({
   saveReceipt: vi.fn(),
 }))
-vi.mock('@/lib/actions/ocr', () => ({
+vi.mock('@/features/receipts/actions/ocr', () => ({
   scanDocumentWithAI: vi.fn(),
 }))
-vi.mock('@/lib/actions/statements', () => ({
+vi.mock('@/features/bank-statements/actions/statements', () => ({
   saveBankStatement: vi.fn(),
 }))
 
 // Mock Zustand store
-vi.mock('@/hooks/use-scan-store', () => ({
+vi.mock('@/features/receipts/hooks/use-scan-store', () => ({
   useScanStore: vi.fn(),
 }))
 
@@ -143,7 +143,7 @@ describe('ScanDialog Component', () => {
       scanStatus: 'idle'
     } as any)
 
-    const { scanDocumentWithAI } = await import('@/lib/actions/ocr')
+    const { scanDocumentWithAI } = await import('@/features/receipts/actions/ocr')
     vi.mocked(scanDocumentWithAI).mockResolvedValue({
       success: true,
       data: { merchant: 'Test Merchant', total: 100 }
@@ -171,7 +171,7 @@ describe('ScanDialog Component', () => {
       }
     } as any)
 
-    const { saveReceipt } = await import('@/lib/actions/receipts')
+    const { saveReceipt } = await import('@/features/receipts/actions/receipts')
     vi.mocked(saveReceipt).mockResolvedValue({ success: true, data: undefined } as any)
 
     render(<ScanDialog scanContext="Receipt" />)
@@ -200,7 +200,7 @@ describe('ScanDialog Component', () => {
       }
     } as any)
 
-    const { saveBankStatement } = await import('@/lib/actions/statements')
+    const { saveBankStatement } = await import('@/features/bank-statements/actions/statements')
     vi.mocked(saveBankStatement).mockResolvedValue({ success: true, data: undefined } as any)
 
     render(<ScanDialog scanContext="BankStatement" />)

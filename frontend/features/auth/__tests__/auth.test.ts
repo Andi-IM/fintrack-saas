@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { login, logout } from '../auth'
-import { resolveAuthOrigin, DefaultOriginResolver } from '../auth-helpers'
+import { login, logout } from '../actions/auth'
+import { resolveAuthOrigin, DefaultOriginResolver } from '../actions/auth-helpers'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { headers } from 'next/headers'

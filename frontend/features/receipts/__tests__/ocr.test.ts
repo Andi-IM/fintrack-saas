@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { scanDocumentWithAI } from '../ocr'
+import { scanDocumentWithAI } from '../actions/ocr'
 import { documentProcessor } from '@/lib/ocr/processor'
 
 vi.mock('@/lib/ocr/processor', () => ({

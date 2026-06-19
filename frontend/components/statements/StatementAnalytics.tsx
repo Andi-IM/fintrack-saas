@@ -2,12 +2,12 @@
 
 import { useState, useMemo, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getStatementAnalytics } from '@/lib/actions/statements'
+import { getStatementAnalytics } from '@/features/bank-statements/actions/statements'
 import type {
   StatementAnalytics as StatementAnalyticsData,
   DailyBalancePoint,
   BankAnalyticsSummary,
-} from '@/lib/actions/statements'
+} from '@/features/bank-statements/actions/statements'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid,

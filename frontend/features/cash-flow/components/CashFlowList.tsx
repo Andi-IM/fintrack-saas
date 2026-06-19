@@ -17,7 +17,7 @@ import { Tables } from "@/lib/database.types"
 import { formatCurrency } from "@/lib/utils/transaction"
 import { Edit2, Trash2, FileText, Plus, Minus, Receipt, Link as LinkIcon, Search, X, ChevronLeft, ChevronRight, Filter } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useCashFlowController } from "@/hooks/use-cash-flow-controller"
+import { useCashFlowController } from "@/features/cash-flow/hooks/use-cash-flow-controller"
 
 export function CashFlowList({ transactions, timeRange }: { transactions: Tables<'cash_flow'>[], dateFilter?: string, timeRange: string }) {
   const router = useRouter()

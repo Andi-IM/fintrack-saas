@@ -8,7 +8,7 @@ import {
   deleteStatementItem,
   addStatementItem,
   getStatementAnalytics,
-} from '../statements'
+} from '../actions/statements'
 import { setStatementRepository, StatementRepository } from '@/lib/repositories/statements'
 import { Tables } from '@/lib/database.types'
 

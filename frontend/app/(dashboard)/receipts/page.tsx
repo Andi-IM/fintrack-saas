@@ -1,4 +1,4 @@
-import { getReceipts } from '@/lib/actions/receipts'
+import { getReceipts } from '@/features/receipts/actions/receipts'
 import { ReceiptList } from '@/components/receipts/ReceiptList'
 import Link from 'next/link'
 import { Camera } from 'lucide-react'

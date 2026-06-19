@@ -1,7 +1,7 @@
 'use client'
 
 import { Banknote, LogOut } from 'lucide-react'
-import { logout } from '@/lib/actions/auth'
+import { logout } from '@/features/auth/actions/auth'
 
 export function Topbar({ email }: { email: string | undefined }) {
   return (

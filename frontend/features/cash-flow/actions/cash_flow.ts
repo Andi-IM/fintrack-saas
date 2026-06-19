@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { invalidateCache } from '@/lib/cache'
 import { Tables } from '@/lib/database.types'
-import { ActionResponse } from './types'
+import { ActionResponse } from '@/lib/actions/types'
 import { getCashFlowRepository } from '@/lib/repositories/cash_flow'
 
 const cashFlowSchema = z.object({
