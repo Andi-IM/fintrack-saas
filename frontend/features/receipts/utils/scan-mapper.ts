@@ -29,7 +29,7 @@ export function mapReceiptResultToPayload(scanResult: OCRResult, fileToScan: Fil
     items: receiptItems.map(item => ({
       productName: item.name,
       quantity: item.quantity || 1,
-      price: item.price || item.amount || 0,
+      price: item.price ?? item.amount ?? 0,
     })),
     file: fileToScan,
   }

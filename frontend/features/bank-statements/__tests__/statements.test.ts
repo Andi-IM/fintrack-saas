@@ -27,6 +27,7 @@ describe('statements server actions', () => {
       updateItem: vi.fn(),
       addItem: vi.fn(),
       findItemsByStatementId: vi.fn(),
+      updateItemBalance: vi.fn().mockResolvedValue(undefined),
       updateClosingBalance: vi.fn(),
       getSignedUrl: vi.fn(),
       uploadFile: vi.fn(),
@@ -238,7 +239,39 @@ describe('statements server actions', () => {
       })
 
       expect(result.success).toBe(true)
+      // item-1 is non-manual: balance persisted (1000 + 500 = 1500)
+      expect(mockRepo.updateItemBalance).toHaveBeenCalledWith('item-1', 1500)
+      // item-2 is manual_balance: balance NOT overwritten
+      expect(mockRepo.updateItemBalance).not.toHaveBeenCalledWith('item-2', expect.anything())
+      // closing balance = item-2's manual balance (1200), total items = 2
       expect(mockRepo.updateClosingBalance).toHaveBeenCalledWith('stmt-1', 1200, 2)
+    })
+
+    it('persists recalculated balance for each non-manual item', async () => {
+      mockRepo.updateItem = vi.fn().mockResolvedValue({ statementId: 'stmt-1' })
+      mockRepo.findById = vi.fn().mockResolvedValue({ id: 'stmt-1', opening_balance: 100 } as any)
+      mockRepo.findItemsByStatementId = vi.fn().mockResolvedValue([
+        { id: 'item-a', amount: 200, type: 'income', balance: null, metadata: null },
+        { id: 'item-b', amount: 50, type: 'expense', balance: null, metadata: null },
+        { id: 'item-c', amount: 999, type: 'income', balance: 500, metadata: { manual_balance: true } },
+      ])
+      mockRepo.updateClosingBalance = vi.fn().mockResolvedValue(undefined)
+
+      await updateStatementItem('item-a', {
+        date: '2026-06-01',
+        description: 'Test',
+        amount: 200,
+        type: 'income',
+      })
+
+      // item-a: 100 + 200 = 300
+      expect(mockRepo.updateItemBalance).toHaveBeenCalledWith('item-a', 300)
+      // item-b: 300 - 50 = 250
+      expect(mockRepo.updateItemBalance).toHaveBeenCalledWith('item-b', 250)
+      // item-c: manual — skipped
+      expect(mockRepo.updateItemBalance).not.toHaveBeenCalledWith('item-c', expect.anything())
+      // closing = item-c's manual balance (500), total = 3
+      expect(mockRepo.updateClosingBalance).toHaveBeenCalledWith('stmt-1', 500, 3)
     })
 
     it('handles statement not found during recalculation gracefully', async () => {
@@ -336,7 +369,30 @@ describe('statements server actions', () => {
       })
 
       expect(result.success).toBe(true)
+      // balance persisted: 1000 - 300 = 700
+      expect(mockRepo.updateItemBalance).toHaveBeenCalledWith('item-new', 700)
       expect(mockRepo.updateClosingBalance).toHaveBeenCalledWith('stmt-1', 700, 1)
+    })
+
+    it('adds item and recalculates (income)', async () => {
+      mockRepo.addItem = vi.fn().mockResolvedValue(undefined)
+      mockRepo.findById = vi.fn().mockResolvedValue({ id: 'stmt-1', opening_balance: 500 } as any)
+      mockRepo.findItemsByStatementId = vi.fn().mockResolvedValue([
+        { id: 'item-inc', amount: 400, type: 'income', balance: null, metadata: null },
+      ])
+      mockRepo.updateClosingBalance = vi.fn().mockResolvedValue(undefined)
+
+      const result = await addStatementItem('stmt-1', {
+        date: '2026-06-19',
+        description: 'New income item',
+        amount: 400,
+        type: 'income',
+      })
+
+      expect(result.success).toBe(true)
+      // balance persisted: 500 + 400 = 900
+      expect(mockRepo.updateItemBalance).toHaveBeenCalledWith('item-inc', 900)
+      expect(mockRepo.updateClosingBalance).toHaveBeenCalledWith('stmt-1', 900, 1)
     })
 
     it('returns error on add statement item database failure', async () => {

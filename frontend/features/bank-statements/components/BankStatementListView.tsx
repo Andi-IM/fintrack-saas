@@ -209,9 +209,9 @@ export function BankStatementListView({
                                         className="h-7 w-7 text-rose-700 hover:text-rose-800 hover:bg-rose-50"
                                         aria-label={`Hapus item ${item.description}`}
                                         onClick={(e) => handleDeleteItem(e, item.id)}
-                                        disabled={deleteItemMutation.isPending}
+                                        disabled={deleteItemMutation.isPending && deleteItemMutation.variables === item.id}
                                       >
-                                        {deleteItemMutation.isPending ? (
+                                        {deleteItemMutation.isPending && deleteItemMutation.variables === item.id ? (
                                           <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
                                         ) : (
                                           <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />

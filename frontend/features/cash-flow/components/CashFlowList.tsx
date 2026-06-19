@@ -217,7 +217,7 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
                         {tx.main_category}
                       </span>
                       {tx.sub_category && (
-                        <span className="text-[10px] text-slate-505 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
+                        <span className="text-[10px] text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
                           {tx.sub_category}
                         </span>
                       )}
