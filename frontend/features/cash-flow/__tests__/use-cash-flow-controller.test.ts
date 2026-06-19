@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useCashFlowController } from '../hooks/use-cash-flow-controller'
+import { deleteCashFlow } from '@/features/cash-flow/actions/cash_flow'
 
 // Global mock state variables
 let mockQuerySearch = ''
@@ -36,7 +37,7 @@ vi.mock('nuqs', () => ({
 }))
 
 // Mock actions
-vi.mock('@/lib/actions/cash_flow', () => ({
+vi.mock('@/features/cash-flow/actions/cash_flow', () => ({
   deleteCashFlow: vi.fn().mockResolvedValue({ success: true }),
 }))
 
@@ -68,8 +69,37 @@ const mockTransactions = [
     receipt_id: null,
     source_item_id: 'statement-item-99',
     user_id: 'user-123'
+  },
+  {
+    id: 'tx-3',
+    created_at: '2026-06-19T00:00:00Z',
+    date: '2026-06-19T12:00:00Z',
+    description: 'Beli Buku',
+    income: 0,
+    expense: 150000,
+    main_category: 'Hobi',
+    sub_category: 'Buku',
+    payment_method: 'Cash',
+    receipt_id: 'receipt-123',
+    source_item_id: null,
+    user_id: 'user-123'
   }
 ]
+
+const manyMockTransactions = Array.from({ length: 30 }, (_, i) => ({
+  id: `tx-${i + 1}`,
+  created_at: '2026-06-19T00:00:00Z',
+  date: '2026-06-19T10:00:00Z',
+  description: `Transaction ${i + 1}`,
+  income: i % 2 === 0 ? 100000 : 0,
+  expense: i % 2 !== 0 ? 50000 : 0,
+  main_category: i % 2 === 0 ? 'Income' : 'Expense',
+  sub_category: 'Test',
+  payment_method: 'Cash',
+  receipt_id: null,
+  source_item_id: null,
+  user_id: 'user-123'
+}))
 
 describe('useCashFlowController hook', () => {
   beforeEach(() => {
@@ -92,8 +122,8 @@ describe('useCashFlowController hook', () => {
 
     expect(result.current.activeMobileTx).toBeNull()
     expect(result.current.localTransactions).toEqual(mockTransactions)
-    expect(result.current.uniqueCategories).toEqual(['Gaji', 'Makanan & Minuman'])
-    expect(result.current.uniquePaymentMethods).toEqual(['Gopay', 'Transfer Bank'])
+    expect(result.current.uniqueCategories).toEqual(['Gaji', 'Hobi', 'Makanan & Minuman'])
+    expect(result.current.uniquePaymentMethods).toEqual(['Cash', 'Gopay', 'Transfer Bank'])
   })
 
   it('triggers search changes successfully', () => {
@@ -201,8 +231,91 @@ describe('useCashFlowController hook', () => {
       await result.current.handleDelete('tx-1')
     })
 
-    expect(result.current.localTransactions.length).toBe(1)
+    expect(result.current.localTransactions.length).toBe(2)
     expect(result.current.localTransactions[0].id).toBe('tx-2')
+  })
+
+  it('handles transaction deletion failure and restores local state', async () => {
+    vi.mocked(deleteCashFlow).mockResolvedValue({ success: false, error: 'Failed to delete' })
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+
+    await act(async () => {
+      await result.current.handleDelete('tx-1')
+    })
+
+    expect(result.current.localTransactions.length).toBe(3)
+    expect(result.current.localTransactions.some(tx => tx.id === 'tx-1')).toBe(true)
+  })
+
+  it('filters by source "receipt" correctly', () => {
+    mockQuerySource = 'receipt'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.filteredTransactions.length).toBe(1)
+    expect(result.current.filteredTransactions[0].id).toBe('tx-3')
+  })
+
+  it('filters by source "statement" correctly', () => {
+    mockQuerySource = 'statement'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.filteredTransactions.length).toBe(1)
+    expect(result.current.filteredTransactions[0].id).toBe('tx-2')
+  })
+
+  it('filters by source "manual" correctly', () => {
+    mockQuerySource = 'manual'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.filteredTransactions.length).toBe(1)
+    expect(result.current.filteredTransactions[0].id).toBe('tx-1')
+  })
+
+  it('calculates correct page numbers for totalPages <= 5', () => {
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.pageNumbers).toEqual([1])
+  })
+
+  it('calculates correct page numbers for validPage <=3', () => {
+    mockQueryPageSize = '5'
+    mockQueryPage = '2'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: manyMockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.pageNumbers).toEqual([1, 2, 3, 4, '...', 6])
+  })
+
+  it('calculates correct page numbers for validPage >= totalPages -2', () => {
+    mockQueryPageSize = '5'
+    mockQueryPage = '5'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: manyMockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.pageNumbers).toEqual([1, '...', 3, 4, 5, 6])
+  })
+
+  it('calculates correct page numbers for middle validPage', () => {
+    mockQueryPageSize = '5'
+    mockQueryPage = '4'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: [...manyMockTransactions, { id: 'tx-31' } as any, { id: 'tx-32' } as any, { id: 'tx-33' } as any, { id: 'tx-34' } as any, { id: 'tx-35' } as any], // 35 items, 7 pages
+      timeRange: 'ALL'
+    }))
+    expect(result.current.pageNumbers).toEqual([1, '...', 3, 4, 5, '...', 7])
   })
 
   it('filters by date, sub_category, and source matching correctly', () => {

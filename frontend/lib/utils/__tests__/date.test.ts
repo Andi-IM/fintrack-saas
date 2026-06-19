@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { formatDateForInput } from '../date'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { formatDateForInput, getBrowserTimezoneOffset } from '../date'
 
 describe('formatDateForInput', () => {
   it('formats a valid ISO string to datetime-local format', () => {
@@ -22,11 +22,26 @@ describe('formatDateForInput', () => {
   })
 })
 
-import { getBrowserTimezoneOffset } from '../date'
-
 describe('getBrowserTimezoneOffset', () => {
-  it('returns timezone offset in +/-HH:MM format', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('returns timezone offset in +HH:MM format for negative offset minutes (ahead of UTC)', () => {
+    vi.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(-420) // UTC+7
     const offset = getBrowserTimezoneOffset()
-    expect(offset).toMatch(/^[+-]\d{2}:\d{2}$/)
+    expect(offset).toBe('+07:00')
+  })
+
+  it('returns timezone offset in -HH:MM format for positive offset minutes (behind UTC)', () => {
+    vi.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(300) // UTC-5
+    const offset = getBrowserTimezoneOffset()
+    expect(offset).toBe('-05:00')
+  })
+
+  it('pads single-digit hours and minutes', () => {
+    vi.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(61) // 1h 1m behind UTC
+    const offset = getBrowserTimezoneOffset()
+    expect(offset).toBe('-01:01')
   })
 })

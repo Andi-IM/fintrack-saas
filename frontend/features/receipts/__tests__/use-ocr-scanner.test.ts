@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { useOcrScanner } from '../hooks/use-ocr-scanner'
 import { useScanStore } from '../hooks/use-scan-store'
 import { scanDocumentWithAI } from '../actions/ocr'
@@ -23,7 +23,12 @@ describe('useOcrScanner', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.useFakeTimers()
     vi.mocked(useScanStore).mockReturnValue(mockStore as any)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('does nothing if no fileToScan is set', async () => {
@@ -41,19 +46,52 @@ describe('useOcrScanner', () => {
     expect(mockStore.setScanStatus).not.toHaveBeenCalled()
   })
 
-  it('runs handleProcessScan successfully', async () => {
-    vi.mocked(scanDocumentWithAI).mockResolvedValue({ success: true, data: { merchant: 'Test Store' } } as any)
+  it('runs handleProcessScan successfully and animates progress', async () => {
+    // Mock scanDocumentWithAI to take time
+    let resolveScan: (value: any) => void
+    const scanPromise = new Promise(resolve => {
+      resolveScan = resolve
+    })
+    vi.mocked(scanDocumentWithAI).mockReturnValue(scanPromise)
+    // Mock setScanProgress to track calls
+    let currentProgress = 0
+    vi.mocked(mockStore.setScanProgress).mockImplementation(callback => {
+      if (typeof callback === 'function') {
+        currentProgress = callback(currentProgress)
+      }
+      return currentProgress
+    })
 
     const { result } = renderHook(() => useOcrScanner('Receipt'))
 
+    // Start processing
+    let processPromise: Promise<void>
     await act(async () => {
-      await result.current.handleProcessScan()
+      processPromise = result.current.handleProcessScan()
+    })
+
+    // Fast-forward time multiple times
+    for (let i = 0; i < 20; i++) {
+      act(() => {
+        vi.advanceTimersByTime(150)
+      })
+    }
+
+    // Verify progress reached up to 90
+    expect(mockStore.setScanProgress).toHaveBeenCalled()
+    expect(currentProgress).toBe(90)
+
+    // Resolve the scan
+    await act(async () => {
+      resolveScan!({ success: true, data: { merchant: 'Test Store' } })
+      await processPromise
     })
 
     expect(mockStore.setScanStatus).toHaveBeenCalledWith('scanning')
     expect(scanDocumentWithAI).toHaveBeenCalled()
     expect(mockStore.setScanResult).toHaveBeenCalledWith({ merchant: 'Test Store' })
     expect(mockStore.setScanStatus).toHaveBeenCalledWith('success')
+    expect(mockStore.setScanProgress).toHaveBeenCalledWith(100)
   })
 
   it('handles scan failure', async () => {
