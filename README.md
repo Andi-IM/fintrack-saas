@@ -4,6 +4,9 @@
 
 # Run and deploy your AI Studio app
 
+[![codecov](https://codecov.io/gh/Andi-IM/fintrack-saas/graph/badge.svg?token=KyUSihKYsJ)](https://codecov.io/gh/Andi-IM/fintrack-saas)
+
+
 This contains everything you need to run your app locally.
 
 View your app in AI Studio: https://ai.studio/apps/752c8754-a277-496f-8ad0-df466b78deba
