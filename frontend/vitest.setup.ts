@@ -6,8 +6,6 @@ import { createElement } from 'react'
 if (!process.env.VERBOSE_TESTS) {
   vi.spyOn(console, 'log').mockImplementation(() => {})
   vi.spyOn(console, 'info').mockImplementation(() => {})
-  vi.spyOn(console, 'warn').mockImplementation(() => {})
-  vi.spyOn(console, 'error').mockImplementation(() => {})
 }
 
 // Mock window.alert to suppress jsdom warnings
