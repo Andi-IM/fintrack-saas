@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 // Interface representing the cash flow database access layer
 export interface CashFlowRepository {
   findAll(): Promise<Tables<'cash_flow'>[]>
-  create(data: Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id'>): Promise<Tables<'cash_flow'>>
+  create(data: Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id' | 'source_item_id'> & { source_item_id?: string | null }): Promise<Tables<'cash_flow'>>
   update(id: string, data: Partial<Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id'>>): Promise<void>
   delete(id: string): Promise<void>
 }
@@ -24,7 +24,7 @@ export class SupabaseCashFlowRepository implements CashFlowRepository {
     return data || []
   }
 
-  async create(data: Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id'>): Promise<Tables<'cash_flow'>> {
+  async create(data: Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id' | 'source_item_id'> & { source_item_id?: string | null }): Promise<Tables<'cash_flow'>> {
     const supabase = await createClient()
     const { data: insertedData, error } = await supabase
       .from('cash_flow')

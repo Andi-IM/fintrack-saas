@@ -1,12 +1,12 @@
 'use server'
 
 import { z } from 'zod'
-import { revalidatePath } from 'next/cache'
+import { invalidateCache } from '@/lib/cache'
 import { Tables } from '@/lib/database.types'
 import { ActionResponse } from './types'
 import { getCashFlowRepository } from '@/lib/repositories/cash_flow'
 
-export const cashFlowSchema = z.object({
+const cashFlowSchema = z.object({
   date: z.string().min(1, 'Date is required'),
   income: z.number().nonnegative().optional().default(0),
   expense: z.number().nonnegative().optional().default(0),
@@ -44,9 +44,10 @@ export async function insertCashFlow(
     const repo = getCashFlowRepository()
     const insertedData = await repo.create({
       ...parsed.data,
+      receipt_id: parsed.data.receipt_id ?? null,
       date: parsed.data.date || new Date().toISOString()
     })
-    revalidatePath('/')
+    invalidateCache(['/'])
     return { success: true, data: insertedData }
   } catch (error: any) {
     console.error("Error inserting cash flow:", error)
@@ -70,7 +71,7 @@ export async function updateCashFlow(
   try {
     const repo = getCashFlowRepository()
     await repo.update(id, parsed.data)
-    revalidatePath('/')
+    invalidateCache(['/'])
     return { success: true }
   } catch (error: any) {
     console.error("Error updating cash flow:", error)
@@ -82,7 +83,7 @@ export async function deleteCashFlow(id: string): Promise<ActionResponse<void>> 
   try {
     const repo = getCashFlowRepository()
     await repo.delete(id)
-    revalidatePath('/')
+    invalidateCache(['/'])
     return { success: true }
   } catch (error: any) {
     console.error("Error deleting cash flow:", error)

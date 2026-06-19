@@ -1,24 +1,13 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
+import { OriginResolver, DefaultOriginResolver } from './auth-helpers'
 
-export async function login() {
+export async function login(originResolver?: OriginResolver | FormData): Promise<void> {
   const supabase = await createClient()
-  let origin: string | undefined
-
-  if (process.env.APP_URL) {
-    origin = process.env.APP_URL
-  } else if (process.env.NEXT_PUBLIC_VERCEL_URL) {
-    origin = `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-  } else {
-    const headersList = await headers()
-    const host = headersList.get('x-forwarded-host') || headersList.get('host') || 'localhost:3000'
-    const proto = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https')
-    origin = `${proto}://${host}`
-  }
+  const resolver = (originResolver && 'resolve' in originResolver) ? originResolver : new DefaultOriginResolver()
+  const origin = await resolver.resolve()
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
@@ -37,9 +26,9 @@ export async function login() {
   }
 }
 
-export async function logout() {
+export async function logout(): Promise<void> {
   const supabase = await createClient()
   await supabase.auth.signOut()
-  revalidatePath('/')
   redirect('/login')
 }
+
