@@ -19,21 +19,21 @@ export function Sidebar() {
         </Link>
         <Link 
           href="/transactions" 
-          className={["flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname.startsWith("/transactions") || pathname === "/add" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
+          className={["flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname?.startsWith("/transactions") || pathname === "/add" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
         >
           <FileText className="w-5 h-5" />
           Transactions
         </Link>
         <Link 
           href="/statements" 
-          className={["flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname.startsWith("/statements") ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
+          className={["flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname?.startsWith("/statements") ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
         >
           <Building2 className="w-5 h-5" />
           Bank Statements
         </Link>
         <Link 
           href="/receipts" 
-          className={["flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname.startsWith("/receipts") ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
+          className={["flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname?.startsWith("/receipts") ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
         >
           <Camera className="w-5 h-5" />
           Receipts
