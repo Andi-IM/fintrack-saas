@@ -46,6 +46,7 @@ export interface StatementRepository {
     balance?: number
   }): Promise<void>
   findItemsByStatementId(statementId: string): Promise<Tables<'bank_statement_items'>[]>
+  updateItemBalance(itemId: string, balance: number): Promise<void>
   updateClosingBalance(itemId: string, closingBalance: number, totalItems: number): Promise<void>
 
   getSignedUrl(path: string): Promise<string>
@@ -318,6 +319,19 @@ export class SupabaseStatementsRepository implements StatementRepository {
 
     if (error || !data) return []
     return data
+  }
+
+  async updateItemBalance(itemId: string, balance: number): Promise<void> {
+    const supabase = await createClient()
+    const { error } = await supabase
+      .from('bank_statement_items')
+      .update({ balance })
+      .eq('id', itemId)
+
+    if (error) {
+      console.error('Error updating item balance:', error)
+      throw new Error('Failed to update item balance')
+    }
   }
 
   async updateClosingBalance(statementId: string, closingBalance: number, totalItems: number): Promise<void> {

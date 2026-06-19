@@ -382,6 +382,7 @@ async function recalculateStatementBalances(statementId: string): Promise<void> 
     } else {
       if (item.type === 'income') runningBalance += item.amount
       else runningBalance -= item.amount
+      await repo.updateItemBalance(item.id, runningBalance)
     }
     lastBalance = runningBalance
   }

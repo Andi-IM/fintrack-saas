@@ -184,10 +184,19 @@ describe('BankStatementListView', () => {
   it('shows Loader2 spinner on delete item button when deleteItemMutation is pending', () => {
     const props = makeProps({
       expandedPeriods: ['stmt-1'],
-      deleteItemMutation: makeMutation({ isPending: true }),
+      deleteItemMutation: makeMutation({ isPending: true, variables: 'item-1' }),
     })
     render(<BankStatementListView {...props} />)
     expect(screen.getByLabelText(/Hapus item Test Transaction/i)).toBeDisabled()
+  })
+
+  it('does not disable delete item button when a different item is pending', () => {
+    const props = makeProps({
+      expandedPeriods: ['stmt-1'],
+      deleteItemMutation: makeMutation({ isPending: true, variables: 'item-other' }),
+    })
+    render(<BankStatementListView {...props} />)
+    expect(screen.getByLabelText(/Hapus item Test Transaction/i)).not.toBeDisabled()
   })
 
   it('calls setEditingItem when edit button is clicked', () => {
