@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-19T09:54:00Z",
+  "title": "Design System: FinTrack SaaS",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Clean Indigo",
+        "canonical": "oklch(0.585 0.233 277.117)",
+        "tonalRamp": [
+          "oklch(0.25 0.23 277.117)",
+          "oklch(0.35 0.23 277.117)",
+          "oklch(0.45 0.23 277.117)",
+          "oklch(0.585 0.233 277.117)",
+          "oklch(0.68 0.20 277.117)",
+          "oklch(0.78 0.15 277.117)",
+          "oklch(0.88 0.10 277.117)",
+          "oklch(0.95 0.05 277.117)"
+        ]
+      },
+      "neutral-bg": {
+        "role": "neutral",
+        "displayName": "Pure Canvas",
+        "canonical": "oklch(1 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.30 0 0)",
+          "oklch(0.50 0 0)",
+          "oklch(0.70 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.90 0 0)",
+          "oklch(0.95 0 0)",
+          "oklch(1.00 0 0)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display Hero Title",
+        "purpose": "Big headlines on landing pages only."
+      },
+      "body": {
+        "displayName": "Standard Body Text",
+        "purpose": "Main content font, forms, cells, and finance tables."
+      }
+    },
+    "shadows": [
+      {
+        "name": "interactive-rise",
+        "value": "0 4px 12px rgba(79, 70, 229, 0.08)",
+        "purpose": "Subtle interactive feedback shadow on card containers and primary buttons."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Snappy, professional easing for UI element transitions."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Clean primary action button.",
+      "html": "<button class=\"ds-btn-primary\">Add Transaction</button>",
+      "css": ".ds-btn-primary { background-color: #4f46e5; color: #ffffff; padding: 10px 16px; font-family: 'Poppins', sans-serif; font-size: 0.875rem; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; transition: background-color 0.2s ease, box-shadow 0.2s ease; } .ds-btn-primary:hover { background-color: #4338ca; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08); }"
+    },
+    {
+      "name": "Financial Card",
+      "kind": "card",
+      "description": "Dashboard container card at rest.",
+      "html": "<div class=\"ds-card\"><h4 class=\"ds-card-title\">Total Assets</h4><p class=\"ds-card-value\">Rp 12.500.000</p></div>",
+      "css": ".ds-card { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; font-family: 'Inter', sans-serif; transition: box-shadow 0.2s ease; } .ds-card:hover { box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08); } .ds-card-title { font-family: 'Poppins', sans-serif; font-size: 0.875rem; font-weight: 500; color: #64748b; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.05em; } .ds-card-value { font-size: 1.5rem; font-weight: 600; color: #0f172a; margin: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Clean Indigo Vault",
+    "overview": "A sleek, highly structured financial workspace built around precision, density, and localized trust. It rejects ambient shadows and warm-cream templates in favor of sharp boundaries, clean typography, and excellent contrast.",
+    "keyCharacteristics": [
+      "Focused Indigo visual identity with dark slate/blue depth.",
+      "Low-elevation, boundary-driven layouts utilizing 1px borders.",
+      "High typographic readability separating numbers (Inter) from branding/headings (Poppins)."
+    ],
+    "rules": [
+      {
+        "name": "The Indigo Constraint Rule",
+        "body": "The primary clean indigo color (#4f46e5) is used selectively on <=10% of any given screen. Primary actions and brand markers carry the accent.",
+        "section": "colors"
+      },
+      {
+        "name": "The Boundary Rule",
+        "body": "Depth must always be created using solid borders (1px) in combination with layout changes. Ambient drop shadows are prohibited unless explicitly triggered by interactive states.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do format all currency amounts explicitly via Intl.NumberFormat('id-ID').",
+      "Do use a Calendar-based date picker for manual transactions instead of simple text inputs.",
+      "Do provide in-page skeleton loading animations for fields while OCR processing is active."
+    ],
+    "donts": [
+      "Don't use warm neutral/beige 'SaaS-cream' default background colors.",
+      "Don't apply border-radius values greater than 16px to cards or sections.",
+      "Don't pair a 1px solid border with a drop shadow of 16px or greater blur."
+    ]
+  }
+}
