@@ -2,8 +2,6 @@
 
 import { format } from "date-fns"
 import { useRouter } from 'next/navigation'
-import { useMemo, useState, useEffect } from 'react'
-import { useQueryState } from 'nuqs'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -13,223 +11,52 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogDescription,
-  DialogFooter
+  DialogDescription
 } from "@/components/ui/dialog"
-import { deleteCashFlow } from "@/lib/actions/cash_flow"
 import { Tables } from "@/lib/database.types"
-import { formatCurrency, filterTransactionsByRange } from "@/lib/utils/transaction"
+import { formatCurrency } from "@/lib/utils/transaction"
 import { Edit2, Trash2, FileText, Plus, Minus, Receipt, Link as LinkIcon, Search, X, ChevronLeft, ChevronRight, Filter } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useCashFlowController } from "@/hooks/use-cash-flow-controller"
 
-export function CashFlowList({ transactions, dateFilter: propDateFilter, timeRange }: { transactions: Tables<'cash_flow'>[], dateFilter?: string, timeRange: string }) {
+export function CashFlowList({ transactions, timeRange }: { transactions: Tables<'cash_flow'>[], dateFilter?: string, timeRange: string }) {
   const router = useRouter()
-
-  const [dateFilter, setDateFilter] = useQueryState('date', {
-    shallow: false,
-  })
-
-  // Mobile Drawer State
-  const [activeMobileTx, setActiveMobileTx] = useState<Tables<'cash_flow'> | null>(null)
-
-  // URL-synchronized query states for search and filters
-  const [search, setSearch] = useQueryState('search', {
-    defaultValue: '',
-    shallow: true,
-  })
-
-  const [category, setCategory] = useQueryState('category', {
-    defaultValue: 'all',
-    shallow: true,
-  })
-
-  const [payment, setPayment] = useQueryState('payment', {
-    defaultValue: 'all',
-    shallow: true,
-  })
-
-  const [source, setSource] = useQueryState('source', {
-    defaultValue: 'all',
-    shallow: true,
-  })
-
-  const [page, setPage] = useQueryState('page', {
-    defaultValue: '1',
-    shallow: true,
-  })
-
-  const [pageSize, setPageSize] = useQueryState('pageSize', {
-    defaultValue: '15',
-    shallow: true,
-  })
-
-  const [range, setRange] = useQueryState('range', {
-    defaultValue: timeRange || 'ALL',
-    shallow: true,
-  })
-
-  // Local state for optimistic updates
-  const [localTransactions, setLocalTransactions] = useState<Tables<'cash_flow'>[]>(transactions)
-
-  // Keep local state in sync when server validation triggers fresh props
-  useEffect(() => {
-    setLocalTransactions(transactions)
-  }, [transactions])
-
-  const handleClearDateFilter = () => {
-    setDateFilter(null)
-  }
-
-  const handleDelete = async (id: string) => {
-    const previousTransactions = [...localTransactions]
-    // Optimistically remove from UI
-    setLocalTransactions(prev => prev.filter(tx => tx.id !== id))
-
-    const result = await deleteCashFlow(id)
-    if (!result.success) {
-      alert(`Failed to delete cash flow: ${result.error}`)
-      setLocalTransactions(previousTransactions)
-    }
-  }
+  
+  // Delegate state management to custom hook controller abstraction
+  const {
+    activeMobileTx,
+    setActiveMobileTx,
+    search,
+    category,
+    payment,
+    source,
+    range,
+    dateFilter,
+    handleClearDateFilter,
+    handleDelete,
+    handleSearchChange,
+    handleCategoryChange,
+    handlePaymentChange,
+    handleSourceChange,
+    handlePageChange,
+    handlePageSizeChange,
+    handleRangeChange,
+    handleResetFilters,
+    uniqueCategories,
+    uniquePaymentMethods,
+    paginatedTransactions,
+    hasActiveFilters,
+    pageNumbers,
+    validPage,
+    limit,
+    startIndex,
+    totalItems,
+    totalPages,
+  } = useCashFlowController({ initialTransactions: transactions, timeRange })
 
   const handleEdit = (id: string) => {
     router.push(`/add?edit=${id}`)
   }
-
-  // Handle filter changes and reset page to 1
-  const handleSearchChange = (val: string) => {
-    setSearch(val || null)
-    setPage('1')
-  }
-
-  const handleCategoryChange = (val: string) => {
-    setCategory(val === 'all' ? null : val)
-    setPage('1')
-  }
-
-  const handlePaymentChange = (val: string) => {
-    setPayment(val === 'all' ? null : val)
-    setPage('1')
-  }
-
-  const handleSourceChange = (val: string) => {
-    setSource(val === 'all' ? null : val)
-    setPage('1')
-  }
-
-  const handlePageChange = (newPage: number) => {
-    setPage(String(newPage))
-  }
-
-  const handlePageSizeChange = (size: string) => {
-    setPageSize(size)
-    setPage('1')
-  }
-
-  const handleRangeChange = (val: string) => {
-    setRange(val === 'ALL' ? null : val)
-    setPage('1')
-  }
-
-  const handleResetFilters = () => {
-    setSearch(null)
-    setCategory(null)
-    setPayment(null)
-    setSource(null)
-    setRange(null)
-    setPage('1')
-  }
-
-  // Extract unique categories and payment methods from data for dynamic filters
-  const uniqueCategories = useMemo(() => {
-    const cats = new Set<string>()
-    localTransactions.forEach(tx => {
-      if (tx.main_category) cats.add(tx.main_category)
-    })
-    return Array.from(cats).sort()
-  }, [localTransactions])
-
-  const uniquePaymentMethods = useMemo(() => {
-    const methods = new Set<string>()
-    localTransactions.forEach(tx => {
-      if (tx.payment_method) methods.add(tx.payment_method)
-    })
-    return Array.from(methods).sort()
-  }, [localTransactions])
-
-  // Filter pipeline
-  const filteredTransactions = useMemo(() => {
-    let result = filterTransactionsByRange(localTransactions, range || 'ALL')
-
-    // 1. Date Filter
-    if (dateFilter) {
-      result = result.filter(tx => tx.date.split('T')[0] === dateFilter)
-    }
-
-    // 2. Keyword Search (description, sub-category, main-category)
-    if (search) {
-      const q = search.toLowerCase()
-      result = result.filter(tx => 
-        (tx.description && tx.description.toLowerCase().includes(q)) ||
-        (tx.sub_category && tx.sub_category.toLowerCase().includes(q)) ||
-        (tx.main_category && tx.main_category.toLowerCase().includes(q))
-      )
-    }
-
-    // 3. Category Filter
-    if (category && category !== 'all') {
-      result = result.filter(tx => tx.main_category === category)
-    }
-
-    // 4. Payment Method Filter
-    if (payment && payment !== 'all') {
-      result = result.filter(tx => tx.payment_method === payment)
-    }
-
-    // 5. Source Type Filter
-    if (source && source !== 'all') {
-      if (source === 'receipt') {
-        result = result.filter(tx => tx.receipt_id !== null)
-      } else if (source === 'statement') {
-        result = result.filter(tx => tx.source_item_id !== null)
-      } else if (source === 'manual') {
-        result = result.filter(tx => tx.receipt_id === null && tx.source_item_id === null)
-      }
-    }
-
-    return result
-  }, [localTransactions, range, dateFilter, search, category, payment, source])
-
-  // Pagination calculation
-  const currentPage = parseInt(page || '1', 10) || 1
-  const limit = parseInt(pageSize || '15', 10) || 15
-  const totalItems = filteredTransactions.length
-  const totalPages = Math.ceil(totalItems / limit) || 1
-  const validPage = Math.min(Math.max(currentPage, 1), totalPages)
-  const startIndex = (validPage - 1) * limit
-
-  const paginatedTransactions = useMemo(() => {
-    return filteredTransactions.slice(startIndex, startIndex + limit)
-  }, [filteredTransactions, startIndex, limit])
-
-  const hasActiveFilters = search || category !== 'all' || payment !== 'all' || source !== 'all' || (range && range !== 'ALL')
-
-  // Generate page numbers to display in pagination controls
-  const pageNumbers = useMemo(() => {
-    const pages: (number | string)[] = []
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i)
-    } else {
-      if (validPage <= 3) {
-        pages.push(1, 2, 3, 4, '...', totalPages)
-      } else if (validPage >= totalPages - 2) {
-        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages)
-      } else {
-        pages.push(1, '...', validPage - 1, validPage, validPage + 1, '...', totalPages)
-      }
-    }
-    return pages
-  }, [totalPages, validPage])
 
   return (
     <Card className="shadow-sm border-slate-200 rounded-xl bg-white relative">
@@ -390,7 +217,7 @@ export function CashFlowList({ transactions, dateFilter: propDateFilter, timeRan
                         {tx.main_category}
                       </span>
                       {tx.sub_category && (
-                        <span className="text-[10px] text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
+                        <span className="text-[10px] text-slate-505 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
                           {tx.sub_category}
                         </span>
                       )}
