@@ -50,6 +50,13 @@ const nextConfig: NextConfig = {
       };
     }
 
+    // Solusi: Statically polyfill process.version for Supabase compilation warnings in Vercel Edge Runtime
+    config.plugins.push(
+      new options.webpack.DefinePlugin({
+        'process.version': JSON.stringify('v20.0.0'),
+      })
+    );
+
     // 4. Inject Codecov Bundle Analysis Webpack Plugin in production
     if (!dev && !isServer && process.env.CODECOV_TOKEN) {
       config.plugins.push(
