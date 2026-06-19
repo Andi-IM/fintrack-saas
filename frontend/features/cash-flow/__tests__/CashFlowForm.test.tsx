@@ -364,4 +364,34 @@ describe('CashFlowForm Component', () => {
     fireEvent.click(cancelBtn)
     expect(mockPush).toHaveBeenCalledWith('/')
   })
+
+  it('does not auto-fill amount if either expense or income is already set', async () => {
+    render(<CashFlowForm initialData={null} />)
+    
+    // First, fill in expense field to simulate existing value
+    const expenseInput = screen.getByLabelText(/Arus Keluar/i) as HTMLInputElement
+    fireEvent.change(expenseInput, { target: { value: '50000' } })
+    
+    // Now trigger selecting a receipt that has total_price
+    const selectReceiptBtn = screen.getByTestId('trigger-receipt-select')
+    fireEvent.click(selectReceiptBtn)
+    
+    // The expense field should remain as '50000', not changed to 125000
+    expect(expenseInput.value).toBe('50000')
+  })
+
+  it('does not auto-fill income if already set when selecting statement item', async () => {
+    render(<CashFlowForm initialData={null} />)
+    
+    // First, fill in income field to simulate existing value
+    const incomeInput = screen.getByLabelText(/Arus Masuk/i) as HTMLInputElement
+    fireEvent.change(incomeInput, { target: { value: '999999' } })
+    
+    // Trigger selecting an income bank statement item
+    const selectStatementBtn = screen.getByTestId('trigger-statement-select-income')
+    fireEvent.click(selectStatementBtn)
+    
+    // The income field should remain as '999999'
+    expect(incomeInput.value).toBe('999999')
+  })
 })

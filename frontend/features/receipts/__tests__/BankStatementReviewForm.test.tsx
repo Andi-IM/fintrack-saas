@@ -163,4 +163,56 @@ describe('BankStatementReviewForm Component', () => {
     fireEvent.click(saveBtn)
     expect(mockHandleSaveScannedItems).toHaveBeenCalled()
   })
+
+  it('renders when scanResult.items is an empty array', () => {
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      scanResult: {
+        bank: 'BCA',
+        statementPeriod: 'May 2026',
+        openingBalance: 100000,
+        closingBalance: 200000,
+        items: []
+      }
+    } as any)
+
+    render(<BankStatementReviewForm />)
+    expect(screen.getByText('Extraction Successful - Review & Edit')).toBeInTheDocument()
+  })
+
+  it('renders scanResult.items with non-bank transaction items', () => {
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      scanResult: {
+        bank: 'BCA',
+        statementPeriod: 'May 2026',
+        openingBalance: 100000,
+        closingBalance: 200000,
+        items: [
+          { name: 'Non-bank item', amount: 50000 }, // Not a bank transaction
+          { name: 'Salary', amount: 5000000, type: 'income', date: '2026-06-19T10:00:00Z' }
+        ]
+      }
+    } as any)
+
+    render(<BankStatementReviewForm />)
+    expect(screen.getByDisplayValue('Salary')).toBeInTheDocument()
+  })
+
+  it('handles null/undefined values for optional fields', () => {
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      scanResult: {
+        bank: 'BCA',
+        statementPeriod: undefined,
+        openingBalance: null,
+        closingBalance: undefined,
+        items: []
+      }
+    } as any)
+
+    render(<BankStatementReviewForm />)
+    const numberInputs = screen.getAllByDisplayValue('0')
+    expect(numberInputs.length).toBeGreaterThan(0)
+  })
 })

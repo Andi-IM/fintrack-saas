@@ -168,6 +168,10 @@ describe('ReceiptReviewForm Component', () => {
     fireEvent.change(txTypeSelect, { target: { value: 'deposit' } })
     expect(mockStore.updateScanResultField).toHaveBeenCalledWith('transactionType', 'deposit')
 
+    // Edit transaction type to 'transfer'
+    fireEvent.change(txTypeSelect, { target: { value: 'transfer' } })
+    expect(mockStore.updateScanResultField).toHaveBeenCalledWith('transactionType', 'transfer')
+
     // Edit Admin Fee
     const feeInput = screen.getByDisplayValue('6500')
     fireEvent.change(feeInput, { target: { value: '0' } })
@@ -181,5 +185,70 @@ describe('ReceiptReviewForm Component', () => {
     const refInput = screen.getByDisplayValue('REF999')
     fireEvent.change(refInput, { target: { value: 'REF777' } })
     expect(mockStore.updateScanResultField).toHaveBeenCalledWith('referenceNumber', 'REF777')
+  })
+
+  it('renders shopping type receipt with no items', () => {
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      scanResult: {
+        type: 'shopping',
+        merchant: 'Alfamart',
+        date: '2026-06-19T10:00:00.000Z',
+        total: 10000,
+        items: []
+      }
+    } as any)
+
+    render(<ReceiptReviewForm />)
+    expect(screen.getByText(/Belum ada item terdeteksi/i)).toBeInTheDocument()
+  })
+
+  it('renders shopping type receipt with scanResult.items undefined', () => {
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      scanResult: {
+        type: 'shopping',
+        merchant: 'Alfamart',
+        date: '2026-06-19T10:00:00Z',
+        total: 10000
+      }
+    } as any)
+
+    render(<ReceiptReviewForm />)
+    expect(screen.getByText('Extraction Successful - Review & Edit')).toBeInTheDocument()
+  })
+
+  it('calls addScanResultItem when add item button is clicked', () => {
+    const mockAddScanResultItem = vi.fn()
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      addScanResultItem: mockAddScanResultItem,
+      scanResult: {
+        type: 'shopping',
+        merchant: 'Alfamart',
+        date: '2026-06-19T10:00:00Z',
+        total: 10000
+      }
+    } as any)
+
+    render(<ReceiptReviewForm />)
+    const addBtn = screen.getByRole('button', { name: /Tambah Item/i })
+    fireEvent.click(addBtn)
+    expect(mockAddScanResultItem).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not show add item button when receipt type is atm', () => {
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      scanResult: {
+        type: 'atm',
+        merchant: 'Mandiri ATM',
+        date: '2026-06-19T10:00:00.000Z',
+        total: 100000
+      }
+    } as any)
+
+    render(<ReceiptReviewForm />)
+    expect(screen.queryByRole('button', { name: /Tambah Item/i })).not.toBeInTheDocument()
   })
 })

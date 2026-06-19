@@ -4,8 +4,8 @@ import { setCashFlowRepository, CashFlowRepository } from '@/lib/repositories/ca
 import { Tables } from '@/lib/database.types'
 
 // Mock next/cache
-vi.mock('next/cache', () => ({
-  revalidatePath: vi.fn(),
+vi.mock('@/lib/cache', () => ({
+  invalidateCache: vi.fn(),
 }))
 
 describe('cash_flow server actions', () => {
@@ -66,11 +66,20 @@ describe('cash_flow server actions', () => {
       }
     })
 
+
+
     it('returns error on insertion database failure', async () => {
       mockRepo.create = vi.fn().mockRejectedValue(new Error('Foreign key violation'))
       const result = await insertCashFlow(validArgs)
       expect(result.success).toBe(false)
       expect(result.error).toBe('Foreign key violation')
+    })
+
+    it('uses fallback error message when error.message is falsy', async () => {
+      mockRepo.create = vi.fn().mockRejectedValue({})
+      const result = await insertCashFlow(validArgs)
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Database error occurred')
     })
   })
 
@@ -103,6 +112,13 @@ describe('cash_flow server actions', () => {
       expect(result.success).toBe(false)
       expect(result.error).toBe('Not Found')
     })
+
+    it('uses fallback error message when error.message is falsy', async () => {
+      mockRepo.update = vi.fn().mockRejectedValue({})
+      const result = await updateCashFlow('tx-1', validArgs)
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Database error occurred')
+    })
   })
 
   describe('deleteCashFlow', () => {
@@ -117,6 +133,13 @@ describe('cash_flow server actions', () => {
       const result = await deleteCashFlow('tx-1')
       expect(result.success).toBe(false)
       expect(result.error).toBe('Permission Denied')
+    })
+
+    it('uses fallback error message when error.message is falsy', async () => {
+      mockRepo.delete = vi.fn().mockRejectedValue({})
+      const result = await deleteCashFlow('tx-1')
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Database error occurred')
     })
   })
 })
