@@ -11,6 +11,10 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './'),
     },
+    reporters: ['default', 'junit'],
+    outputFile: {
+      junit: './report.junit.xml',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
