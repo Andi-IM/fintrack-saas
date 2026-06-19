@@ -262,7 +262,7 @@ function BalanceChart({ data }: { data: StatementAnalyticsData }) {
           </div>
         </div>
         <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <LineChart data={chartData} margin={{ top: 10, right: 20, left: 20, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
               <XAxis
@@ -354,7 +354,7 @@ function TotalSaldoChart({ data }: { data: StatementAnalyticsData }) {
           </div>
         </div>
         <div className="h-[200px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 20, bottom: 20 }}>
               <defs>
                 <linearGradient id="total-gradient" x1="0" y1="0" x2="0" y2="1">
