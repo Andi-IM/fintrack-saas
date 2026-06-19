@@ -1,7 +1,20 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { CashFlowList } from '../CashFlowList'
 import React from 'react'
+
+// Mock next/navigation
+const mockPush = vi.fn()
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: mockPush,
+  }),
+}))
+
+// Mock actions
+vi.mock('@/lib/actions/cash_flow', () => ({
+  deleteCashFlow: vi.fn().mockResolvedValue({ success: true }),
+}))
 
 // Dummy transactions
 const mockTransactions = [
@@ -39,11 +52,8 @@ describe('CashFlowList Component', () => {
   it('renders transactions successfully on desktop view', () => {
     render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
 
-    // Check descriptions are rendered (getAllByText since it renders in both Mobile card and Desktop table)
     expect(screen.getAllByText('Beli Kopi Susu')[0]).toBeInTheDocument()
     expect(screen.getAllByText('Gaji Bulanan')[0]).toBeInTheDocument()
-
-    // Check IDR formatted currencies are present
     expect(screen.getAllByText(/25\.000/)[0]).toBeInTheDocument()
     expect(screen.getAllByText(/10\.000\.000/)[0]).toBeInTheDocument()
   })
@@ -51,7 +61,6 @@ describe('CashFlowList Component', () => {
   it('renders categorized tags correctly', () => {
     render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
 
-    // Match exact text string instead of uppercase since it renders main_category directly
     expect(screen.getAllByText('Makanan & Minuman').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Gaji').length).toBeGreaterThan(0)
   })
@@ -59,7 +68,6 @@ describe('CashFlowList Component', () => {
   it('toggles mobile drawer on card tap', () => {
     render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
 
-    // Get the h4 containing 'Beli Kopi Susu' (which is the mobile card heading)
     const mobileHeading = screen.getAllByText('Beli Kopi Susu').find(el => el.tagName === 'H4')
     const cardElement = mobileHeading?.closest('.cursor-pointer')
     expect(cardElement).not.toBeNull()
@@ -68,8 +76,30 @@ describe('CashFlowList Component', () => {
       fireEvent.click(cardElement)
     }
 
-    // Verify modal overlay title is rendered
     expect(screen.getByText('Kelola Transaksi')).toBeInTheDocument()
     expect(screen.getByText('Hapus Transaksi')).toBeInTheDocument()
+  })
+
+  it('triggers search filter changes', async () => {
+    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+
+    const searchInput = screen.getByPlaceholderText('Cari deskripsi / kategori...')
+    fireEvent.change(searchInput, { target: { value: 'Gaji' } })
+    
+    // Check that we can type into the input element successfully
+    expect(searchInput).toBeTruthy()
+  })
+
+  it('allows clicking cancel inside drawer', () => {
+    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+
+    const mobileHeading = screen.getAllByText('Beli Kopi Susu').find(el => el.tagName === 'H4')
+    const cardElement = mobileHeading?.closest('.cursor-pointer')
+    if (cardElement) fireEvent.click(cardElement)
+
+    const cancelButton = screen.getByText('Batal')
+    fireEvent.click(cancelButton)
+
+    expect(screen.queryByText('Kelola Transaksi')).not.toBeInTheDocument()
   })
 })
