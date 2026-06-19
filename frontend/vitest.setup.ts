@@ -2,6 +2,15 @@ import '@testing-library/jest-dom'
 import { vi } from 'vitest'
 import { createElement } from 'react'
 
+// Suppress console logs in tests by default, unless VERBOSE_TESTS is set
+if (!process.env.VERBOSE_TESTS) {
+  vi.spyOn(console, 'log').mockImplementation(() => {})
+  vi.spyOn(console, 'info').mockImplementation(() => {})
+}
+
+// Mock window.alert to suppress jsdom warnings
+global.alert = vi.fn()
+
 function createMockSupabaseClient() {
   const self = {
     auth: {

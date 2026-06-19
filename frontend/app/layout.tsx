@@ -3,7 +3,9 @@ import { Inter, Poppins } from 'next/font/google';
 import './globals.css';
 import { cn } from "@/lib/utils";
 import { QueryProvider } from '@/components/providers/QueryProvider';
-import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 const poppins = Poppins({ weight: ['400', '500', '600', '700'], subsets: ['latin'], variable: '--font-poppins' });
@@ -20,6 +22,8 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         <NuqsAdapter>
           <QueryProvider>{children}</QueryProvider>
         </NuqsAdapter>
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );

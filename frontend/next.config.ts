@@ -27,6 +27,12 @@ const nextConfig: NextConfig = {
     },
   },
   transpilePackages: ['motion'],
+  // Strip console logs from client-side production bundle
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error'], // Keep console.error for critical errors
+    } : false,
+  },
   webpack: (config, options) => {
     const { dev, isServer } = options;
 
