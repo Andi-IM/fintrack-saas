@@ -16,3 +16,22 @@ You are working on a project that utilizes Architectural Decision Records (ADRs)
      - `## Alternatives Considered` (Other options evaluated and why they were rejected)
      - `## Consequences` (Positive impacts, trade-offs, risks, and implications)
      - `## Related Notes` (Optional, links to related files or components)
+
+# Semantic Release & Commit Rules
+
+To support automated versioning and releases, you MUST follow these standards for all commits and pull requests:
+
+1. **Commit Message Format**: Follow Conventional Commits format strictly.
+   - `feat: ...` for a new feature (triggers a minor version bump).
+   - `fix: ...` for a bug fix (triggers a patch version bump).
+   - `docs: ...` for documentation modifications (does not trigger a release).
+   - `style: ...` for code formatting changes (does not trigger a release).
+   - `refactor: ...` for code refactoring (does not trigger a release).
+   - `perf: ...` for performance improvements (triggers a patch version bump).
+   - `test: ...` for adding/updating tests (does not trigger a release).
+   - `chore: ...` for package/build changes (does not trigger a release).
+   - Use `BREAKING CHANGE:` or `!` after the type/scope for breaking changes (triggers a major version bump).
+2. **Release Workflows**:
+   - Pushes to the `dev` branch trigger automatic Semantic Pre-releases (`rc` prerelease versions).
+   - Pushes/merges to the `main` branch trigger production releases (stable versions).
+   - The release workflow generates release tags, updates `CHANGELOG.md`, updates versioning files, and publishes release info to GitHub.
