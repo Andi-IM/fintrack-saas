@@ -15,6 +15,7 @@
 .DS_Store
 .vscode/
 .idea/
+*.junit.xml
 
 # Supabase backend ignores
 supabase/.temp/
