@@ -1,3 +1,10 @@
+# [1.0.0-rc.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.0.0-rc.3...v1.0.0-rc.4) (2026-06-19)
+
+
+### Features
+
+* abstract state management into useCashFlowController hook and implement repository pattern for database actions ([4dcc38e](https://github.com/Andi-IM/fintrack-saas/commit/4dcc38e908277a819ac22f8a175405f229df16cb))
+
 # [1.0.0-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.0.0-rc.2...v1.0.0-rc.3) (2026-06-19)
 
 
