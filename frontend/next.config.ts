@@ -43,7 +43,7 @@ const nextConfig: NextConfig = {
     }
 
     // Inject Codecov Bundle Analysis Webpack Plugin in production builds
-    if (!dev) {
+    if (!dev && !isServer && process.env.CODECOV_TOKEN) {
       config.plugins.push(
         codecovNextJSWebpackPlugin({
           enableBundleAnalysis: true,
