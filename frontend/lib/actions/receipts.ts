@@ -1,8 +1,8 @@
 'use server'
 
 import { z } from 'zod'
-import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { invalidateCache } from '@/lib/cache'
+import { getReceiptRepository } from '@/lib/repositories/receipts'
 import { Tables } from '@/lib/database.types'
 import { ActionResponse } from './types'
 
@@ -43,92 +43,32 @@ export async function saveReceipt(input: SaveReceiptInput): Promise<ActionRespon
     }
   }
 
-  const supabase = await createClient()
+  try {
+    const repo = getReceiptRepository()
 
-  // 1. Upload file to Supabase Storage if file is provided
-  let filePath: string | null = null
-  if (file) {
-    try {
-      const bytes = await file.arrayBuffer()
-      const buffer = Buffer.from(bytes)
-
-      const fileExt = file.name.split('.').pop() || 'jpg'
-      const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`
-      const folder = parsed.data.storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-      filePath = `${folder}/${uniqueName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('receipts')
-        .upload(filePath, buffer, {
-          contentType: file.type || 'image/jpeg',
-          duplex: 'half'
-        })
-
-      if (uploadError) {
-        console.error('Error uploading receipt file:', uploadError)
-        return { success: false, error: `Failed to upload receipt file: ${uploadError.message}` }
-      }
-    } catch (err: any) {
-      console.error('Exception during receipt upload:', err)
-      return { success: false, error: `Upload error: ${err.message}` }
-    }
-  }
-
-  // 2. Insert parent receipt
-  const { data: receipt, error: receiptError } = await supabase
-    .from('receipts')
-    .insert({
+    const receipt = await repo.save({
       type: parsed.data.type,
-      store_name: parsed.data.storeName,
-      store_address: parsed.data.storeAddress || null,
+      storeName: parsed.data.storeName,
+      storeAddress: parsed.data.storeAddress ?? null,
       date: parsed.data.date,
-      total_price: parsed.data.totalPrice,
-      payment_method: parsed.data.paymentMethod || null,
-      amount_paid: parsed.data.amountPaid ?? null,
+      totalPrice: parsed.data.totalPrice,
+      paymentMethod: parsed.data.paymentMethod ?? null,
+      amountPaid: parsed.data.amountPaid ?? null,
       change: parsed.data.change ?? null,
-      atm_id: parsed.data.atmId || null,
-      transaction_type: parsed.data.transactionType || null,
+      atmId: parsed.data.atmId ?? null,
+      transactionType: parsed.data.transactionType ?? null,
       fee: parsed.data.fee ?? 0,
-      file_path: filePath,
-      bank_statement_item_id: parsed.data.bankStatementItemId || null,
+      bankStatementItemId: parsed.data.bankStatementItemId ?? null,
+      file: file || null,
+      items: parsed.data.items,
     })
-    .select()
-    .single()
 
-  if (receiptError) {
-    console.error('Error creating receipt record:', receiptError)
-    if (filePath) {
-      await supabase.storage.from('receipts').remove([filePath])
-    }
-    return { success: false, error: `Failed to save receipt: ${receiptError.message}` }
+    invalidateCache(['/receipts', '/'])
+    return { success: true, data: { receiptId: receipt.id } }
+  } catch (error: any) {
+    console.error('Error saving receipt:', error)
+    return { success: false, error: error.message || 'Database error occurred' }
   }
-
-  // 3. Insert items (only if it's a shopping receipt and items exist)
-  if (parsed.data.type === 'shopping' && parsed.data.items && parsed.data.items.length > 0) {
-    const itemsToInsert = parsed.data.items.map(item => ({
-      receipt_id: receipt.id,
-      product_name: item.productName,
-      quantity: item.quantity,
-      price: item.price,
-    }))
-
-    const { error: itemsError } = await supabase
-      .from('receipts_items')
-      .insert(itemsToInsert)
-
-    if (itemsError) {
-      console.error('Error inserting receipt items:', itemsError)
-      // Attempt cleanup of the parent receipt
-      await supabase.from('receipts').delete().eq('id', receipt.id)
-      if (filePath) {
-        await supabase.storage.from('receipts').remove([filePath])
-      }
-      return { success: false, error: `Failed to save receipt items: ${itemsError.message}` }
-    }
-  }
-
-  revalidatePath('/')
-  return { success: true, data: { receiptId: receipt.id } }
 }
 
 export type ReceiptWithItems = Tables<'receipts'> & {
@@ -139,85 +79,44 @@ export type ReceiptWithItems = Tables<'receipts'> & {
 }
 
 export async function getReceipts(): Promise<ActionResponse<ReceiptWithItems[]>> {
-  const supabase = await createClient()
-
-  const { data, error } = await supabase
-    .from('receipts')
-    .select(`
-      *,
-      receipts_items (*),
-      bank_statement_items (
-        *,
-        bank_statements (
-          bank_name
-        )
-      )
-    `)
-    .order('date', { ascending: false })
-
-  if (error) {
+  try {
+    const repo = getReceiptRepository()
+    const data = await repo.findAll()
+    return { success: true, data: data as ReceiptWithItems[] }
+  } catch (error: any) {
     console.error('Error fetching receipts:', error)
     return { success: false, error: `Failed to fetch receipts: ${error.message}` }
   }
-
-  return { success: true, data: data as ReceiptWithItems[] }
 }
 
 export async function deleteReceipt(id: string): Promise<ActionResponse<void>> {
-  const supabase = await createClient()
+  try {
+    const repo = getReceiptRepository()
 
-  // 1. Fetch file_path from DB
-  const { data: receipt, error: fetchError } = await supabase
-    .from('receipts')
-    .select('file_path')
-    .eq('id', id)
-    .single()
+    const filePath = await repo.getFilePathById(id)
+    await repo.delete(id)
 
-  if (fetchError) {
-    console.error('Error fetching receipt for deletion:', fetchError)
-    return { success: false, error: `Failed to find receipt: ${fetchError.message}` }
-  }
+    if (filePath) {
+      await repo.removeFile(filePath)
+    }
 
-  // 2. Delete DB record first (cascades items)
-  const { error } = await supabase
-    .from('receipts')
-    .delete()
-    .eq('id', id)
-
-  if (error) {
+    invalidateCache(['/receipts', '/'])
+    return { success: true }
+  } catch (error: any) {
     console.error('Error deleting receipt:', error)
     return { success: false, error: `Failed to delete receipt: ${error.message}` }
   }
-
-  // 3. Delete file from storage
-  if (receipt?.file_path) {
-    const { error: storageError } = await supabase.storage
-      .from('receipts')
-      .remove([receipt.file_path])
-
-    if (storageError) {
-      console.error('Error deleting file from storage:', storageError)
-    }
-  }
-
-  revalidatePath('/receipts')
-  revalidatePath('/')
-  return { success: true }
 }
 
 export async function getReceiptFileUrl(path: string): Promise<ActionResponse<string>> {
-  const supabase = await createClient()
-  
-  const { data, error } = await supabase.storage
-    .from('receipts')
-    .createSignedUrl(path, 3600)
-
-  if (error) {
+  try {
+    const repo = getReceiptRepository()
+    const url = await repo.getSignedUrl(path)
+    return { success: true, data: url }
+  } catch (error: any) {
     console.error('Error creating signed URL for receipt:', error)
     return { success: false, error: 'Failed to get file access' }
   }
-
-  return { success: true, data: data.signedUrl }
 }
 
 export async function updateReceipt(
@@ -234,78 +133,43 @@ export async function updateReceipt(
     }
   }
 
-  const supabase = await createClient()
+  try {
+    const repo = getReceiptRepository()
 
-  // 1. Update the parent receipt record in the receipts table
-  const { data: receipt, error: receiptError } = await supabase
-    .from('receipts')
-    .update({
+    const receipt = await repo.update(id, {
       type: parsed.data.type,
-      store_name: parsed.data.storeName,
-      store_address: parsed.data.storeAddress || null,
+      storeName: parsed.data.storeName,
+      storeAddress: parsed.data.storeAddress ?? null,
       date: parsed.data.date,
-      total_price: parsed.data.totalPrice,
-      payment_method: parsed.data.paymentMethod || null,
-      amount_paid: parsed.data.amountPaid ?? null,
+      totalPrice: parsed.data.totalPrice,
+      paymentMethod: parsed.data.paymentMethod ?? null,
+      amountPaid: parsed.data.amountPaid ?? null,
       change: parsed.data.change ?? null,
-      atm_id: parsed.data.atmId || null,
-      transaction_type: parsed.data.transactionType || null,
+      atmId: parsed.data.atmId ?? null,
+      transactionType: parsed.data.transactionType ?? null,
       fee: parsed.data.fee ?? 0,
-      bank_statement_item_id: parsed.data.bankStatementItemId || null,
+      bankStatementItemId: parsed.data.bankStatementItemId ?? null,
     })
-    .eq('id', id)
-    .select()
-    .single()
 
-  if (receiptError) {
-    console.error('Error updating receipt record:', receiptError)
-    return { success: false, error: `Failed to update receipt: ${receiptError.message}` }
-  }
+    if (parsed.data.items && parsed.data.items.length >= 0) {
+      await repo.deleteItemsByReceiptId(id)
 
-  // 2. Handle items
-  if (parsed.data.type === 'shopping') {
-    // Delete existing items
-    const { error: deleteError } = await supabase
-      .from('receipts_items')
-      .delete()
-      .eq('receipt_id', id)
+      if (parsed.data.type === 'shopping' && parsed.data.items.length > 0) {
+        const itemsToInsert = parsed.data.items.map((item) => ({
+          receipt_id: id,
+          product_name: item.productName,
+          quantity: item.quantity,
+          price: item.price,
+        }))
 
-    if (deleteError) {
-      console.error('Error deleting old receipt items:', deleteError)
-      return { success: false, error: `Failed to clear old items: ${deleteError.message}` }
-    }
-
-    // Insert new items if any
-    if (parsed.data.items && parsed.data.items.length > 0) {
-      const itemsToInsert = parsed.data.items.map((item) => ({
-        receipt_id: id,
-        product_name: item.productName,
-        quantity: item.quantity,
-        price: item.price,
-      }))
-
-      const { error: itemsError } = await supabase
-        .from('receipts_items')
-        .insert(itemsToInsert)
-
-      if (itemsError) {
-        console.error('Error inserting receipt items during update:', itemsError)
-        return { success: false, error: `Failed to update receipt items: ${itemsError.message}` }
+        await repo.insertItems(itemsToInsert)
       }
     }
-  } else {
-    // If updated to atm type, remove any existing shopping items
-    const { error: deleteError } = await supabase
-      .from('receipts_items')
-      .delete()
-      .eq('receipt_id', id)
 
-    if (deleteError) {
-      console.error('Error removing receipt items for ATM type:', deleteError)
-    }
+    invalidateCache(['/receipts'])
+    return { success: true, data: { receiptId: id } }
+  } catch (error: any) {
+    console.error('Error updating receipt:', error)
+    return { success: false, error: error.message || 'Database error occurred' }
   }
-
-  revalidatePath('/receipts')
-  return { success: true, data: { receiptId: id } }
 }
-

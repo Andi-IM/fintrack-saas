@@ -154,8 +154,8 @@ export default function BankStatementList() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center p-12">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      <div className="flex justify-center items-center p-12" role="status" aria-label="Memuat daftar mutasi bank">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" aria-hidden="true" />
       </div>
     )
   }
@@ -174,7 +174,7 @@ export default function BankStatementList() {
     <>
     <div className="space-y-4">
       {Object.entries(groupedData).map(([bank, statements]) => (
-        <div key={bank} className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
+        <section key={bank} aria-label={`Grup Bank ${bank}`} className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
           {/* Bank Header */}
           <button 
             onClick={() => toggleBank(bank)}
@@ -196,13 +196,14 @@ export default function BankStatementList() {
           {expandedBanks.includes(bank) && (
             <div className="divide-y divide-slate-100">
               {statements.map((statement) => (
-                <div key={statement.id} className="bg-white">
-                  <div 
+                <article key={statement.id} className="bg-white">
+                  <div
                     onClick={() => togglePeriod(statement.id)}
-                    className="w-full flex items-center justify-between px-6 py-3 hover:bg-slate-50/50 transition-colors cursor-pointer"
+                    aria-expanded={expandedPeriods.includes(statement.id)}
+                    className="w-full flex items-center justify-between px-6 py-3 hover:bg-slate-50/50 transition-colors cursor-pointer text-left"
                   >
                     <div className="flex items-center gap-3">
-                      <Calendar className="w-4 h-4 text-slate-400" />
+                      <Calendar className="w-4 h-4 text-slate-400" aria-hidden="true" />
                       <span className="text-sm font-semibold text-slate-700">{statement.statement_period}</span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -210,13 +211,14 @@ export default function BankStatementList() {
                         variant="ghost" 
                         size="icon"
                         className="h-8 w-8 text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                        aria-label={`Hapus laporan mutasi ${statement.statement_period}`}
                         onClick={(e) => handleDeleteStatement(e, statement.id, statement.file_path)}
                         disabled={deleteMutation.isPending && deleteMutation.variables?.id === statement.id}
                       >
                         {deleteMutation.isPending && deleteMutation.variables?.id === statement.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                         ) : (
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" aria-hidden="true" />
                         )}
                       </Button>
                       <Button 
@@ -228,10 +230,10 @@ export default function BankStatementList() {
                           handleViewFile(statement.file_path)
                         }}
                       >
-                        <FileText className="w-3.5 h-3.5 mr-1.5" />
+                        <FileText className="w-3.5 h-3.5 mr-1.5" aria-hidden="true" />
                         View PDF
                       </Button>
-                      {expandedPeriods.includes(statement.id) ? <ChevronDown className="w-4 h-4 text-slate-300" /> : <ChevronRight className="w-4 h-4 text-slate-300" />}
+                      {expandedPeriods.includes(statement.id) ? <ChevronDown className="w-4 h-4 text-slate-300" aria-hidden="true" /> : <ChevronRight className="w-4 h-4 text-slate-300" aria-hidden="true" />}
                     </div>
                   </div>
 
@@ -301,24 +303,26 @@ export default function BankStatementList() {
                                       variant="ghost"
                                       size="icon"
                                       className="h-7 w-7 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50"
+                                      aria-label={`Edit item ${item.description}`}
                                       onClick={(e) => {
                                         e.stopPropagation()
                                         setEditingItem({ statementId: statement.id, item })
                                       }}
                                     >
-                                      <Pencil className="w-3.5 h-3.5" />
+                                      <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                                     </Button>
                                     <Button
                                       variant="ghost"
                                       size="icon"
                                       className="h-7 w-7 text-rose-700 hover:text-rose-800 hover:bg-rose-50"
+                                      aria-label={`Hapus item ${item.description}`}
                                       onClick={(e) => handleDeleteItem(e, item.id)}
                                       disabled={deleteItemMutation.isPending}
                                     >
                                       {deleteItemMutation.isPending ? (
-                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                        <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
                                       ) : (
-                                        <Trash2 className="w-3.5 h-3.5" />
+                                        <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                                       )}
                                     </Button>
                                   </div>
@@ -400,11 +404,11 @@ export default function BankStatementList() {
                       </div>
                     </div>
                   )}
-                </div>
+                </article>
               ))}
             </div>
           )}
-        </div>
+        </section>
       ))}
     </div>
 

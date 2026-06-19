@@ -149,8 +149,9 @@ export function CashFlowForm({
 
           <div className="space-y-5">
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tanggal & Waktu</Label>
+              <Label htmlFor="date" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tanggal & Waktu</Label>
               <Input 
+                id="date"
                 type="datetime-local" 
                 {...register('date')}
                 className="h-11 rounded-lg border-slate-200 font-mono" 
@@ -160,8 +161,9 @@ export function CashFlowForm({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kategori Besar</Label>
+                <Label htmlFor="main_category" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kategori Besar</Label>
                 <select 
+                  id="main_category"
                   {...register('main_category')}
                   className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
                 >
@@ -174,8 +176,9 @@ export function CashFlowForm({
                 {errors.main_category && <p className="text-xs text-rose-500 font-semibold">{errors.main_category.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Sub Kategori</Label>
+                <Label htmlFor="sub_category" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Sub Kategori</Label>
                 <Input 
+                  id="sub_category"
                   type="text" 
                   {...register('sub_category')}
                   className="h-11 rounded-lg border-slate-200" 
@@ -185,8 +188,9 @@ export function CashFlowForm({
             </div>
             
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Deskripsi / Catatan</Label>
+              <Label htmlFor="description" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Deskripsi / Catatan</Label>
               <Input 
+                id="description"
                 type="text" 
                 {...register('description')}
                 className="h-11 rounded-lg border-slate-200" 
@@ -196,10 +200,11 @@ export function CashFlowForm({
 
             <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
-                  <Plus className="w-3 h-3" /> Arus Masuk (Income)
+                <Label htmlFor="income" className="text-xs font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
+                  <Plus className="w-3 h-3" aria-hidden="true" /> Arus Masuk (Income)
                 </Label>
                 <Input 
+                  id="income"
                   type="number" 
                   {...register('income')}
                   className="h-11 rounded-lg border-emerald-200 font-mono focus-visible:ring-emerald-500" 
@@ -208,10 +213,11 @@ export function CashFlowForm({
                 {errors.income && <p className="text-[11px] text-rose-500 font-semibold">{errors.income.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-rose-600 uppercase tracking-wider flex items-center gap-1">
-                  <Minus className="w-3 h-3" /> Arus Keluar (Expense)
+                <Label htmlFor="expense" className="text-xs font-bold text-rose-600 uppercase tracking-wider flex items-center gap-1">
+                  <Minus className="w-3 h-3" aria-hidden="true" /> Arus Keluar (Expense)
                 </Label>
                 <Input 
+                  id="expense"
                   type="number" 
                   {...register('expense')}
                   className="h-11 rounded-lg border-rose-200 font-mono focus-visible:ring-rose-500" 
@@ -222,8 +228,9 @@ export function CashFlowForm({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Metode Pembayaran / Sumber Dana</Label>
+              <Label htmlFor="payment_method" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Metode Pembayaran / Sumber Dana</Label>
               <select 
+                id="payment_method"
                 {...register('payment_method')}
                 className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
               >
@@ -246,7 +253,7 @@ export function CashFlowForm({
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
-                    <Receipt className="w-3.5 h-3.5 text-slate-400" />
+                    <Receipt className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
                     Kaitkan dengan Resit
                   </Label>
                   <Controller
@@ -279,7 +286,7 @@ export function CashFlowForm({
 
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
-                    <LinkIcon className="w-3.5 h-3.5 text-slate-400" />
+                    <LinkIcon className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
                     Kaitkan dengan Mutasi Bank
                   </Label>
                   <Controller

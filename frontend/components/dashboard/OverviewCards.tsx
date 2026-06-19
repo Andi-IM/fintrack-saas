@@ -51,7 +51,7 @@ export function OverviewCards({ transactions, timeRange }: { transactions: Table
   }, [savingsRate])
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <section aria-label="Ringkasan Keuangan" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {/* Net Balance Card */}
       <Card className="bg-indigo-700 text-white shadow-lg border-transparent relative overflow-hidden rounded-xl">
         <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -100,6 +100,6 @@ export function OverviewCards({ transactions, timeRange }: { transactions: Table
           </div>
         </CardHeader>
       </Card>
-    </div>
+    </section>
   )
 }

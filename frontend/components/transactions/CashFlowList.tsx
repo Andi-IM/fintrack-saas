@@ -177,7 +177,7 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
       
       <CardContent className="p-0">
         {/* Mobile View (Cards) */}
-        <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
+        <section aria-label="Daftar Transaksi Mobile" className="grid grid-cols-1 gap-4 p-4 md:hidden">
           {paginatedTransactions.length === 0 ? (
             <div className="text-center text-slate-500 py-8">
               <FileText className="w-8 h-8 text-slate-200 mx-auto mb-2" />
@@ -189,11 +189,11 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
               const nominal = isIncome ? Number(tx.income) : Number(tx.expense);
 
               return (
-                <Card 
-                  key={tx.id} 
-                  className="overflow-hidden border border-slate-100 shadow-none bg-white hover:border-indigo-100 hover:bg-slate-50/30 transition-all cursor-pointer active:scale-[0.99]"
-                  onClick={() => setActiveMobileTx(tx)}
-                >
+                <article key={tx.id}>
+                  <Card 
+                    className="overflow-hidden border border-slate-100 shadow-none bg-white hover:border-indigo-100 hover:bg-slate-50/30 transition-all cursor-pointer active:scale-[0.99]"
+                    onClick={() => setActiveMobileTx(tx)}
+                  >
                   <CardContent className="p-4 space-y-3">
                     <div className="flex justify-between items-start">
                       <div>
@@ -239,13 +239,14 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
                     </div>
                   </CardContent>
                 </Card>
+                </article>
               )
             })
           )}
-        </div>
+        </section>
 
         {/* Desktop View (Table) */}
-        <div className="hidden md:block overflow-hidden">
+        <section aria-label="Daftar Transaksi Desktop" className="hidden md:block overflow-hidden">
           <Table className="w-full text-left">
             <TableHeader className="bg-slate-50 text-[10px] uppercase text-slate-400 font-bold border-b border-slate-100">
               <TableRow>
@@ -327,7 +328,7 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
               )}
             </TableBody>
           </Table>
-        </div>
+        </section>
 
         {/* Pagination Controls */}
         {totalItems > 0 && (
