@@ -197,6 +197,15 @@ describe('statements server actions', () => {
       expect(result.success).toBe(false)
       expect(result.error).toBe('Upload failed')
     })
+
+    it('returns fallback error message when error.message is falsy', async () => {
+      mockRepo.checkExistingForBank = vi.fn().mockResolvedValue([])
+      mockRepo.save = vi.fn().mockRejectedValue({})
+
+      const result = await saveBankStatement(validSave)
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Failed to save bank statement')
+    })
   })
 
   describe('updateStatementItem', () => {
@@ -282,6 +291,14 @@ describe('statements server actions', () => {
       expect(result.error).toBe('Item not found')
     })
 
+    it('returns error when statement_id is missing from delete result', async () => {
+      mockRepo.deleteItem = vi.fn().mockResolvedValue({ } as any)
+
+      const result = await deleteStatementItem('item-1')
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Statement ID is missing from the item')
+    })
+
     it('returns error on delete database failure', async () => {
       mockRepo.deleteItem = vi.fn().mockRejectedValue(new Error('Delete failed'))
 
@@ -303,20 +320,23 @@ describe('statements server actions', () => {
       expect(result.error).toBe('Validation failed')
     })
 
-    it('adds item and recalculates', async () => {
+    it('adds item and recalculates (expense)', async () => {
       mockRepo.addItem = vi.fn().mockResolvedValue(undefined)
-      mockRepo.findById = vi.fn().mockResolvedValue({ id: 'stmt-1', opening_balance: 0 } as any)
-      mockRepo.findItemsByStatementId = vi.fn().mockResolvedValue([])
+      mockRepo.findById = vi.fn().mockResolvedValue({ id: 'stmt-1', opening_balance: 1000 } as any)
+      mockRepo.findItemsByStatementId = vi.fn().mockResolvedValue([
+        { id: 'item-new', amount: 300, type: 'expense', balance: null, metadata: null },
+      ])
       mockRepo.updateClosingBalance = vi.fn().mockResolvedValue(undefined)
 
       const result = await addStatementItem('stmt-1', {
         date: '2026-06-19',
-        description: 'New item',
-        amount: 50000,
-        type: 'income',
+        description: 'New expense item',
+        amount: 300,
+        type: 'expense',
       })
 
       expect(result.success).toBe(true)
+      expect(mockRepo.updateClosingBalance).toHaveBeenCalledWith('stmt-1', 700, 1)
     })
 
     it('returns error on add statement item database failure', async () => {
@@ -391,6 +411,84 @@ describe('statements server actions', () => {
         expect(mandiriSummary?.latestBalance).toBe(1800000)
         expect(mandiriSummary?.totalExpense).toBe(200000)
       }
+    })
+
+    it('calculates balance from type when item.balance is missing', async () => {
+      const mockStatements = [
+        {
+          id: 'stmt-test',
+          bank_name: 'TestBank',
+          statement_period: 'Jun 2026',
+          opening_balance: 1000,
+          closing_balance: 1300,
+          bank_statement_items: [
+            { id: 'i1', date: '2026-06-01', amount: 500, type: 'income', description: 'Test Income', category: null, balance: null },
+            { id: 'i2', date: '2026-06-02', amount: 200, type: 'expense', description: 'Test Expense', category: null, balance: undefined },
+          ],
+        },
+      ]
+
+      mockRepo.findAllWithItems = vi.fn().mockResolvedValue(mockStatements as any)
+
+      const result = await getStatementAnalytics()
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.balanceHistory).toHaveLength(2)
+        expect(result.data.balanceHistory[0].balance).toBe(1500)
+        expect(result.data.balanceHistory[1].balance).toBe(1300)
+      }
+    })
+
+    it('sorts items with same date by id', async () => {
+      const mockStatements = [
+        {
+          id: 'stmt-test',
+          bank_name: 'TestBank',
+          statement_period: 'Jun 2026',
+          opening_balance: 100,
+          closing_balance: 200,
+          bank_statement_items: [
+            { id: 'item-2', date: '2026-06-01', amount: 50, type: 'income', description: 'Second', category: null, balance: null },
+            { id: 'item-1', date: '2026-06-01', amount: 50, type: 'income', description: 'First', category: null, balance: null },
+          ],
+        },
+      ]
+
+      mockRepo.findAllWithItems = vi.fn().mockResolvedValue(mockStatements as any)
+
+      const result = await getStatementAnalytics()
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.balanceHistory[0].transactions.length).toBe(2)
+        expect(result.data.balanceHistory[0].transactions[0].description).toBe('First')
+        expect(result.data.balanceHistory[0].transactions[1].description).toBe('Second')
+      }
+    })
+
+    it('handles statements with unparsable statement_period (range is null)', async () => {
+      const mockStatements = [
+        {
+          id: 'stmt-test-1',
+          bank_name: 'TestBank',
+          statement_period: 'Invalid Period', // getPeriodRange will return null
+          opening_balance: 1000,
+          closing_balance: 1500,
+          bank_statement_items: [],
+        },
+        {
+          id: 'stmt-test-2',
+          bank_name: 'TestBank',
+          statement_period: 'Jul 2026', // getPeriodRange works
+          opening_balance: 1500,
+          closing_balance: 1700,
+          bank_statement_items: [],
+        },
+      ]
+
+      mockRepo.findAllWithItems = vi.fn().mockResolvedValue(mockStatements as any)
+
+      const result = await getStatementAnalytics()
+      expect(result.success).toBe(true)
     })
   })
 })

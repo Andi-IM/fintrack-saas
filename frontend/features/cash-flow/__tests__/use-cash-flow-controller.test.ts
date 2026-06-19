@@ -329,4 +329,188 @@ describe('useCashFlowController hook', () => {
 
     expect(result.current.filteredTransactions.length).toBe(1)
   })
+
+  it('covers filters for dateFilter, category, and payment', () => {
+    mockQueryDate = '2026-06-19'
+    mockQueryCategory = 'Gaji'
+    mockQueryPayment = 'Transfer Bank'
+
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+
+    expect(result.current.hasActiveFilters).toBe(true)
+  })
+
+  it('handles activeMobileTx state changes', () => {
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+
+    act(() => {
+      result.current.setActiveMobileTx(mockTransactions[0])
+    })
+
+    expect(result.current.activeMobileTx).toEqual(mockTransactions[0])
+  })
+
+  it('handles filtering by date', () => {
+    mockQueryDate = '2026-06-19'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.filteredTransactions.length).toBeGreaterThan(0)
+  })
+
+  it('handles filtering by category', () => {
+    mockQueryCategory = 'Gaji'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.filteredTransactions.length).toBeGreaterThan(0)
+  })
+
+  it('handles filtering by payment method', () => {
+    mockQueryPayment = 'Gopay'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.filteredTransactions.length).toBeGreaterThan(0)
+  })
+
+  it('handles filtering by search term', () => {
+    mockQuerySearch = 'Kopi'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.filteredTransactions.length).toBeGreaterThan(0)
+  })
+
+  it('handles filtering by source: receipt', () => {
+    mockQuerySource = 'receipt'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.filteredTransactions.some(tx => tx.receipt_id)).toBeTruthy()
+  })
+
+  it('handles filtering by source: statement', () => {
+    mockQuerySource = 'statement'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.filteredTransactions.some(tx => tx.source_item_id)).toBeTruthy()
+  })
+
+  it('handles filtering by source: manual', () => {
+    mockQuerySource = 'manual'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.filteredTransactions.every(tx => tx.receipt_id === null && tx.source_item_id === null)).toBeTruthy()
+  })
+
+  it('calls handleClearDateFilter to clear date filter', () => {
+    mockQueryDate = '2026-06-19'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+    act(() => {
+      result.current.handleClearDateFilter()
+    })
+    expect(mockSetDateFilter).toHaveBeenCalledWith(null)
+  })
+
+  it('calls handleResetFilters to reset all filters', () => {
+    mockQuerySearch = 'test'
+    mockQueryCategory = 'Makan'
+    mockQueryPayment = 'Cash'
+    mockQuerySource = 'receipt'
+    mockQueryRange = 'THIS_WEEK'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+    act(() => {
+      result.current.handleResetFilters()
+    })
+    expect(mockSetSearch).toHaveBeenCalledWith(null)
+    expect(mockSetCategory).toHaveBeenCalledWith(null)
+    expect(mockSetPayment).toHaveBeenCalledWith(null)
+    expect(mockSetSource).toHaveBeenCalledWith(null)
+    expect(mockSetRange).toHaveBeenCalledWith(null)
+    expect(mockSetPage).toHaveBeenCalledWith('1')
+  })
+
+  it('handles handleDelete when delete fails', async () => {
+    vi.mocked(deleteCashFlow).mockResolvedValue({ success: false, error: 'Failed to delete' })
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+    await act(async () => {
+      await result.current.handleDelete(mockTransactions[0].id)
+    })
+    expect(result.current.localTransactions.length).toBe(mockTransactions.length) // rollback
+  })
+
+  it('handles page numbers when totalPages <=5', () => {
+    mockQueryPageSize = '2'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.pageNumbers).toEqual([1,2]) // 4 items, 2/page → 2 pages
+  })
+
+  it('handles page numbers when validPage <=3', () => {
+    const manyMockTransactions = Array.from({ length: 100 }, (_, i) => ({
+      ...mockTransactions[0],
+      id: `tx-${i}`,
+      amount: 1000 + i
+    }))
+    mockQueryPage = '2'
+    mockQueryPageSize = '10'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: manyMockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.pageNumbers).toEqual([1,2,3,4,'...', 10])
+  })
+
+  it('handles page numbers when validPage >= totalPages -2', () => {
+    const manyMockTransactions = Array.from({ length: 100 }, (_, i) => ({
+      ...mockTransactions[0],
+      id: `tx-${i}`,
+      amount: 1000 + i
+    }))
+    mockQueryPage = '9'
+    mockQueryPageSize = '10'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: manyMockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.pageNumbers).toEqual([1,'...',7,8,9,10])
+  })
+
+  it('handles pagination with multiple pages', () => {
+    mockQueryPage = '2'
+    mockQueryPageSize = '1'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      timeRange: 'ALL'
+    }))
+    expect(result.current.validPage).toBe(2)
+    expect(result.current.paginatedTransactions.length).toBe(1)
+  })
 })

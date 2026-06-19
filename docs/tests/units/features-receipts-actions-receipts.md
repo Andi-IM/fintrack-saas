@@ -1,0 +1,17 @@
+# Test Case Document: Receipts Server Actions
+
+## Test Cases
+
+| ID Test | Deskripsi | Langkah-langkah Pengujian | Data yang Diuji | Ekspektasi Hasil | Realita Hasil | Status |
+|---------|-----------|---------------------------|-----------------|------------------|---------------|--------|
+| TC-RCPT-001 | saveReceipt mengembalikan validation error untuk field required yang hilang | 1. Panggil saveReceipt dengan empty object | input: {} | - success = false, error = 'Validation failed' | Sesuai ekspektasi | Lulus |
+| TC-RCPT-002 | saveReceipt menyimpan receipt dengan items dengan sukses | 1. Mock repo.save return receipt<br>2. Panggil saveReceipt dengan validInput dan items | validInput + items | - success = true, data.receiptId = 'rec-1'<br>- repo.save dipanggil 1x | Sesuai ekspektasi | Lulus |
+| TC-RCPT-003 | saveReceipt mengembalikan error ketika save throw | 1. Mock repo.save throw Error('Storage full')<br>2. Panggil saveReceipt dengan validInput | validInput + repo.save throws | - success = false, error = 'Storage full' | Sesuai ekspektasi | Lulus |
+| TC-RCPT-004 | getReceipts mengembalikan receipts ketika sukses | 1. Mock repo.findAll return receipts array<br>2. Panggil getReceipts() | repo.findAll returns receipts | - success = true, data = receipts array | Sesuai ekspektasi | Lulus |
+| TC-RCPT-005 | getReceipts mengembalikan error ketika gagal | 1. Mock repo.findAll throw Error('DB error')<br>2. Panggil getReceipts() | repo.findAll throws | - success = false, error = 'Failed to fetch receipts: DB error' | Sesuai ekspektasi | Lulus |
+| TC-RCPT-006 | deleteReceipt menghapus receipt dengan sukses | 1. Mock repo.getFilePathById return path<br>2. Mock repo.delete dan removeFile<br>3. Panggil deleteReceipt('rec-1') | receipt id 'rec-1' | - success = true<br>- repo.delete dipanggil dengan 'rec-1'<br>- repo.removeFile dipanggil dengan path | Sesuai ekspektasi | Lulus |
+| TC-RCPT-007 | deleteReceipt mengembalikan error ketika delete gagal | 1. Mock repo.getFilePathById return null<br>2. Mock repo.delete throw Error('Delete failed')<br>3. Panggil deleteReceipt('rec-1') | receipt id 'rec-1' + delete throws | - success = false, error = 'Failed to delete receipt: Delete failed' | Sesuai ekspektasi | Lulus |
+| TC-RCPT-008 | getReceiptFileUrl mengembalikan signed URL | 1. Mock repo.getSignedUrl return url<br>2. Panggil getReceiptFileUrl dengan path | file path | - success = true, data = signed url | Sesuai ekspektasi | Lulus |
+| TC-RCPT-009 | getReceiptFileUrl mengembalikan error ketika gagal | 1. Mock repo.getSignedUrl throw Error('Signed URL failed')<br>2. Panggil getReceiptFileUrl dengan path | file path + getSignedUrl throws | - success = false, error = 'Failed to get file access' | Sesuai ekspektasi | Lulus |
+| TC-RCPT-010 | updateReceipt mengupdate receipt dengan sukses | 1. Mock repo.update return updated receipt<br>2. Mock repo.deleteItemsByReceiptId<br>3. Panggil updateReceipt dengan id dan input | receipt id 'rec-1' + update input | - success = true, data.receiptId = 'rec-1' | Sesuai ekspektasi | Lulus |
+| TC-RCPT-011 | updateReceipt mengembalikan error ketika update gagal | 1. Mock repo.update throw Error('Update failed')<br>2. Panggil updateReceipt dengan id dan input | receipt id 'rec-1' + update throws | - success = false, error = 'Update failed' | Sesuai ekspektasi | Lulus |
