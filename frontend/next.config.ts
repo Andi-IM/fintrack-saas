@@ -38,8 +38,21 @@ const nextConfig: NextConfig = {
       };
     }
     // Suppress "Serializing big strings" cache warnings from large type files (e.g. lucide-react).
-    if (dev && config.cache && typeof config.cache === 'object') {
+    if (config.cache && typeof config.cache === 'object') {
       (config.cache as Record<string, unknown>).maxMemoryGenerations = 0;
+    }
+    // Solusi 1: Meredam warning infrastruktur Webpack (serialisasi string besar)
+    config.infrastructureLogging = {
+      level: 'error',
+    };
+
+    // Solusi 3: Mock/stub modul Node.js (process) agar tidak memicu warning Edge Runtime di browser/edge bundler
+    if (!isServer) {
+      config.resolve = config.resolve || {};
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        process: false,
+      };
     }
 
     // Inject Codecov Bundle Analysis Webpack Plugin in production builds
@@ -50,6 +63,7 @@ const nextConfig: NextConfig = {
           bundleName: "fintrack-frontend",
           uploadToken: process.env.CODECOV_TOKEN,
           webpack: options.webpack,
+          telemetry: false, // Solusi 2: Matikan telemetry Codecov
         })
       );
     }
