@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { CashFlowForm } from '../components/CashFlowForm'
 import React from 'react'
 import { insertCashFlow, updateCashFlow } from '@/features/cash-flow/actions/cash_flow'
@@ -68,6 +68,20 @@ vi.mock('@/components/receipts/StatementItemSelect', () => ({
       >
         Select Statement Error Date
       </button>
+      <button 
+        data-testid="trigger-statement-select-no-date" 
+        onClick={(e) => {
+          e.preventDefault()
+          onChange('statement-uuid-4')
+          onSelect({
+            description: 'No Date Tx',
+            amount: 100,
+            type: 'expense'
+          })
+        }}
+      >
+        Select Statement No Date
+      </button>
     </div>
   ),
 }))
@@ -102,6 +116,19 @@ vi.mock('@/components/receipts/ReceiptSelect', () => ({
         }}
       >
         Select Receipt Error Date
+      </button>
+      <button 
+        data-testid="trigger-receipt-select-no-date" 
+        onClick={(e) => {
+          e.preventDefault()
+          onChange('receipt-uuid-no-date')
+          onSelect({
+            store_name: 'No Date Receipt',
+            total_price: 100
+          })
+        }}
+      >
+        Select Receipt No Date
       </button>
     </div>
   ),
@@ -393,5 +420,71 @@ describe('CashFlowForm Component', () => {
     
     // The income field should remain as '999999'
     expect(incomeInput.value).toBe('999999')
+  })
+
+  it('does not overwrite description if already set when selecting receipt', async () => {
+    render(<CashFlowForm initialData={null} />)
+    const descInput = screen.getByLabelText(/Deskripsi \/ Catatan/i) as HTMLInputElement
+    fireEvent.change(descInput, { target: { value: 'existing desc' } })
+    
+    const selectReceiptBtn = screen.getByTestId('trigger-receipt-select')
+    fireEvent.click(selectReceiptBtn)
+    
+    expect(descInput.value).toBe('existing desc')
+  })
+
+  it('does not overwrite description if already set when selecting statement item', async () => {
+    render(<CashFlowForm initialData={null} />)
+    const descInput = screen.getByLabelText(/Deskripsi \/ Catatan/i) as HTMLInputElement
+    fireEvent.change(descInput, { target: { value: 'existing desc' } })
+    
+    const selectStatementBtn = screen.getByTestId('trigger-statement-select-income')
+    fireEvent.click(selectStatementBtn)
+    
+    expect(descInput.value).toBe('existing desc')
+  })
+
+  it('handles statement item with missing date gracefully', async () => {
+    render(<CashFlowForm initialData={null} />)
+    const selectNoDateBtn = screen.getByTestId('trigger-statement-select-no-date')
+    fireEvent.click(selectNoDateBtn)
+    
+    expect(screen.getByDisplayValue('No Date Tx')).toBeInTheDocument()
+  })
+
+  it('handles receipt item with missing date gracefully', async () => {
+    render(<CashFlowForm initialData={null} />)
+    const selectNoDateBtn = screen.getByTestId('trigger-receipt-select-no-date')
+    fireEvent.click(selectNoDateBtn)
+    
+    expect(screen.getByDisplayValue('No Date Receipt')).toBeInTheDocument()
+  })
+
+  it('shows loading state while submitting', async () => {
+    // Resolve promise manually to test loading state
+    let resolvePromise: (val: any) => void = () => {}
+    const submitPromise = new Promise((resolve) => {
+      resolvePromise = resolve
+    })
+    vi.mocked(insertCashFlow).mockImplementation(() => submitPromise as any)
+
+    render(<CashFlowForm initialData={null} />)
+
+    const incomeInput = screen.getByLabelText(/Arus Masuk/i)
+    fireEvent.change(incomeInput, { target: { value: '50000' } })
+
+    const submitBtn = screen.getByRole('button', { name: /Simpan Arus Kas/i })
+    fireEvent.click(submitBtn)
+
+    // Wait for the button to show loading spinner by querying for the animate-spin class
+    await waitFor(() => {
+      expect(submitBtn.querySelector('.animate-spin')).toBeInTheDocument()
+      expect(submitBtn).toBeDisabled()
+    })
+
+    // Resolve the promise to finish the test cleanly, wrapped in act() to flush state updates
+    await act(async () => {
+      resolvePromise({ success: true, data: undefined })
+    })
   })
 })
