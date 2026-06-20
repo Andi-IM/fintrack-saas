@@ -76,6 +76,10 @@ export const config = {
     },
     // Gets executed once before all workers get launched.
     onPrepare: async function () {
+        if (process.env.NO_START_SERVER === 'true') {
+            console.log('Next.js server start skipped (NO_START_SERVER=true).');
+            return;
+        }
         console.log('Starting Next.js development server in the background...');
         
         // Load env vars from .env.ci or a custom ENV_FILE, without touching .env.local
@@ -116,6 +120,9 @@ export const config = {
     },
     // Gets executed after all workers have shut down and the session has ended.
     onComplete: function () {
+        if (process.env.NO_START_SERVER === 'true') {
+            return;
+        }
         if (devServerProcess?.pid) {
             console.log('Stopping Next.js development server...');
             if (process.platform === 'win32') {
