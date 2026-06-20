@@ -96,16 +96,16 @@ export function BankStatementListView({
               <div className="divide-y divide-slate-100">
                 {statements.map((statement) => (
                   <article key={statement.id} className="bg-white">
-                    <button
-                      type="button"
-                      onClick={() => togglePeriod(statement.id)}
-                      aria-expanded={expandedPeriods.includes(statement.id)}
-                      className="w-full flex items-center justify-between px-6 py-3 hover:bg-slate-50/50 transition-colors cursor-pointer text-left focus-visible:outline-indigo-500"
-                    >
-                      <div className="flex items-center gap-3">
+                    <div className="w-full flex items-center justify-between px-6 py-3 hover:bg-slate-50/50 transition-colors">
+                      <button
+                        type="button"
+                        onClick={() => togglePeriod(statement.id)}
+                        aria-expanded={expandedPeriods.includes(statement.id)}
+                        className="flex-1 flex items-center gap-3 text-left focus-visible:outline-indigo-500 cursor-pointer outline-none"
+                      >
                         <Calendar className="w-4 h-4 text-slate-400" aria-hidden="true" />
-                        <span className="text-sm font-semibold text-slate-700">{statement.statement_period}</span>
-                      </div>
+                        <span className="text-sm font-semibold text-slate-700 hover:text-indigo-600 transition-colors">{statement.statement_period}</span>
+                      </button>
                       <div className="flex items-center gap-2">
                         <Button
                           variant="ghost"
@@ -133,9 +133,17 @@ export function BankStatementListView({
                           <FileText className="w-3.5 h-3.5 mr-1.5" aria-hidden="true" />
                           View PDF
                         </Button>
-                        {expandedPeriods.includes(statement.id) ? <ChevronDown className="w-4 h-4 text-slate-300" aria-hidden="true" /> : <ChevronRight className="w-4 h-4 text-slate-300" aria-hidden="true" />}
+                        <button
+                          type="button"
+                          onClick={() => togglePeriod(statement.id)}
+                          tabIndex={-1}
+                          className="outline-none cursor-pointer text-slate-300 hover:text-slate-500 ml-1"
+                          aria-hidden="true"
+                        >
+                          {expandedPeriods.includes(statement.id) ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                        </button>
                       </div>
-                    </button>
+                    </div>
 
                     {/* Transaction Details */}
                     {expandedPeriods.includes(statement.id) && (
