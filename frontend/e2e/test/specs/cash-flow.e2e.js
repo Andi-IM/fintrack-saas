@@ -53,12 +53,12 @@ describe('Cash Flow (Transactions) E2E Test', () => {
         })
 
         it('CF-04: should display income entry (Gaji Bulan Juni)', async () => {
-            const incomeText = await $('tbody *=Gaji Bulan Juni')
+            const incomeText = await $('tbody').$('*=Gaji Bulan Juni')
             await expect(incomeText).toBeDisplayed()
         })
 
         it('CF-05: should display expense entry (Makan Siang)', async () => {
-            const expenseText = await $('tbody *=Makan Siang')
+            const expenseText = await $('tbody').$('*=Makan Siang')
             await expect(expenseText).toBeDisplayed()
 
             await browser.saveScreenshot(
@@ -87,10 +87,10 @@ describe('Cash Flow (Transactions) E2E Test', () => {
             await searchInput.setValue('Nonton Bioskop')
             await browser.pause(600)
 
-            const matchingText = await $('tbody *=Nonton Bioskop')
+            const matchingText = await $('tbody').$('*=Nonton Bioskop')
             await expect(matchingText).toBeDisplayed()
 
-            const noOtherText = await $('tbody *=Makan Siang')
+            const noOtherText = await $('tbody').$('*=Makan Siang')
             expect(await noOtherText.isExisting()).toBe(false)
         })
 
@@ -99,10 +99,10 @@ describe('Cash Flow (Transactions) E2E Test', () => {
             await categorySelect.selectByVisibleText('Kebutuhan (Needs)')
             await browser.pause(600)
 
-            const matchingText = await $('tbody *=Makan Siang')
+            const matchingText = await $('tbody').$('*=Makan Siang')
             await expect(matchingText).toBeDisplayed()
 
-            const noOtherText = await $('tbody *=Gaji Bulan Juni')
+            const noOtherText = await $('tbody').$('*=Gaji Bulan Juni')
             expect(await noOtherText.isExisting()).toBe(false)
         })
 
@@ -321,14 +321,18 @@ describe('Cash Flow (Transactions) E2E Test', () => {
             }
 
             // CF-20: Verifikasi empty state
-            const emptyState = await $('*=Tidak ada transaksi')
-            const emptyStateAlt = await $('*=Tidak ada arus kas')
-            const emptyStateFilter = await $('*=Tidak ada transaksi yang cocok')
-            const hasEmpty =
-                (await emptyState.isExisting()) ||
-                (await emptyStateAlt.isExisting()) ||
-                (await emptyStateFilter.isExisting())
-            expect(hasEmpty).toBe(true)
+            await browser.waitUntil(async () => {
+                const emptyState = await $('*=Tidak ada transaksi')
+                const emptyStateAlt = await $('*=Tidak ada arus kas')
+                const emptyStateFilter = await $('*=Tidak ada transaksi yang cocok')
+                
+                return (await emptyState.isExisting()) || 
+                       (await emptyStateAlt.isExisting()) || 
+                       (await emptyStateFilter.isExisting())
+            }, { 
+                timeout: 5000, 
+                timeoutMsg: 'Pesan Empty State tidak muncul setelah seluruh baris dihapus' 
+            })
 
             await browser.saveScreenshot(
                 path.join(process.cwd(), '../../docs/tests/e2e/screenshots/cash-flow-empty-state.png')
