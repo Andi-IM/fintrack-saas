@@ -40,6 +40,9 @@ jobs:
       run: pnpm install --frozen-lockfile
       working-directory: frontend
 
+    - name: Load CI environment
+      run: cp frontend/.env.ci frontend/.env.local
+
     - name: Run tests with coverage
       run: pnpm test
       working-directory: frontend
@@ -51,19 +54,26 @@ jobs:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         NEXT_TELEMETRY_DISABLED: 1
 
+    - name: Run E2E and Performance Checks (Alternated)
+      if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      run: ENV_FILE=.env.ci pnpm test:alternated
+      working-directory: frontend
+
     - name: Upload test results to Codecov
       if: ${{ !cancelled() }}
-      uses: codecov/test-results-action@v1
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: frontend/report.junit.xml
+        files: frontend/report.junit.xml
         flags: frontend
+        report_type: test_results
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: frontend/coverage/lcov.info
+        files: frontend/coverage/lcov.info
         flags: frontend
         fail_ci_if_error: true
+
 

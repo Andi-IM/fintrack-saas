@@ -5,6 +5,10 @@ import { createClient } from '@/lib/supabase/server'
 import { OriginResolver, DefaultOriginResolver } from './auth-helpers'
 
 export async function login(originResolver?: OriginResolver | FormData): Promise<void> {
+  if (process.env.BYPASS_AUTH === 'true' && (process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_IS_TESTING === 'true')) {
+    redirect('/')
+    return
+  }
   const supabase = await createClient()
   const resolver = (originResolver && 'resolve' in originResolver) ? originResolver : new DefaultOriginResolver()
   const origin = await resolver.resolve()

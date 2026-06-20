@@ -82,10 +82,13 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
             {...getRootProps()} 
             className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ease-in-out
               ${isDragActive ? 'border-indigo-500 bg-indigo-100 shadow-inner' : 'border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 bg-white/50'}`}
+            role="button"
+            aria-label={`Upload ${scanContext === 'Receipt' ? 'receipt image' : 'PDF statement'}`}
+            tabIndex={0}
           >
             <input {...getInputProps()} />
             <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-              <UploadCloud className="w-8 h-8 text-indigo-500" />
+              <UploadCloud className="w-8 h-8 text-indigo-500" aria-hidden="true" />
             </div>
             <p className="text-sm font-bold tracking-tight text-indigo-950 mb-1">
               Drag & drop your {scanContext === 'Receipt' ? 'receipt image' : 'PDF statement'} here

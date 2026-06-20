@@ -16,8 +16,13 @@ export function ScanProgressIndicator({
 }: ScanProgressIndicatorProps) {
   if (scanStatus === 'scanning') {
     return (
-      <div className="bg-white border border-indigo-100 rounded-xl p-6 text-center space-y-4 shadow-sm">
-        <div className="relative w-20 h-20 mx-auto">
+      <div 
+        className="bg-white border border-indigo-100 rounded-xl p-6 text-center space-y-4 shadow-sm"
+        role="status"
+        aria-live="polite"
+        aria-label="Scanning in progress"
+      >
+        <div className="relative w-20 h-20 mx-auto" role="progressbar" aria-valuenow={scanProgress} aria-valuemin={0} aria-valuemax={100}>
           <svg className="animate-spin w-full h-full text-indigo-100" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
             <path className="opacity-75 text-indigo-600" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -36,9 +41,13 @@ export function ScanProgressIndicator({
 
   if (scanStatus === 'error') {
     return (
-      <div className="bg-rose-50 border border-rose-100 rounded-xl p-6 text-center space-y-4 shadow-sm">
+      <div 
+        className="bg-rose-50 border border-rose-100 rounded-xl p-6 text-center space-y-4 shadow-sm"
+        role="alert"
+        aria-live="assertive"
+      >
         <div className="bg-rose-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto text-rose-600">
-          <AlertCircle className="w-6 h-6" />
+          <AlertCircle className="w-6 h-6" aria-hidden="true" />
         </div>
         <div>
           <p className="text-sm font-bold text-slate-800">Processing Failed</p>

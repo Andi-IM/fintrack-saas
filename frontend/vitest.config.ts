@@ -42,7 +42,8 @@ export default defineConfig({
         'lib/utils/**/*.ts',
       ],
       exclude: [
-        'features/**/__tests__/**',
+        '**/__tests__/**',
+        '**/*e2e*.ts',
       ],
     },
   },

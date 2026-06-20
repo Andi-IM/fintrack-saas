@@ -1,6 +1,13 @@
+packages:
+  - '.'
+  - 'e2e'
+
 allowBuilds:
   '@google/genai': false
   '@tailwindcss/oxide': false
+  edgedriver: true
+  esbuild: true
+  geckodriver: true
   protobufjs: false
   re2: false
   sharp: false

@@ -33,34 +33,42 @@ export function BankStatementReviewForm() {
       <div className="p-4 space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Bank Name</p>
+            <label htmlFor="bank-name" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Bank Name</label>
             <Input
+              id="bank-name"
+              aria-label="Bank Name"
               value={scanResult.bank || ''}
               onChange={(e) => updateScanResultField('bank', e.target.value)}
               className="h-8 text-xs font-bold"
             />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Period</p>
+            <label htmlFor="statement-period" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Period</label>
             <Input
+              id="statement-period"
+              aria-label="Period"
               value={scanResult.statementPeriod || ''}
               onChange={(e) => updateScanResultField('statementPeriod', e.target.value)}
               className="h-8 text-xs font-bold text-right"
             />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Saldo Awal</p>
+            <label htmlFor="opening-balance" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Saldo Awal</label>
             <Input
+              id="opening-balance"
               type="number"
+              aria-label="Opening Balance"
               value={scanResult.openingBalance ?? 0}
               onChange={(e) => updateScanResultField('openingBalance', parseFloat(e.target.value) || 0)}
               className="h-8 text-xs font-bold font-mono"
             />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Saldo Akhir</p>
+            <label htmlFor="closing-balance" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Saldo Akhir</label>
             <Input
+              id="closing-balance"
               type="number"
+              aria-label="Closing Balance"
               value={scanResult.closingBalance ?? 0}
               onChange={(e) => updateScanResultField('closingBalance', parseFloat(e.target.value) || 0)}
               className="h-8 text-xs font-bold text-right font-mono text-indigo-600"
@@ -73,11 +81,13 @@ export function BankStatementReviewForm() {
             <div key={i} className="bg-white p-2 rounded border border-slate-200 shadow-sm space-y-2 transition-all hover:border-indigo-200">
               <div className="flex gap-2 items-center">
                 <Input
+                  aria-label={`Nama transaksi bank ${i + 1}`}
                   value={item.name}
                   onChange={(e) => updateScanResultItem(i, 'name', e.target.value)}
                   className="h-7 text-[11px] font-bold flex-1"
                 />
                 <select
+                  aria-label="Transaction Type"
                   value={item.type}
                   onChange={(e) => updateScanResultItem(i, 'type', e.target.value)}
                   className={`h-7 w-20 text-[10px] font-bold rounded-md border border-slate-200 bg-white px-1 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${item.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}
@@ -88,12 +98,14 @@ export function BankStatementReviewForm() {
               </div>
               <div className="flex gap-2 items-center">
                 <Input
+                  aria-label={`Tanggal transaksi bank ${i + 1}`}
                   type="datetime-local"
                   value={item.date ? item.date.slice(0, 16) : ''}
                   onChange={(e) => updateScanResultItem(i, 'date', e.target.value ? new Date(e.target.value).toISOString() : '')}
                   className="h-7 text-[10px] flex-1"
                 />
                 <Input
+                  aria-label={`Nominal transaksi bank ${i + 1}`}
                   type="number"
                   value={item.amount}
                   onChange={(e) => updateScanResultItem(i, 'amount', parseFloat(e.target.value))}
@@ -102,7 +114,7 @@ export function BankStatementReviewForm() {
                 <button
                   onClick={() => deleteScanResultItem(i)}
                   className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded transition-colors"
-                  title="Hapus transaksi ini"
+                  aria-label="Hapus transaksi ini"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

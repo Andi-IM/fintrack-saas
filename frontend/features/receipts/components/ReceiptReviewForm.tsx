@@ -34,8 +34,10 @@ export function ReceiptReviewForm() {
       <div className="p-4 space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Receipt Type</p>
+            <label htmlFor="receipt-type" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Receipt Type</label>
             <select
+              id="receipt-type"
+              aria-label="Receipt Type"
               value={scanResult.type || 'shopping'}
               onChange={(e) => updateScanResultField('type', e.target.value as 'shopping' | 'atm')}
               className="h-8 w-full text-xs font-bold rounded-md border border-slate-200 bg-white px-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -45,26 +47,32 @@ export function ReceiptReviewForm() {
             </select>
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Merchant / Bank</p>
+            <label htmlFor="merchant" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Merchant / Bank</label>
             <Input
+              id="merchant"
+              aria-label="Merchant / Bank"
               value={scanResult.merchant || ''}
               onChange={(e) => updateScanResultField('merchant', e.target.value)}
               className="h-8 text-sm font-bold"
             />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Date & Time</p>
+            <label htmlFor="receipt-date" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Date & Time</label>
             <Input
+              id="receipt-date"
               type="datetime-local"
+              aria-label="Date & Time"
               value={scanResult.date ? scanResult.date.slice(0, 16) : ''}
               onChange={(e) => updateScanResultField('date', e.target.value ? new Date(e.target.value).toISOString() : '')}
               className="h-8 text-xs font-bold font-mono"
             />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Total Amount</p>
+            <label htmlFor="total-amount" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Total Amount</label>
             <Input
+              id="total-amount"
               type="number"
+              aria-label="Total Amount"
               value={scanResult.total || 0}
               onChange={(e) => updateScanResultField('total', parseFloat(e.target.value) || 0)}
               className="h-8 text-sm font-bold text-right text-indigo-600 font-mono"
@@ -74,8 +82,10 @@ export function ReceiptReviewForm() {
           {(scanResult.type || 'shopping') === 'atm' ? (
             <>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">ATM ID / Terminal</p>
+                <label htmlFor="atm-id" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">ATM ID / Terminal</label>
                 <Input
+                  id="atm-id"
+                  aria-label="ATM ID / Terminal"
                   value={scanResult.atmId || ''}
                   onChange={(e) => updateScanResultField('atmId', e.target.value)}
                   className="h-8 text-xs font-bold"
@@ -83,8 +93,10 @@ export function ReceiptReviewForm() {
                 />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Transaction Type</p>
+                <label htmlFor="transaction-type" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Transaction Type</label>
                 <select
+                  id="transaction-type"
+                  aria-label="Transaction Type"
                   value={scanResult.transactionType || 'withdrawal'}
                   onChange={(e) => updateScanResultField('transactionType', e.target.value as any)}
                   className="h-8 w-full text-xs font-bold rounded-md border border-slate-200 bg-white px-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -95,17 +107,21 @@ export function ReceiptReviewForm() {
                 </select>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Admin Fee</p>
+                <label htmlFor="admin-fee" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Admin Fee</label>
                 <Input
+                  id="admin-fee"
                   type="number"
+                  aria-label="Admin Fee"
                   value={scanResult.fee || 0}
                   onChange={(e) => updateScanResultField('fee', parseFloat(e.target.value) || 0)}
                   className="h-8 text-xs font-bold font-mono"
                 />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nomor Referensi</p>
+                <label htmlFor="atm-reference" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nomor Referensi</label>
                 <Input
+                  id="atm-reference"
+                  aria-label="Nomor Referensi"
                   value={scanResult.referenceNumber || ''}
                   onChange={(e) => updateScanResultField('referenceNumber', e.target.value)}
                   className="h-8 text-xs font-bold font-mono"
@@ -116,8 +132,10 @@ export function ReceiptReviewForm() {
           ) : (
             <>
               <div className="col-span-2">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Store Address</p>
+                <label htmlFor="store-address" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Store Address</label>
                 <Input
+                  id="store-address"
+                  aria-label="Store Address"
                   value={scanResult.address || ''}
                   onChange={(e) => updateScanResultField('address', e.target.value)}
                   className="h-8 text-xs"
@@ -125,34 +143,42 @@ export function ReceiptReviewForm() {
                 />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Payment Method</p>
+                <label htmlFor="payment-method" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Payment Method</label>
                 <Input
+                  id="payment-method"
+                  aria-label="Payment Method"
                   value={scanResult.paymentMethod || 'Cash'}
                   onChange={(e) => updateScanResultField('paymentMethod', e.target.value)}
                   className="h-8 text-xs font-bold"
                 />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Cash Paid</p>
+                <label htmlFor="cash-paid" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Cash Paid</label>
                 <Input
+                  id="cash-paid"
                   type="number"
+                  aria-label="Cash Paid"
                   value={scanResult.amountPaid || scanResult.total || 0}
                   onChange={(e) => updateScanResultField('amountPaid', parseFloat(e.target.value) || 0)}
                   className="h-8 text-xs font-bold text-right font-mono"
                 />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Change (Kembalian)</p>
+                <label htmlFor="change-amount" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Change (Kembalian)</label>
                 <Input
+                  id="change-amount"
                   type="number"
+                  aria-label="Change"
                   value={scanResult.change || 0}
                   onChange={(e) => updateScanResultField('change', parseFloat(e.target.value) || 0)}
                   className="h-8 text-xs font-bold font-mono"
                 />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nomor Referensi</p>
+                <label htmlFor="shopping-reference" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nomor Referensi</label>
                 <Input
+                  id="shopping-reference"
+                  aria-label="Nomor Referensi"
                   value={scanResult.referenceNumber || ''}
                   onChange={(e) => updateScanResultField('referenceNumber', e.target.value)}
                   className="h-8 text-xs font-bold font-mono"
@@ -170,38 +196,40 @@ export function ReceiptReviewForm() {
               <button
                 onClick={() => addScanResultItem()}
                 className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-2 py-0.5 rounded transition-colors"
-                title="Tambah item baru"
+                aria-label="Tambah item baru"
               >
                 <Plus className="w-3 h-3" />
                 Tambah Item
               </button>
             </div>
-            {receiptItems.length > 0 ? (
-              receiptItems.map((item, i) => (
-                <div key={i} className="flex gap-2 items-center border-b border-slate-200 border-dashed pb-2 last:border-0 last:pb-0">
-                  <Input
-                    value={item.name}
-                    onChange={(e) => updateScanResultItem(i, 'name', e.target.value)}
-                    className="h-7 text-[11px] flex-1 bg-transparent border-none focus-visible:ring-1"
-                    placeholder="Nama produk"
-                  />
-                  <Input
-                    type="number"
-                    value={item.amount}
-                    onChange={(e) => updateScanResultItem(i, 'amount', parseFloat(e.target.value))}
-                    className="h-7 text-[11px] w-24 text-right bg-transparent border-none focus-visible:ring-1 font-mono"
-                    placeholder="Harga"
-                  />
-                  <button
-                    onClick={() => deleteScanResultItem(i)}
-                    className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded transition-colors"
-                    title="Hapus item ini"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))
-            ) : (
+{receiptItems.length > 0 ? (
+               receiptItems.map((item, i) => (
+                 <div key={i} className="flex gap-2 items-center border-b border-slate-200 border-dashed pb-2 last:border-0 last:pb-0">
+                   <Input
+                     aria-label={`Nama produk item ${i + 1}`}
+                     value={item.name}
+                     onChange={(e) => updateScanResultItem(i, 'name', e.target.value)}
+                     className="h-7 text-[11px] flex-1 bg-transparent border-none focus-visible:ring-1"
+                     placeholder="Nama produk"
+                   />
+                   <Input
+                     aria-label={`Harga item ${i + 1}`}
+                     type="number"
+                     value={item.amount}
+                     onChange={(e) => updateScanResultItem(i, 'amount', parseFloat(e.target.value))}
+                     className="h-7 text-[11px] w-24 text-right bg-transparent border-none focus-visible:ring-1 font-mono"
+                     placeholder="Harga"
+                   />
+                   <button
+                 onClick={() => deleteScanResultItem(i)}
+                 className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded transition-colors"
+                 aria-label="Hapus item ini"
+               >
+                 <Trash2 className="w-3.5 h-3.5" />
+               </button>
+                 </div>
+               ))
+             ) : (
               <p className="text-[11px] text-slate-400 italic text-center py-2">Belum ada item terdeteksi. Klik &quot;Tambah Item&quot; untuk menambahkan.</p>
             )}
           </div>
