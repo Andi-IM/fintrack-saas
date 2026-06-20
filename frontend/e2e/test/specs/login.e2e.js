@@ -7,9 +7,9 @@ describe('Login Flow', () => {
         // Verify the title is correct
         await expect(browser).toHaveTitle('FinTrack SaaS')
 
-        // Verify the header "Private Vault" is displayed (Next.js components use appropriate classes/tags)
-        const header = await $('div=Private Vault')
-        await expect(header).toBeDisplayed()
+        // Verify the header "Private Vault" is displayed via data-slot attribute
+        const header = await $('[data-slot="card-title"]')
+        await expect(header).toHaveText('Private Vault')
 
         // Verify the GitHub login button is displayed
         const githubButton = await $('button=Continue with GitHub')
@@ -22,18 +22,8 @@ describe('Login Flow', () => {
         const githubButton = await $('button=Continue with GitHub')
         await githubButton.click()
 
-        // Wait for the URL to redirect to dashboard /
-        await browser.waitUntil(
-            async () => {
-                const url = await browser.getUrl()
-                const pathname = new URL(url).pathname
-                return pathname === '/'
-            },
-            {
-                timeout: 45000,
-                timeoutMsg: 'Expected browser to redirect to the dashboard'
-            }
-        )
+        // Verify redirect to dashboard using WebdriverIO built-in matcher
+        await expect(browser).toHaveUrl('http://localhost:3000/', { timeout: 45000 })
 
         // Verify the dashboard header is displayed
         const dashboardHeader = await $('h1=Dashboard Overview')

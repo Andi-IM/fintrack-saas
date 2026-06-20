@@ -75,7 +75,7 @@ export const config = {
             console.log('Next.js server is active! Commencing E2E tests...');
         } catch (err) {
             console.error('Failed to start Next.js server:', err.message);
-            if (devServerProcess) {
+            if (devServerProcess?.pid) {
                 if (process.platform === 'win32') {
                     exec(`taskkill /pid ${devServerProcess.pid} /T /F`);
                 } else {
@@ -87,7 +87,7 @@ export const config = {
     },
     // Gets executed after all workers have shut down and the session has ended.
     onComplete: function () {
-        if (devServerProcess) {
+        if (devServerProcess?.pid) {
             console.log('Stopping Next.js development server...');
             if (process.platform === 'win32') {
                 exec(`taskkill /pid ${devServerProcess.pid} /T /F`, (err) => {
