@@ -1,3 +1,10 @@
+## [1.2.1-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.2.0...v1.2.1-rc.1) (2026-06-20)
+
+
+### Bug Fixes
+
+* **e2e:** increase timeouts for CI environment and apply dynamic routing fix ([54383c9](https://github.com/Andi-IM/fintrack-saas/commit/54383c9664f60f3ccb2ca6ad503f1804b888590e))
+
 # [1.2.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.2.0-rc.1...v1.2.0-rc.2) (2026-06-20)
 
 
