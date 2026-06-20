@@ -7,6 +7,7 @@ import { OriginResolver, DefaultOriginResolver } from './auth-helpers'
 export async function login(originResolver?: OriginResolver | FormData): Promise<void> {
   if (process.env.BYPASS_AUTH === 'true') {
     redirect('/')
+    return
   }
   const supabase = await createClient()
   const resolver = (originResolver && 'resolve' in originResolver) ? originResolver : new DefaultOriginResolver()
