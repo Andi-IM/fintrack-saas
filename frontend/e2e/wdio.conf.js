@@ -71,7 +71,7 @@ export const config = {
 
         // Wait for port 3000 to become available
         try {
-            await waitPort(3000, '127.0.0.1', 30000);
+            await waitPort(3000, '127.0.0.1', 60000);
             console.log('Next.js server is active! Commencing E2E tests...');
         } catch (err) {
             console.error('Failed to start Next.js server:', err.message);
