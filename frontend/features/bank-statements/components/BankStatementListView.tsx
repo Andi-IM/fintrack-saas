@@ -74,7 +74,9 @@ export function BankStatementListView({
           <section key={bank} aria-label={`Grup Bank ${bank}`} className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
             {/* Bank Header */}
             <button
+              type="button"
               onClick={() => toggleBank(bank)}
+              aria-expanded={expandedBanks.includes(bank)}
               className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors bg-slate-50/50"
             >
               <div className="flex items-center gap-3">
@@ -94,10 +96,11 @@ export function BankStatementListView({
               <div className="divide-y divide-slate-100">
                 {statements.map((statement) => (
                   <article key={statement.id} className="bg-white">
-                    <div
+                    <button
+                      type="button"
                       onClick={() => togglePeriod(statement.id)}
                       aria-expanded={expandedPeriods.includes(statement.id)}
-                      className="w-full flex items-center justify-between px-6 py-3 hover:bg-slate-50/50 transition-colors cursor-pointer text-left"
+                      className="w-full flex items-center justify-between px-6 py-3 hover:bg-slate-50/50 transition-colors cursor-pointer text-left focus-visible:outline-indigo-500"
                     >
                       <div className="flex items-center gap-3">
                         <Calendar className="w-4 h-4 text-slate-400" aria-hidden="true" />
@@ -132,7 +135,7 @@ export function BankStatementListView({
                         </Button>
                         {expandedPeriods.includes(statement.id) ? <ChevronDown className="w-4 h-4 text-slate-300" aria-hidden="true" /> : <ChevronRight className="w-4 h-4 text-slate-300" aria-hidden="true" />}
                       </div>
-                    </div>
+                    </button>
 
                     {/* Transaction Details */}
                     {expandedPeriods.includes(statement.id) && (
@@ -158,11 +161,11 @@ export function BankStatementListView({
                           <table className="w-full text-left text-xs">
                             <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
                               <tr>
-                                <th className="px-4 py-2">Date</th>
-                                <th className="px-4 py-2">Description</th>
-                                <th className="px-4 py-2 text-right">Amount</th>
-                                <th className="px-4 py-2 text-right">Balance</th>
-                                <th className="px-4 py-2 text-right w-16">Actions</th>
+                                <th scope="col" className="px-4 py-2">Date</th>
+                                <th scope="col" className="px-4 py-2">Description</th>
+                                <th scope="col" className="px-4 py-2 text-right">Amount</th>
+                                <th scope="col" className="px-4 py-2 text-right">Balance</th>
+                                <th scope="col" className="px-4 py-2 text-right w-16">Actions</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -242,9 +245,10 @@ export function BankStatementListView({
                         {/* Mobile Card List View */}
                         <div className="md:hidden space-y-3">
                           {statement.bank_statement_items.map((item) => (
-                            <div
+                            <button
+                              type="button"
                               key={item.id}
-                              className="bg-white rounded-lg border border-slate-200 p-3.5 space-y-2 shadow-none hover:border-indigo-100 hover:bg-slate-50/30 transition-all cursor-pointer active:scale-[0.99]"
+                              className="w-full text-left bg-white rounded-lg border border-slate-200 p-3.5 space-y-2 shadow-none hover:border-indigo-100 hover:bg-slate-50/30 transition-all cursor-pointer active:scale-[0.99] focus-visible:outline-indigo-500"
                               onClick={() => setActiveMobileItem({ statementId: statement.id, item })}
                             >
                               <div className="flex justify-between items-start gap-2">
@@ -276,7 +280,7 @@ export function BankStatementListView({
                                   )}
                                 </div>
                               </div>
-                            </div>
+                            </button>
                           ))}
 
                           <Button

@@ -1,7 +1,8 @@
 'use server'
 
 import { z } from 'zod'
-import { invalidateCache } from '@/lib/cache'
+import { unstable_cache } from 'next/cache'
+import { invalidateCache, invalidateCacheTags } from '@/lib/cache'
 import { getReceiptRepository } from '@/lib/repositories/receipts'
 import { Tables } from '@/lib/database.types'
 import { ActionResponse } from '@/lib/actions/types'
@@ -64,6 +65,7 @@ export async function saveReceipt(input: SaveReceiptInput): Promise<ActionRespon
     })
 
     invalidateCache(['/receipts', '/'])
+    invalidateCacheTags(['receipts'])
     return { success: true, data: { receiptId: receipt.id } }
   } catch (error: any) {
     console.error('Error saving receipt:', error)
@@ -78,7 +80,7 @@ export type ReceiptWithItems = Tables<'receipts'> & {
   }) | null
 }
 
-export async function getReceipts(): Promise<ActionResponse<ReceiptWithItems[]>> {
+const _fetchReceipts = async (): Promise<ActionResponse<ReceiptWithItems[]>> => {
   try {
     const repo = getReceiptRepository()
     const data = await repo.findAll()
@@ -87,6 +89,16 @@ export async function getReceipts(): Promise<ActionResponse<ReceiptWithItems[]>>
     console.error('Error fetching receipts:', error)
     return { success: false, error: `Failed to fetch receipts: ${error.message}` }
   }
+}
+
+const _getCachedReceipts = unstable_cache(
+  _fetchReceipts,
+  ['receipts-list'],
+  { revalidate: 30, tags: ['receipts'] }
+)
+
+export async function getReceipts(): Promise<ActionResponse<ReceiptWithItems[]>> {
+  return _getCachedReceipts()
 }
 
 export async function deleteReceipt(id: string): Promise<ActionResponse<void>> {
@@ -101,6 +113,7 @@ export async function deleteReceipt(id: string): Promise<ActionResponse<void>> {
     }
 
     invalidateCache(['/receipts', '/'])
+    invalidateCacheTags(['receipts'])
     return { success: true }
   } catch (error: any) {
     console.error('Error deleting receipt:', error)
@@ -167,6 +180,7 @@ export async function updateReceipt(
     }
 
     invalidateCache(['/receipts'])
+    invalidateCacheTags(['receipts'])
     return { success: true, data: { receiptId: id } }
   } catch (error: any) {
     console.error('Error updating receipt:', error)

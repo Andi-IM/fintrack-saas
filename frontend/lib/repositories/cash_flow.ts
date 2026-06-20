@@ -63,11 +63,18 @@ export class SupabaseCashFlowRepository implements CashFlowRepository {
   }
 }
 
-// Single active repository instance
-let repositoryInstance: CashFlowRepository = new SupabaseCashFlowRepository()
+let repositoryInstance: CashFlowRepository | null = null
 
 export function getCashFlowRepository(): CashFlowRepository {
-  return repositoryInstance
+  if (repositoryInstance) return repositoryInstance
+
+  if (process.env.NEXT_PUBLIC_IS_TESTING === 'true') {
+    const { FakeCashFlowRepository } = require('./fake-cash-flow')
+    repositoryInstance = new FakeCashFlowRepository()
+  } else {
+    repositoryInstance = new SupabaseCashFlowRepository()
+  }
+  return repositoryInstance!
 }
 
 // Helper function to inject mock repository during test suites
