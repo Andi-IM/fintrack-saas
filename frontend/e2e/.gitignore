@@ -5,6 +5,7 @@ node_modules/
 errorShots/
 reports/
 junit.xml
+.lighthouseci/
 
 # Logs and system files
 *.log

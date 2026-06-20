@@ -10,6 +10,7 @@
     "verify:adr-018": "bash scripts/verify-adr-018.sh",
     "test": "vitest run --coverage",
     "test:watch": "vitest",
+    "test:perf": "lhci autorun",
     "clean": "next clean"
   },
   "dependencies": {

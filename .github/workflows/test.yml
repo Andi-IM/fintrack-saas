@@ -54,6 +54,11 @@ jobs:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         NEXT_TELEMETRY_DISABLED: 1
 
+    - name: Run E2E and Performance Checks (Alternated)
+      if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      run: pnpm test:alternated
+      working-directory: frontend/e2e
+
     - name: Upload test results to Codecov
       if: ${{ !cancelled() }}
       uses: codecov/codecov-action@v5
@@ -70,10 +75,5 @@ jobs:
         files: frontend/coverage/lcov.info
         flags: frontend
         fail_ci_if_error: true
-
-    - name: Run E2E tests
-      if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-      run: pnpm test
-      working-directory: frontend/e2e
 
 
