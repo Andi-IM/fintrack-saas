@@ -1,3 +1,11 @@
+# [1.4.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.3.0...v1.4.0-rc.1) (2026-06-20)
+
+
+### Features
+
+* implement authentication infrastructure with middleware, server actions, and Vitest configuration ([53f42f2](https://github.com/Andi-IM/fintrack-saas/commit/53f42f21206ab355a0c2af28ef28de72e51b14cb))
+* implement BankStatementListView and add comprehensive unit tests for CashFlowList and CashFlowForm components ([c62e5bd](https://github.com/Andi-IM/fintrack-saas/commit/c62e5bd9aabee008588d5dcfcf15f54cdf0b5fb5))
+
 # [1.3.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.2.0...v1.3.0) (2026-06-20)
 
 
