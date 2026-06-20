@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# Test screenshots and reports
+errorShots/
+reports/
+junit.xml
+
+# Logs and system files
+*.log
+.DS_Store
