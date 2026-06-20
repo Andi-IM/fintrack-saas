@@ -1,16 +1,16 @@
-# [1.3.0-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.3.0-rc.2...v1.3.0-rc.3) (2026-06-20)
+# [1.3.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.2.0...v1.3.0) (2026-06-20)
+
+
+### Bug Fixes
+
+* **e2e:** increase timeouts for CI environment and apply dynamic routing fix ([54383c9](https://github.com/Andi-IM/fintrack-saas/commit/54383c9664f60f3ccb2ca6ad503f1804b888590e))
 
 
 ### Features
 
-* implement BankStatementListView and add comprehensive unit tests for CashFlowList and CashFlowForm components ([c62e5bd](https://github.com/Andi-IM/fintrack-saas/commit/c62e5bd9aabee008588d5dcfcf15f54cdf0b5fb5))
-
-# [1.3.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.3.0-rc.1...v1.3.0-rc.2) (2026-06-20)
-
-
-### Features
-
-* implement authentication infrastructure with middleware, server actions, and Vitest configuration ([53f42f2](https://github.com/Andi-IM/fintrack-saas/commit/53f42f21206ab355a0c2af28ef28de72e51b14cb))
+* add responsive sidebar and bottom navigation components for app layout ([1050738](https://github.com/Andi-IM/fintrack-saas/commit/1050738facaf8c45afb5dcdd60b77b8720c239ee))
+* implement E2E testing framework with Lighthouse CI and auth bypass support ([77a79bf](https://github.com/Andi-IM/fintrack-saas/commit/77a79bf391c2ac00c5d95988cd7c4c95dfecb2bc))
+* implement receipt and bank statement scanning features with E2E testing infrastructure ([ecd2892](https://github.com/Andi-IM/fintrack-saas/commit/ecd2892e04715ac7433a241d0e09ae384d4a354e))
 
 # [1.3.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.2.1-rc.1...v1.3.0-rc.1) (2026-06-20)
 
