@@ -1,3 +1,10 @@
+# [1.3.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.3.0-rc.1...v1.3.0-rc.2) (2026-06-20)
+
+
+### Features
+
+* implement authentication infrastructure with middleware, server actions, and Vitest configuration ([53f42f2](https://github.com/Andi-IM/fintrack-saas/commit/53f42f21206ab355a0c2af28ef28de72e51b14cb))
+
 # [1.3.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.2.1-rc.1...v1.3.0-rc.1) (2026-06-20)
 
 
