@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { LayoutDashboard, FileText, Camera, Building2 } from 'lucide-react'
 
 export function BottomNav() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const isScanReceipt = pathname === '/add' && searchParams?.get('scan') === 'Receipt'
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -24,7 +26,7 @@ export function BottomNav() {
       label: 'Transaksi',
       href: '/transactions',
       icon: FileText,
-      active: mounted && (pathname?.startsWith('/transactions') || pathname === '/add')
+      active: mounted && (pathname?.startsWith('/transactions') || (pathname === '/add' && !isScanReceipt))
     },
     {
       label: 'Bank',
@@ -36,7 +38,7 @@ export function BottomNav() {
       label: 'Struk',
       href: '/receipts',
       icon: Camera,
-      active: mounted && !!pathname?.startsWith('/receipts')
+      active: mounted && (!!pathname?.startsWith('/receipts') || isScanReceipt)
     }
   ]
 
