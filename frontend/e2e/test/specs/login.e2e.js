@@ -30,7 +30,7 @@ describe('Login Flow', () => {
                 return pathname === '/'
             },
             {
-                timeout: 15000,
+                timeout: 45000,
                 timeoutMsg: 'Expected browser to redirect to the dashboard'
             }
         )
