@@ -22,8 +22,18 @@ describe('Login Flow', () => {
         const githubButton = await $('button=Continue with GitHub')
         await githubButton.click()
 
-        // Verify redirect to dashboard using WebdriverIO built-in matcher
-        await expect(browser).toHaveUrl('http://localhost:3000/', { timeout: 45000 })
+        // Wait for the URL to redirect to dashboard /
+        await browser.waitUntil(
+            async () => {
+                const url = await browser.getUrl()
+                const pathname = new URL(url).pathname
+                return pathname === '/'
+            },
+            {
+                timeout: 45000,
+                timeoutMsg: 'Expected browser to redirect to the dashboard'
+            }
+        )
 
         // Verify the dashboard header is displayed
         const dashboardHeader = await $('h1=Dashboard Overview')
