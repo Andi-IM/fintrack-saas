@@ -59,7 +59,7 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: frontend/report.junit.xml
+        files: frontend/report.junit.xml
         flags: frontend
         report_type: test_results
 
@@ -67,7 +67,7 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: frontend/coverage/lcov.info
+        files: frontend/coverage/lcov.info
         flags: frontend
         fail_ci_if_error: true
 
