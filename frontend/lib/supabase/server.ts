@@ -27,7 +27,7 @@ export async function createClient() {
     }
   )
 
-  if (process.env.BYPASS_AUTH === 'true') {
+  if (process.env.BYPASS_AUTH === 'true' && process.env.NODE_ENV !== 'production') {
     client.auth.getUser = async (token?: string) => {
       return {
         data: {
