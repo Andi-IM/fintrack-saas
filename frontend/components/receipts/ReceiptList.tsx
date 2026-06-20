@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useMemo } from 'react'
+import { useState, useTransition, useMemo, Suspense, lazy } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { format } from 'date-fns'
@@ -15,7 +15,7 @@ import {
   Maximize2,
   Pencil
 } from 'lucide-react'
-import { ReceiptEditDialog } from './ReceiptEditDialog'
+const ReceiptEditDialog = lazy(() => import('./ReceiptEditDialog').then(m => ({ default: m.ReceiptEditDialog })))
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -106,12 +106,13 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
         <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="Cari toko, bank, atau alamat..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
+<Input
+           placeholder="Cari toko, bank, atau alamat..."
+           value={searchQuery}
+           onChange={(e) => setSearchQuery(e.target.value)}
+           className="pl-9"
+           aria-label="Cari toko, bank, atau alamat"
+         />
         </div>
         <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
           <Button
@@ -190,39 +191,42 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                         {formatCurrency(Number(receipt.total_price))}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleSelectReceipt(receipt)
-                        }}
-                        className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setEditingReceipt(receipt)
-                        }}
-                        className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        disabled={isPending}
-                        onClick={(e) => handleDelete(receipt.id, e)}
-                        className="text-rose-700 hover:text-rose-800 hover:bg-rose-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+<div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleSelectReceipt(receipt)
+                            }}
+                            className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50"
+                            aria-label={`Lihat detail ${receipt.store_name}`}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setEditingReceipt(receipt)
+                            }}
+                            className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50"
+                            aria-label={`Edit ${receipt.store_name}`}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            disabled={isPending}
+                            onClick={(e) => handleDelete(receipt.id, e)}
+                            className="text-rose-700 hover:text-rose-800 hover:bg-rose-50"
+                            aria-label={`Hapus ${receipt.store_name}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                   </div>
                 </CardContent>
               </Card>
@@ -271,36 +275,39 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                       {formatCurrency(Number(receipt.total_price))}
                     </TableCell>
                     <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => handleSelectReceipt(receipt)}
-                          className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setEditingReceipt(receipt)
-                          }}
-                          className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          disabled={isPending}
-                          onClick={(e) => handleDelete(receipt.id, e)}
-                          className="text-rose-700 hover:text-rose-800 hover:bg-rose-50"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+<div className="flex items-center justify-center gap-1">
+                         <Button
+                           variant="ghost"
+                           size="icon-sm"
+                           onClick={() => handleSelectReceipt(receipt)}
+                           className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50"
+                           aria-label={`Lihat detail ${receipt.store_name}`}
+                         >
+                           <Eye className="w-4 h-4" />
+                         </Button>
+                         <Button
+                           variant="ghost"
+                           size="icon-sm"
+                           onClick={(e) => {
+                             e.stopPropagation()
+                             setEditingReceipt(receipt)
+                           }}
+                           className="text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50"
+                           aria-label={`Edit ${receipt.store_name}`}
+                         >
+                           <Pencil className="w-4 h-4" />
+                         </Button>
+                         <Button
+                           variant="ghost"
+                           size="icon-sm"
+                           disabled={isPending}
+                           onClick={(e) => handleDelete(receipt.id, e)}
+                           className="text-rose-700 hover:text-rose-800 hover:bg-rose-50"
+                           aria-label={`Hapus ${receipt.store_name}`}
+                         >
+                           <Trash2 className="w-4 h-4" />
+                         </Button>
+                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -378,6 +385,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                               fill
                               sizes="(max-width: 768px) 100vw, 500px"
                               className="object-contain rounded-xl transition-all duration-300 group-hover:scale-[1.02]"
+                              loading="lazy"
                               unoptimized
                             />
                             <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-1.5 text-white">
@@ -617,14 +625,15 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
           <DialogTitle className="sr-only">Pratinjau Struk Layar Penuh</DialogTitle>
           {receiptFileUrl && (
             <div className="relative w-full h-[80vh] flex items-center justify-center">
-              <Image 
-                src={receiptFileUrl} 
-                alt="Pratinjau Struk Fisik" 
-                fill
-                sizes="(max-width: 768px) 100vw, 1200px"
-                className="object-contain"
-                unoptimized
-              />
+<Image 
+                  src={receiptFileUrl} 
+                  alt="Pratinjau Struk Fisik" 
+                  fill
+                  sizes="(max-width: 768px) 100vw, 1200px"
+                  className="object-contain"
+                  loading="lazy"
+                  unoptimized
+                />
             </div>
           )}
         </DialogContent>
@@ -632,17 +641,19 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
 
       {/* Edit Modal */}
       {editingReceipt && (
-        <ReceiptEditDialog
-          receipt={editingReceipt}
-          open={editingReceipt !== null}
-          onOpenChange={(open) => {
-            if (!open) setEditingReceipt(null)
-          }}
-          onSuccess={() => {
-            setEditingReceipt(null)
-            router.refresh()
-          }}
-        />
+        <Suspense fallback={null}>
+          <ReceiptEditDialog
+            receipt={editingReceipt}
+            open={editingReceipt !== null}
+            onOpenChange={(open) => {
+              if (!open) setEditingReceipt(null)
+            }}
+            onSuccess={() => {
+              setEditingReceipt(null)
+              router.refresh()
+            }}
+          />
+        </Suspense>
       )}
     </div>
   )

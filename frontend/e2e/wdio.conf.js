@@ -64,7 +64,7 @@ export const config = {
         }
     }],
     logLevel: 'info',
-    baseUrl: 'http://localhost:3000',
+    baseUrl: 'http://127.0.0.1:3000',
     waitforTimeout: 10000,
     connectionRetryTimeout: 120000,
     connectionRetryCount: 3,
@@ -99,6 +99,8 @@ export const config = {
             env: {
                 ...process.env,
                 ...ciEnv,
+                BYPASS_AUTH: 'true',
+                NEXT_PUBLIC_IS_TESTING: 'true'
             }
         });
 

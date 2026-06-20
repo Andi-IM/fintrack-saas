@@ -1,4 +1,5 @@
 import { expect } from '@wdio/globals'
+import path from 'path'
 
 describe('Login Flow', () => {
     it('should display the login page correctly', async () => {
@@ -14,6 +15,9 @@ describe('Login Flow', () => {
         // Verify the GitHub login button is displayed
         const githubButton = await $('button=Continue with GitHub')
         await expect(githubButton).toBeDisplayed()
+
+        // Ambil screenshot halaman login
+        await browser.saveScreenshot(path.join(process.cwd(), '../../docs/tests/e2e/screenshots/login.png'))
     })
 
     it('should redirect to the dashboard when bypass auth is active', async () => {
@@ -38,5 +42,8 @@ describe('Login Flow', () => {
         // Verify the dashboard header is displayed
         const dashboardHeader = await $('h1=Dashboard Overview')
         await expect(dashboardHeader).toBeDisplayed()
+
+        // Ambil screenshot dashboard setelah login
+        await browser.saveScreenshot(path.join(process.cwd(), '../../docs/tests/e2e/screenshots/dashboard.png'))
     })
 })

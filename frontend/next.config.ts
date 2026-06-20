@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  output: 'standalone',
+  output: process.env.NEXT_PUBLIC_IS_TESTING === 'true' ? undefined : 'standalone',
   experimental: {
     serverActions: {
       bodySizeLimit: '5mb',

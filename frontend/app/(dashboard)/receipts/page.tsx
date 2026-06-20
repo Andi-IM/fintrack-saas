@@ -1,9 +1,11 @@
 import { getReceipts } from '@/features/receipts/actions/receipts'
 import { ReceiptList } from '@/components/receipts/ReceiptList'
+import { setupE2eMockData } from '@/features/receipts/actions/e2e-setup'
 import Link from 'next/link'
 import { Camera } from 'lucide-react'
 
 export default async function ReceiptsPage() {
+  await setupE2eMockData()
   const response = await getReceipts()
   const receipts = response.success ? (response.data || []) : []
 

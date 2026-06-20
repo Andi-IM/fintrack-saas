@@ -1,20 +1,96 @@
-import { spawn, spawnSync, exec } from 'child_process';
+import { spawn, spawnSync, exec, execSync } from 'child_process';
 import net from 'net';
 import fs from 'fs';
 import path from 'path';
 
-function loadEnvFile(filePath) {
-    if (!fs.existsSync(filePath)) return {};
-    return fs.readFileSync(filePath, 'utf-8')
-        .split('\n')
-        .filter(line => line.trim() && !line.trim().startsWith('#'))
-        .reduce((acc, line) => {
-            const [key, ...rest] = line.split('=');
-            if (!key) return acc;
-            const value = rest.join('=').trim().replace(/^"|"$/g, '').replace(/^'|'$/g, '');
-            acc[key.trim()] = value;
-            return acc;
-        }, {});
+let serverProcess = null;
+let originalEnvLocal = false;
+let usingBackupEnv = false;
+
+function restoreEnv() {
+    if (usingBackupEnv) {
+        const envLocalPath = path.resolve('..', '.env.local');
+        const envBackupPath = path.resolve('..', '.env.local.backup');
+
+        if (fs.existsSync(envLocalPath)) {
+            try { fs.unlinkSync(envLocalPath); } catch(e) {}
+        }
+
+        if (originalEnvLocal && fs.existsSync(envBackupPath)) {
+            try { fs.renameSync(envBackupPath, envLocalPath); } catch(e) {}
+            console.log(`Restored original .env.local from backup`);
+        } else if (fs.existsSync(envBackupPath)) {
+            try { fs.unlinkSync(envBackupPath); } catch(e) {}
+        }
+    }
+}
+
+function cleanupAndExit(code = 0) {
+    if (serverProcess) {
+        console.log('Stopping Next.js production server...');
+        if (process.platform === 'win32') {
+            try { execSync(`taskkill /pid ${serverProcess.pid} /T /F`); } catch (err) {}
+        } else {
+            try { process.kill(-serverProcess.pid); } catch (err) {}
+        }
+        serverProcess = null;
+    }
+    restoreEnv();
+    process.exit(code);
+}
+
+process.on('SIGINT', () => cleanupAndExit(1));
+process.on('SIGTERM', () => cleanupAndExit(1));
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught exception:', err);
+    cleanupAndExit(1);
+});
+
+function killPort3000() {
+    try {
+        if (process.platform === 'win32') {
+            const output = execSync('netstat -ano | findstr :3000').toString();
+            const lines = output.split('\n');
+            for (const line of lines) {
+                const parts = line.trim().split(/\s+/);
+                if (parts.length >= 5 && parts[1].includes(':3000') && parts[3] === 'LISTENING') {
+                    const pid = parts[4];
+                    if (pid && pid !== '0') {
+                        console.log(`Killing zombie process ${pid} on port 3000...`);
+                        execSync(`taskkill /pid ${pid} /T /F`);
+                    }
+                }
+            }
+        } else {
+            try {
+                execSync('lsof -i :3000 -t | xargs kill -9', { stdio: 'ignore' });
+            } catch (err) {}
+        }
+    } catch (e) {
+        // Ignore if no process found or kill fails
+    }
+}
+
+function setupEnv() {
+    const envFileName = process.env.ENV_FILE || '.env.ci';
+    const envSourcePath = path.resolve('..', envFileName);
+    const envLocalPath = path.resolve('..', '.env.local');
+    const envBackupPath = path.resolve('..', '.env.local.backup');
+
+    if (!fs.existsSync(envSourcePath)) {
+        console.warn(`Warning: ${envSourcePath} not found. Skipping env swap.`);
+        return;
+    }
+
+    if (fs.existsSync(envLocalPath)) {
+        fs.renameSync(envLocalPath, envBackupPath);
+        originalEnvLocal = true;
+        console.log(`Backed up existing .env.local to .env.local.backup`);
+    }
+
+    fs.copyFileSync(envSourcePath, envLocalPath);
+    console.log(`Copied ${envFileName} to .env.local for native Next.js testing.`);
+    usingBackupEnv = true;
 }
 
 function checkPort(port, host) {
@@ -64,25 +140,20 @@ function runCommand(cmd, args, extraEnv = {}) {
 }
 
 async function main() {
-    let serverProcess;
+    killPort3000();
     
     try {
-        console.log('Starting Next.js production server in the background...');
-        
-        const envFile = path.resolve('../.env.ci');
-        const ciEnv = loadEnvFile(envFile);
-        if (Object.keys(ciEnv).length > 0) {
-            console.log(`Loaded ${Object.keys(ciEnv).length} env vars from ${envFile}`);
-        }
+        setupEnv();
 
+        console.log('\nBuilding Next.js application for testing...');
+        runCommand('pnpm', ['--dir', '..', 'build']);
+
+        console.log('\nStarting Next.js production server in the background...');
         serverProcess = spawn('pnpm', ['--dir', '..', 'start'], {
             shell: true,
             detached: process.platform !== 'win32',
             stdio: 'inherit',
-            env: {
-                ...process.env,
-                ...ciEnv
-            }
+            env: { ...process.env, PORT: '3000', HOSTNAME: '127.0.0.1' }
         });
 
         // Wait for port 3000 to become available
@@ -101,7 +172,7 @@ async function main() {
             {
                 name: 'Performance Login Test',
                 type: 'perf',
-                action: () => runCommand('npx', ['lhci', 'autorun', '--collect.url=http://localhost:3000/login'])
+                action: () => runCommand('npx', ['lhci', 'autorun', '--config=../.lighthouserc.json', '--collect.url=http://127.0.0.1:3000/login'])
             },
 
             // --- 2. RECEIPTS FEATURE ---
@@ -112,10 +183,16 @@ async function main() {
                 action: () => runCommand('npx', ['wdio', 'run', 'wdio.conf.js', '--spec', './test/specs/receipts.e2e.js'], { NO_START_SERVER: 'true' })
             },
             {
-                name: 'Performance Receipts Test',
+                name: 'Performance Receipts Test (Desktop)',
                 type: 'perf',
-                spec: './test/specs/receipts.e2e.js', // Triggered only if e2e receipts spec exists
-                action: () => runCommand('npx', ['lhci', 'autorun', '--collect.url=http://localhost:3000/receipts'])
+                spec: './test/specs/receipts.e2e.js',
+                action: () => runCommand('npx', ['lhci', 'autorun', '--config=../.lighthouserc.json', '--collect.url=http://127.0.0.1:3000/receipts'])
+            },
+            {
+                name: 'Performance Receipts Test (Mobile)',
+                type: 'perf',
+                spec: './test/specs/receipts.e2e.js',
+                action: () => runCommand('npx', ['lhci', 'autorun', '--config=../.lighthouserc.mobile.json', '--collect.url=http://127.0.0.1:3000/receipts'])
             }
         ];
 
@@ -143,20 +220,7 @@ async function main() {
         console.error('======================================================\n');
         process.exitCode = 1;
     } finally {
-        if (serverProcess) {
-            console.log('Stopping Next.js production server...');
-            if (process.platform === 'win32') {
-                exec(`taskkill /pid ${serverProcess.pid} /T /F`, (err) => {
-                    if (err) console.error('Failed to clean up Next.js server:', err);
-                });
-            } else {
-                try {
-                    process.kill(-serverProcess.pid);
-                } catch (err) {
-                    console.error('Failed to clean up Next.js server:', err);
-                }
-            }
-        }
+        cleanupAndExit(process.exitCode || 0);
     }
 }
 

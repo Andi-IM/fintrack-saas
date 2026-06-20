@@ -337,6 +337,18 @@ describe('ScanDialog Component', () => {
     fireEvent.click(removeBtn)
     expect(mockStore.setFileToScan).toHaveBeenCalledWith(null)
   })
+
+  it('has accessible dropzone for file upload', () => {
+    render(<ScanDialog scanContext="Receipt" />)
+    const dropzone = screen.getByRole('button', { name: /upload receipt image/i })
+    expect(dropzone).toHaveAttribute('tabindex', '0')
+  })
+
+  it('has accessible dropzone for bank statement upload', () => {
+    render(<ScanDialog scanContext="BankStatement" />)
+    const dropzone = screen.getByRole('button', { name: /upload PDF statement/i })
+    expect(dropzone).toHaveAttribute('tabindex', '0')
+  })
 })
 
 describe('ScanProgressIndicator Component', () => {
@@ -350,5 +362,32 @@ describe('ScanProgressIndicator Component', () => {
       />
     )
     expect(container.firstChild).toBeNull()
+  })
+
+  it('has role status and aria-live for scanning state', () => {
+    render(
+      <ScanProgressIndicator
+        scanStatus="scanning"
+        scanProgress={50}
+        errorMessage={null}
+        onRetry={vi.fn()}
+      />
+    )
+    const statusElement = screen.getByRole('status')
+    expect(statusElement).toHaveAttribute('aria-live', 'polite')
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50')
+  })
+
+  it('has role alert for error state', () => {
+    render(
+      <ScanProgressIndicator
+        scanStatus="error"
+        scanProgress={0}
+        errorMessage="Test error message"
+        onRetry={vi.fn()}
+      />
+    )
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(screen.getByText('Test error message')).toBeInTheDocument()
   })
 })
