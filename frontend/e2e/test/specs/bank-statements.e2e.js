@@ -25,19 +25,35 @@ describe('Bank Statements Feature E2E Test', () => {
     describe('View List - Empty / Filled State', () => {
         it('should navigate to bank statements page', async () => {
             await browser.setWindowSize(1200, 800)
-            await browser.url('/bank-statements')
+            await browser.url('/statements')
             
-            // Menunggu indikator loading hilang
+            // Tunggu sampai loader muncul, ATAU data muncul, ATAU empty state muncul (karena page loading Next.js mungkin memakan waktu)
+            await browser.waitUntil(async () => {
+                const loader = await $('[role="status"][aria-label="Memuat daftar mutasi bank"]')
+                const emptyCard = await $('*=No bank statements found')
+                const bankSection = await $('section[aria-label^="Grup Bank"]')
+                return (await loader.isExisting()) || (await emptyCard.isExisting()) || (await bankSection.isExisting())
+            }, { timeout: 20000, timeoutMsg: 'Page took too long to render any recognizable elements' })
+            
+            // Menunggu indikator loading hilang (jika loader sempat muncul)
             const loader = await $('[role="status"][aria-label="Memuat daftar mutasi bank"]')
             if (await loader.isExisting()) {
-                await loader.waitForExist({ reverse: true, timeout: 10000 })
+                await loader.waitForExist({ reverse: true, timeout: 15000 })
             }
         })
 
         it('should display data or empty state text', async () => {
+            // Tunggu elemen muncul dengan toleransi waktu lebih tinggi
+            await browser.waitUntil(async () => {
+                const emptyCard = await $('*=No bank statements found')
+                const bankSection = await $('section[aria-label^="Grup Bank"]')
+                return (await emptyCard.isExisting()) || (await bankSection.isExisting())
+            }, { timeout: 15000, timeoutMsg: 'Data and empty state did not appear' })
+
+            await browser.saveScreenshot(path.join(process.cwd(), '../../docs/tests/e2e/screenshots/bank-statements-list.png'))
+
             const emptyCard = await $('*=No bank statements found')
             const bankSection = await $('section[aria-label^="Grup Bank"]')
-            
             const isEmpty = await emptyCard.isExisting()
             const hasData = await bankSection.isExisting()
             
@@ -67,6 +83,10 @@ describe('Bank Statements Feature E2E Test', () => {
                 // Memastikan status berubah
                 const newState = await toggleBtn.getAttribute('aria-expanded')
                 expect(initialState).not.toBe(newState)
+                
+                // Kembalikan ke state awal agar tes berikutnya tidak terganggu
+                await toggleBtn.click()
+                await browser.pause(500)
             }
         })
 
@@ -84,6 +104,10 @@ describe('Bank Statements Feature E2E Test', () => {
                 
                 const newState = await periodBtn.getAttribute('aria-expanded')
                 expect(initialState).not.toBe(newState)
+                
+                // Kembalikan ke state awal
+                await periodBtn.click()
+                await browser.pause(500)
             }
         })
         
@@ -96,6 +120,7 @@ describe('Bank Statements Feature E2E Test', () => {
                  // Modal Edit Transaction Item harus muncul
                  const modalDialog = await $('[role="dialog"]')
                  await expect(modalDialog).toBeDisplayed()
+                 await browser.saveScreenshot(path.join(process.cwd(), '../../docs/tests/e2e/screenshots/bank-statements-modal.png'))
                  
                  // Menggunakan tombol ESC untuk menutup
                  await browser.keys(['Escape'])
@@ -108,7 +133,7 @@ describe('Bank Statements Feature E2E Test', () => {
         beforeEach(async () => {
             await browser.setWindowSize(375, 812)
             // Lakukan navigasi ulang jika diperlukan untuk mereset layout/state
-            await browser.url('/bank-statements')
+            await browser.url('/statements')
             const loader = await $('[role="status"][aria-label="Memuat daftar mutasi bank"]')
             if (await loader.isExisting()) {
                 await loader.waitForExist({ reverse: true, timeout: 10000 })
@@ -137,6 +162,7 @@ describe('Bank Statements Feature E2E Test', () => {
                     
                     const drawerDialog = await $('[role="dialog"]')
                     await expect(drawerDialog).toBeDisplayed()
+                    await browser.saveScreenshot(path.join(process.cwd(), '../../docs/tests/e2e/screenshots/bank-statements-mobile.png'))
                     
                     // Menutup laci (drawer) dengan menekan tombol Batal
                     const batalBtn = await $('button=Batal')
