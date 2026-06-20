@@ -1,3 +1,10 @@
+# [1.3.0-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.3.0-rc.2...v1.3.0-rc.3) (2026-06-20)
+
+
+### Features
+
+* implement BankStatementListView and add comprehensive unit tests for CashFlowList and CashFlowForm components ([c62e5bd](https://github.com/Andi-IM/fintrack-saas/commit/c62e5bd9aabee008588d5dcfcf15f54cdf0b5fb5))
+
 # [1.3.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.3.0-rc.1...v1.3.0-rc.2) (2026-06-20)
 
 
