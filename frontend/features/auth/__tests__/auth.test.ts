@@ -117,6 +117,22 @@ describe('auth server actions', () => {
 
       expect(redirect).toHaveBeenCalledWith('/login?message=GitHub%20provider%20failed')
     })
+
+    it('redirects directly to dashboard when BYPASS_AUTH is true', async () => {
+      process.env.BYPASS_AUTH = 'true'
+      const mockSupabase = await createClient()
+      const mockSignIn = vi.fn()
+      mockSupabase.auth.signInWithOAuth = mockSignIn
+
+      const mockResolver = {
+        resolve: vi.fn().mockResolvedValue('https://test-origin.com')
+      }
+
+      await login(mockResolver)
+
+      expect(mockSignIn).not.toHaveBeenCalled()
+      expect(redirect).toHaveBeenCalledWith('/')
+    })
   })
 
   describe('logout', () => {

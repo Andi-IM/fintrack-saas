@@ -251,4 +251,55 @@ describe('ReceiptReviewForm Component', () => {
     render(<ReceiptReviewForm />)
     expect(screen.queryByRole('button', { name: /Tambah Item/i })).not.toBeInTheDocument()
   })
+
+  it('has accessible labels for all form fields in shopping mode', () => {
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      scanResult: {
+        type: 'shopping',
+        merchant: 'Alfamart',
+        date: '2026-06-19T10:00:00.000Z',
+        total: 10000,
+        items: []
+      }
+    } as any)
+
+    render(<ReceiptReviewForm />)
+
+    expect(screen.getByLabelText(/Receipt Type/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Merchant/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Date & Time/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Total Amount/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Store Address/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Payment Method/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Cash Paid/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Change/i)).toBeInTheDocument()
+  })
+
+  it('has accessible labels for all form fields in atm mode', () => {
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      scanResult: {
+        type: 'atm',
+        merchant: 'Mandiri ATM',
+        date: '2026-06-19T10:00:00.000Z',
+        total: 100000,
+        atmId: 'ATM001',
+        transactionType: 'withdrawal',
+        fee: 0,
+        referenceNumber: 'REF999'
+      }
+    } as any)
+
+    render(<ReceiptReviewForm />)
+
+    expect(screen.getByLabelText(/Receipt Type/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Merchant/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Date & Time/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Total Amount/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/ATM ID/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Transaction Type/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Admin Fee/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Nomor Referensi/i)).toBeInTheDocument()
+  })
 })

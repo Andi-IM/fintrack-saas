@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+
+# Test screenshots and reports
+errorShots/
+reports/
+junit.xml
+.lighthouseci/
+
+# Logs and system files
+*.log
+.DS_Store

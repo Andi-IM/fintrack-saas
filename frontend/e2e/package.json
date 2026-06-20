@@ -1,0 +1,26 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+"scripts": {
+    "test": "wdio run wdio.conf.js",
+    "test:perf": "lhci autorun",
+    "test:perf:mobile": "lhci autorun --config=.lighthouserc.mobile.json",
+    "test:alternated": "node scripts/run-alternated-tests.js",
+    "lint": "eslint \"**/*.js\"",
+    "format": "prettier --write \"./**/*.js\""
+  },
+  "license": "ISC",
+  "packageManager": "pnpm@10.18.0",
+  "devDependencies": {
+    "@lhci/cli": "^0.15.1",
+    "@wdio/cli": "^9.28.0",
+    "@wdio/local-runner": "^9.28.0",
+    "@wdio/mocha-framework": "^9.28.0",
+    "@wdio/spec-reporter": "^9.28.0",
+    "eslint": "^8.57.1",
+    "eslint-plugin-wdio": "^8.37.0",
+    "prettier": "^3.0.0"
+  }
+}
