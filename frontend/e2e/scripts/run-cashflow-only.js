@@ -161,53 +161,12 @@ async function main() {
         console.log('Next.js production server is active! Starting test sequence...');
 
         // Define tests queue
-        const tests = [
-            // --- 1. AUTH FEATURE (Login + Logout) ---
-            {
-                name: 'E2E Auth Test',
-                type: 'e2e',
-                spec: './test/specs/auth.e2e.js',
-                action: () => runCommand('npx', ['wdio', 'run', 'wdio.conf.js', '--spec', './test/specs/auth.e2e.js'], { NO_START_SERVER: 'true' })
-            },
-            {
-                name: 'Performance Login Test',
-                type: 'perf',
-                action: () => runCommand('npx', ['lhci', 'autorun', '--config=../.lighthouserc.json', '--collect.url=http://127.0.0.1:3000/login'])
-            },
-
-            // --- 2. RECEIPTS FEATURE ---
-            {
-                name: 'E2E Receipts Test',
-                type: 'e2e',
-                spec: './test/specs/receipts.e2e.js',
-                action: () => runCommand('npx', ['wdio', 'run', 'wdio.conf.js', '--spec', './test/specs/receipts.e2e.js'], { NO_START_SERVER: 'true' })
-            },
-            {
-                name: 'Performance Receipts Test (Desktop)',
-                type: 'perf',
-                spec: './test/specs/receipts.e2e.js',
-                action: () => runCommand('npx', ['lhci', 'autorun', '--config=../.lighthouserc.json', '--collect.url=http://127.0.0.1:3000/receipts'])
-            },
-            {
-                name: 'Performance Receipts Test (Mobile)',
-                type: 'perf',
-                spec: './test/specs/receipts.e2e.js',
-                action: () => runCommand('npx', ['lhci', 'autorun', '--config=../.lighthouserc.mobile.json', '--collect.url=http://127.0.0.1:3000/receipts'])
-            },
-
-            // --- 3. CASH FLOW (TRANSACTIONS) FEATURE ---
-            {
-                name: 'E2E Cash Flow Test',
-                type: 'e2e',
-                spec: './test/specs/cash-flow.e2e.js',
-                action: () => runCommand('npx', ['wdio', 'run', 'wdio.conf.js', '--spec', './test/specs/cash-flow.e2e.js'], { NO_START_SERVER: 'true' })
-            },
-            {
-                name: 'Performance Transactions Test (Desktop)',
-                type: 'perf',
-                action: () => runCommand('npx', ['lhci', 'autorun', '--config=../.lighthouserc.json', '--collect.url=http://127.0.0.1:3000/transactions'])
-            }
-        ];
+        const tests = [{
+      name: 'E2E Cash Flow Test',
+      type: 'e2e',
+      spec: './test/specs/cash-flow.e2e.js',
+      action: () => runCommand('npx', ['wdio', 'run', 'wdio.conf.js', '--spec', './test/specs/cash-flow.e2e.js'], { NO_START_SERVER: 'true' })
+  }];
 
         // Execute tests sequentially
         for (const test of tests) {

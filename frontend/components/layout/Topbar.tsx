@@ -20,7 +20,7 @@ export function Topbar({ email }: { email: string | undefined }) {
           </div>
         )}
         <form action={logout}>
-          <button type="submit" className="text-slate-400 hover:text-slate-600 transition-colors flex items-center">
+          <button type="submit" className="text-slate-400 hover:text-slate-600 transition-colors flex items-center" aria-label="Keluar" title="Keluar">
             <LogOut className="w-5 h-5" />
           </button>
         </form>

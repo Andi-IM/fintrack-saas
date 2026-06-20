@@ -65,8 +65,12 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
           <div className="flex items-center gap-3">
             <CardTitle className="text-sm font-bold text-slate-800">Riwayat Arus Kas</CardTitle>
             {dateFilter && (
-              <button onClick={handleClearDateFilter} className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100 hover:bg-indigo-100 transition-colors flex items-center gap-1">
-                Filter Tanggal: {dateFilter} <span>✕</span>
+              <button
+                onClick={handleClearDateFilter}
+                aria-label={`Hapus filter tanggal: ${dateFilter}`}
+                className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100 hover:bg-indigo-100 transition-colors flex items-center gap-1"
+              >
+                Filter Tanggal: {dateFilter} <span aria-hidden="true">✕</span>
               </button>
             )}
           </div>
@@ -75,9 +79,10 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
               variant="ghost" 
               size="sm" 
               onClick={handleResetFilters}
+              aria-label="Bersihkan semua filter aktif"
               className="h-7 px-2.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-bold flex items-center gap-1 rounded-md"
             >
-              <X className="w-3.5 h-3.5" /> Bersihkan Filter
+              <X className="w-3.5 h-3.5" aria-hidden="true" /> Bersihkan Filter
             </Button>
           )}
         </div>
@@ -92,14 +97,16 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
               placeholder="Cari deskripsi / kategori..."
               value={search || ''}
               onChange={(e) => handleSearchChange(e.target.value)}
+              aria-label="Cari transaksi berdasarkan deskripsi atau kategori"
               className="pl-9 pr-8 h-9 text-xs rounded-lg border-slate-200 focus-visible:ring-indigo-500"
             />
             {search && (
               <button 
-                onClick={() => handleSearchChange('')} 
+                onClick={() => handleSearchChange('')}
+                aria-label="Hapus teks pencarian"
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-3.5 h-3.5" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -109,6 +116,7 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
             <select
               value={category || 'all'}
               onChange={(e) => handleCategoryChange(e.target.value)}
+              aria-label="Filter berdasarkan kategori"
               className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none cursor-pointer"
             >
               <option value="all">Semua Kategori</option>
@@ -126,6 +134,7 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
             <select
               value={payment || 'all'}
               onChange={(e) => handlePaymentChange(e.target.value)}
+              aria-label="Filter berdasarkan metode pembayaran"
               className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none cursor-pointer"
             >
               <option value="all">Semua Metode Bayar</option>
@@ -143,6 +152,7 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
             <select
               value={source || 'all'}
               onChange={(e) => handleSourceChange(e.target.value)}
+              aria-label="Filter berdasarkan sumber data"
               className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none cursor-pointer"
             >
               <option value="all">Semua Sumber Data</option>
@@ -160,6 +170,7 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
             <select
               value={range || 'ALL'}
               onChange={(e) => handleRangeChange(e.target.value)}
+              aria-label="Filter berdasarkan rentang waktu"
               className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none cursor-pointer"
             >
               <option value="ALL">Semua Waktu</option>
@@ -246,8 +257,14 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
         </section>
 
         {/* Desktop View (Table) */}
-        <section aria-label="Daftar Transaksi Desktop" className="hidden md:block overflow-hidden">
+        <section
+          aria-label="Daftar Transaksi Desktop"
+          aria-live="polite"
+          aria-atomic="false"
+          className="hidden md:block overflow-hidden"
+        >
           <Table className="w-full text-left">
+            <caption className="sr-only">Riwayat arus kas — {totalItems} transaksi</caption>
             <TableHeader className="bg-slate-50 text-[10px] uppercase text-slate-400 font-bold border-b border-slate-100">
               <TableRow>
                 <TableHead className="px-6 py-3 font-bold text-slate-400 w-40">Waktu</TableHead>
@@ -307,17 +324,17 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
                         </div>
                       </TableCell>
                       <TableCell className={cn("px-6 py-4 text-right font-bold whitespace-nowrap align-top font-mono", isIncome ? 'text-emerald-600' : 'text-rose-600')}>
-                        <div className="flex items-center justify-end gap-1">
-                          {isIncome ? <Plus className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
+                        <div className="flex items-center justify-end gap-1" aria-label={`${isIncome ? 'Pemasukan' : 'Pengeluaran'} ${formatCurrency(nominal)}`}>
+                          {isIncome ? <Plus className="w-3 h-3" aria-hidden="true" /> : <Minus className="w-3 h-3" aria-hidden="true" />}
                           {formatCurrency(nominal)}
                         </div>
                       </TableCell>
                       <TableCell className="px-6 py-4 text-center whitespace-nowrap align-top">
                         <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(tx.id)} className="h-8 w-8 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50">
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(tx.id)} className="h-8 w-8 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50" aria-label={`Edit ${tx.description || 'arus kas'}`}>
                             <Edit2 className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(tx.id)} className="h-8 w-8 text-rose-700 hover:text-rose-800 hover:bg-rose-50">
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(tx.id)} className="h-8 w-8 text-rose-700 hover:text-rose-800 hover:bg-rose-50" aria-label={`Hapus ${tx.description || 'arus kas'}`}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -348,6 +365,7 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
                 <select
                   value={String(limit)}
                   onChange={(e) => handlePageSizeChange(e.target.value)}
+                  aria-label="Jumlah transaksi per halaman"
                   className="h-8 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
                 >
                   <option value="10">10</option>
@@ -366,9 +384,10 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
                   size="icon"
                   onClick={() => handlePageChange(validPage - 1)}
                   disabled={validPage === 1}
+                  aria-label="Halaman sebelumnya"
                   className="h-8 w-8 text-slate-500 border-slate-200 disabled:opacity-40 disabled:hover:bg-transparent"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-4 h-4" aria-hidden="true" />
                 </Button>
 
                 {/* Number Buttons */}
@@ -386,6 +405,8 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
                       key={`page-${pageNum}`}
                       variant={validPage === pageNum ? "default" : "outline"}
                       onClick={() => handlePageChange(pageNum)}
+                      aria-label={`Halaman ${pageNum}`}
+                      aria-current={validPage === pageNum ? 'page' : undefined}
                       className={cn(
                         "h-8 w-8 text-xs font-bold transition-all",
                         validPage === pageNum
@@ -404,9 +425,10 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
                   size="icon"
                   onClick={() => handlePageChange(validPage + 1)}
                   disabled={validPage === totalPages}
+                  aria-label="Halaman berikutnya"
                   className="h-8 w-8 text-slate-500 border-slate-200 disabled:opacity-40 disabled:hover:bg-transparent"
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-4 h-4" aria-hidden="true" />
                 </Button>
               </div>
             </div>

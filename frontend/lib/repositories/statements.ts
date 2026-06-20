@@ -403,6 +403,12 @@ export class SupabaseStatementsRepository implements StatementRepository {
 
 let statementRepoInstance: StatementRepository = new SupabaseStatementsRepository()
 
+if (process.env.NEXT_PUBLIC_IS_TESTING === 'true') {
+  // Gunakan require agar tidak menyebabkan masalah circular dependency atau type check di browser/edge jika tidak didukung
+  const { FakeStatementRepository } = require('./fake-statements')
+  statementRepoInstance = new FakeStatementRepository()
+}
+
 export function getStatementRepository(): StatementRepository {
   return statementRepoInstance
 }
