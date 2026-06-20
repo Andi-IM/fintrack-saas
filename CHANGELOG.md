@@ -5,6 +5,14 @@
 
 * **e2e:** increase timeouts for CI environment and apply dynamic routing fix ([54383c9](https://github.com/Andi-IM/fintrack-saas/commit/54383c9664f60f3ccb2ca6ad503f1804b888590e))
 
+# [1.2.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.1.0...v1.2.0) (2026-06-19)
+
+
+### Features
+
+* add @vercel/analytics for web analytics ([7787adc](https://github.com/Andi-IM/fintrack-saas/commit/7787adcd2e190f3ca3bd8e6f3fedd77ed6d73051))
+* add @vercel/speed-insights to monitor web performance ([373ae58](https://github.com/Andi-IM/fintrack-saas/commit/373ae58d2ec8b49181aefbafd7fc2b5c33a06f90))
+
 # [1.2.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.1.0...v1.2.0-rc.1) (2026-06-19)
 
 
