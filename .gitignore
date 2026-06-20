@@ -7,6 +7,7 @@
 # Environment and logs
 .env*
 !.env.example
+!.env.ci
 /*.log
 /logs/
 /coverage/

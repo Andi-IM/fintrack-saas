@@ -40,6 +40,9 @@ jobs:
       run: pnpm install --frozen-lockfile
       working-directory: frontend
 
+    - name: Load CI environment
+      run: cp frontend/.env.ci frontend/.env.local
+
     - name: Run tests with coverage
       run: pnpm test
       working-directory: frontend
@@ -72,9 +75,5 @@ jobs:
       if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
       run: pnpm test
       working-directory: frontend/e2e
-      env:
-        NEXT_PUBLIC_SUPABASE_URL: https://dummy-supabase-url.supabase.co
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon-key
-        BYPASS_AUTH: true
 
 

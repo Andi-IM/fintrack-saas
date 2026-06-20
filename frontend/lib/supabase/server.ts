@@ -4,9 +4,12 @@ import { cookies } from 'next/headers'
 export async function createClient() {
   const cookieStore = await cookies()
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
   const client = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -33,7 +36,7 @@ export async function createClient() {
         data: {
           user: {
             id: 'mock-user-id',
-            email: process.env.AUTHORIZED_EMAIL || 'andi.irhamm@gmail.com',
+            email: process.env.AUTHORIZED_EMAIL,
             role: 'authenticated',
             aud: 'authenticated',
             app_metadata: {},

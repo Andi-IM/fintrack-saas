@@ -1,5 +1,25 @@
 import { spawn, exec } from 'child_process';
 import net from 'net';
+import fs from 'fs';
+import path from 'path';
+
+/**
+ * Parse a .env file into a key-value object.
+ * Lines starting with # are comments. Supports KEY=value and KEY="value".
+ */
+function loadEnvFile(filePath) {
+    if (!fs.existsSync(filePath)) return {};
+    return fs.readFileSync(filePath, 'utf-8')
+        .split('\n')
+        .filter(line => line.trim() && !line.trim().startsWith('#'))
+        .reduce((acc, line) => {
+            const [key, ...rest] = line.split('=');
+            if (!key) return acc;
+            const value = rest.join('=').trim().replace(/^"|"$/g, '').replace(/^'|'$/g, '');
+            acc[key.trim()] = value;
+            return acc;
+        }, {});
+}
 
 let devServerProcess;
 
@@ -58,6 +78,15 @@ export const config = {
     onPrepare: async function () {
         console.log('Starting Next.js development server in the background...');
         
+        // Load env vars from .env.ci or a custom ENV_FILE, without touching .env.local
+        const envFile = process.env.ENV_FILE
+            ? path.resolve(process.env.ENV_FILE)
+            : path.resolve('../.env.ci');
+        const ciEnv = loadEnvFile(envFile);
+        if (Object.keys(ciEnv).length > 0) {
+            console.log(`Loaded ${Object.keys(ciEnv).length} env vars from ${envFile}`);
+        }
+
         devServerProcess = spawn('npx', ['next', 'dev'], {
             cwd: '../', // Run in the parent directory (frontend)
             shell: true,
@@ -65,7 +94,7 @@ export const config = {
             stdio: 'inherit',
             env: {
                 ...process.env,
-                BYPASS_AUTH: 'true'
+                ...ciEnv,
             }
         });
 
