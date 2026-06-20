@@ -1,0 +1,13 @@
+{
+  "ci": {
+    "collect": {
+      "settings": {
+        "chromeFlags": "--no-sandbox --headless --disable-gpu",
+        "formFactor": "mobile"
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

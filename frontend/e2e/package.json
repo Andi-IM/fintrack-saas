@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "scripts": {
+"scripts": {
     "test": "wdio run wdio.conf.js",
     "test:perf": "lhci autorun",
+    "test:perf:mobile": "lhci autorun --config=.lighthouserc.mobile.json",
     "test:alternated": "node scripts/run-alternated-tests.js",
     "lint": "eslint \"**/*.js\"",
     "format": "prettier --write \"./**/*.js\""

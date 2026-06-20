@@ -56,8 +56,8 @@ jobs:
 
     - name: Run E2E and Performance Checks (Alternated)
       if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-      run: pnpm test:alternated
-      working-directory: frontend/e2e
+      run: ENV_FILE=.env.ci pnpm test:alternated
+      working-directory: frontend
 
     - name: Upload test results to Codecov
       if: ${{ !cancelled() }}
