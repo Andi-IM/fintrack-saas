@@ -1,7 +1,6 @@
 'use server'
 
 import { z } from 'zod'
-import { unstable_cache } from 'next/cache'
 import { invalidateCache, invalidateCacheTags } from '@/lib/cache'
 import { getReceiptRepository } from '@/lib/repositories/receipts'
 import { Tables } from '@/lib/database.types'
@@ -92,24 +91,13 @@ const _fetchReceipts = async (userId: string): Promise<ActionResponse<ReceiptWit
   }
 }
 
-const _getCachedReceipts = unstable_cache(
-  _fetchReceipts,
-  ['receipts-list'],
-  { revalidate: 30, tags: ['receipts'] }
-)
-
 export async function getReceipts(): Promise<ActionResponse<ReceiptWithItems[]>> {
   const user = await getCachedUser()
   if (!user) {
     return { success: false, error: 'User not authenticated' }
   }
 
-  // Bypass cache during testing to ensure fresh mock data is always retrieved
-  if (process.env.NEXT_PUBLIC_IS_TESTING === 'true') {
-    return _fetchReceipts(user.id)
-  }
-
-  return _getCachedReceipts(user.id)
+  return _fetchReceipts(user.id)
 }
 
 export async function deleteReceipt(id: string): Promise<ActionResponse<void>> {

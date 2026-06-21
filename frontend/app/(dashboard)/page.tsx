@@ -1,7 +1,9 @@
+import { Suspense } from 'react'
 import { getCashFlow } from '@/features/cash-flow/actions/cash_flow'
 import { OverviewCards } from '@/components/dashboard/OverviewCards'
 import { TransactionChart } from '@/components/dashboard/TransactionChart'
 import { FinancialInsights } from '@/components/dashboard/FinancialInsights'
+import { DashboardSkeleton } from '@/components/ui/dashboard-skeleton'
 
 export default async function DashboardPage({
   searchParams,

@@ -26,6 +26,7 @@ import {
 import { Button } from '@/components/ui/button'
 import ItemEditDialog from '@/components/statements/ItemEditDialog'
 import type { ItemFormData } from '@/components/statements/ItemEditDialog'
+import { BankStatementListSkeleton } from '@/components/ui/statements-skeleton'
 import { formatDateForInput } from '@/lib/utils/date'
 
 export function BankStatementListView({
@@ -50,11 +51,7 @@ export function BankStatementListView({
   handleViewFile,
 }: UseBankStatementsReturn) {
   if (loading) {
-    return (
-      <div className="flex justify-center items-center p-12" role="status" aria-label="Memuat daftar mutasi bank">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" aria-hidden="true" />
-      </div>
-    )
+    return <BankStatementListSkeleton />
   }
 
   if (!groupedData || Object.keys(groupedData).length === 0) {
@@ -179,7 +176,7 @@ export function BankStatementListView({
                                 <th scope="col" className="px-4 py-2 text-right w-16">Actions</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody data-state="loaded" className="divide-y divide-slate-100">
                               {statement.bank_statement_items.map((item) => (
                                 <tr key={item.id} className="hover:bg-slate-50 transition-colors">
                                   <td className="px-4 py-2.5 text-slate-500 whitespace-nowrap">

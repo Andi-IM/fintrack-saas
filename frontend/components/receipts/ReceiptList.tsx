@@ -249,7 +249,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                   <TableHead className="w-[100px] text-center">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody data-state="loaded">
                 {filteredReceipts.map((receipt) => (
                   <TableRow
                     key={receipt.id}

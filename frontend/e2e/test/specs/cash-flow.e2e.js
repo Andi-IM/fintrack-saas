@@ -21,10 +21,7 @@ describe('Cash Flow (Transactions) E2E Test', () => {
             await browser.setWindowSize(1200, 800)
             await browser.url('/transactions')
             // Tunggu data render
-            await browser.waitUntil(
-                async () => (await $$('tbody tr')).length > 0,
-                { timeout: 10000, timeoutMsg: 'Transaction rows did not appear' }
-            )
+            await $('tbody[data-state="loaded"]').waitForExist({ timeout: 10000, timeoutMsg: 'Transaction rows did not appear' })
         })
 
         it('CF-01: should display the Arus Kas page heading', async () => {
@@ -69,10 +66,7 @@ describe('Cash Flow (Transactions) E2E Test', () => {
         beforeEach(async () => {
             await browser.setWindowSize(1200, 800)
             await browser.url('/transactions')
-            await browser.waitUntil(
-                async () => (await $$('tbody tr')).length > 0,
-                { timeout: 10000, timeoutMsg: 'Rows did not appear before filter test' }
-            )
+            await $('tbody[data-state="loaded"]').waitForExist({ timeout: 10000, timeoutMsg: 'Rows did not appear before filter test' })
         })
 
         it('CF-06: should filter rows by description search', async () => {
@@ -231,10 +225,7 @@ describe('Cash Flow (Transactions) E2E Test', () => {
         before(async () => {
             await browser.setWindowSize(1200, 800)
             await browser.url('/transactions')
-            await browser.waitUntil(
-                async () => (await $$('tbody tr')).length > 0,
-                { timeout: 10000, timeoutMsg: 'No rows to edit' }
-            )
+            await $('tbody[data-state="loaded"]').waitForExist({ timeout: 10000, timeoutMsg: 'No rows to edit' })
         })
 
         it('CF-14: should navigate to /add?edit={id} when clicking Edit button', async () => {
