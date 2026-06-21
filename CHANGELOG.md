@@ -1,3 +1,11 @@
+# [1.4.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.4.0-rc.1...v1.4.0-rc.2) (2026-06-21)
+
+
+### Features
+
+* implement bank statement and receipt E2E tests with supporting repository and auth mocks ([fd64b18](https://github.com/Andi-IM/fintrack-saas/commit/fd64b182e3ecf4a63c19307b4a6130e41ef82ffe))
+* implement receipt and cash flow management features with comprehensive test coverage and CI workflow support ([1a4d3f7](https://github.com/Andi-IM/fintrack-saas/commit/1a4d3f7922dc0e4026ae36598495f67ef1bfb7a0))
+
 # [1.4.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.3.0...v1.4.0-rc.1) (2026-06-20)
 
 
