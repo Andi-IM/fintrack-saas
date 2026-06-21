@@ -1,4 +1,4 @@
-# ADR-038: Accessibility (a11y) Implementation for Receipts and Scan Components
+# ADR-039: Accessibility (a11y) Implementation for Receipts and Scan Components
 
 ## Status
 Accepted

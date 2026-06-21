@@ -1,8 +1,7 @@
 'use server'
 
 import { z } from 'zod'
-import { unstable_cache } from 'next/cache'
-import { invalidateCache, invalidateCacheTags } from '@/lib/cache'
+import { invalidateCache } from '@/lib/cache'
 import { getReceiptRepository } from '@/lib/repositories/receipts'
 import { Tables } from '@/lib/database.types'
 import { ActionResponse } from '@/lib/actions/types'
@@ -66,7 +65,7 @@ export async function saveReceipt(input: SaveReceiptInput): Promise<ActionRespon
     })
 
     invalidateCache(['/receipts', '/'])
-    invalidateCacheTags(['receipts'])
+
     return { success: true, data: { receiptId: receipt.id } }
   } catch (error: any) {
     console.error('Error saving receipt:', error)
@@ -92,24 +91,13 @@ const _fetchReceipts = async (userId: string): Promise<ActionResponse<ReceiptWit
   }
 }
 
-const _getCachedReceipts = unstable_cache(
-  _fetchReceipts,
-  ['receipts-list'],
-  { revalidate: 30, tags: ['receipts'] }
-)
-
 export async function getReceipts(): Promise<ActionResponse<ReceiptWithItems[]>> {
   const user = await getCachedUser()
   if (!user) {
     return { success: false, error: 'User not authenticated' }
   }
 
-  // Bypass cache during testing to ensure fresh mock data is always retrieved
-  if (process.env.NEXT_PUBLIC_IS_TESTING === 'true') {
-    return _fetchReceipts(user.id)
-  }
-
-  return _getCachedReceipts(user.id)
+  return _fetchReceipts(user.id)
 }
 
 export async function deleteReceipt(id: string): Promise<ActionResponse<void>> {
@@ -124,7 +112,7 @@ export async function deleteReceipt(id: string): Promise<ActionResponse<void>> {
     }
 
     invalidateCache(['/receipts', '/'])
-    invalidateCacheTags(['receipts'])
+
     return { success: true }
   } catch (error: any) {
     console.error('Error deleting receipt:', error)
@@ -191,7 +179,7 @@ export async function updateReceipt(
     }
 
     invalidateCache(['/receipts'])
-    invalidateCacheTags(['receipts'])
+
     return { success: true, data: { receiptId: id } }
   } catch (error: any) {
     console.error('Error updating receipt:', error)

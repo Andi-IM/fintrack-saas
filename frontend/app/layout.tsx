@@ -22,8 +22,12 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         <NuqsAdapter>
           <QueryProvider>{children}</QueryProvider>
         </NuqsAdapter>
-        <SpeedInsights />
-        <Analytics />
+        {process.env.VERCEL === '1' && (
+          <>
+            <SpeedInsights />
+            <Analytics />
+          </>
+        )}
       </body>
     </html>
   );

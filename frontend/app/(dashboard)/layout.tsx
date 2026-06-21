@@ -33,7 +33,7 @@ export default function DashboardLayout({
         <UserTopbar />
       </Suspense>
       <div className="flex flex-1 overflow-hidden h-[calc(100vh-56px)]">
-        <Suspense fallback={<div className="w-64 bg-white border-r border-slate-200 hidden md:block"></div>}>
+        <Suspense fallback={<div className="w-20 lg:w-64 bg-white border-r border-slate-200 hidden md:block"></div>}>
           <Sidebar />
         </Suspense>
         <main className="flex-1 overflow-y-auto p-4 pb-20 md:p-8 relative">

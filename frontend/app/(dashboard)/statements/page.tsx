@@ -1,5 +1,4 @@
-import BankStatementList from '@/features/bank-statements/components/BankStatementList'
-import StatementAnalytics from '@/components/statements/StatementAnalytics'
+import { StatementAnalyticsLazy, BankStatementListLazy } from '@/components/statements/DynamicStatementComponents'
 import Link from 'next/link'
 import { FileText } from 'lucide-react'
 
@@ -21,9 +20,9 @@ export default function BankStatementsPage() {
         </Link>
       </div>
 
-      <StatementAnalytics />
+      <StatementAnalyticsLazy />
 
-      <BankStatementList />
+      <BankStatementListLazy />
     </div>
   )
 }
