@@ -221,7 +221,7 @@ export function FinancialInsights({ transactions }: { transactions: Tables<'cash
                 </div>
                 <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs">
                   <span className="text-slate-500">Puncak Surplus ({formatMonthName(peakMonth)})</span>
-                  <span className="font-bold text-emerald-600">+{formatCurrency(peakNet)}</span>
+                  <span className="font-bold text-emerald-700">+{formatCurrency(peakNet)}</span>
                 </div>
               </div>
 
@@ -282,7 +282,7 @@ export function FinancialInsights({ transactions }: { transactions: Tables<'cash
                   <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Kembalian Resit Diselamatkan</p>
                   <p className="text-xl font-bold text-slate-800 mt-0.5">{formatCurrency(changeStats.total)}</p>
                   <p className="text-xs text-slate-500 mt-1">
-                    Anda berhasil mencatat <span className="font-bold text-emerald-600">{changeStats.count} kali</span> kembalian belanja mikro. Ini mencegah kebocoran uang kecil!
+                    Anda berhasil mencatat <span className="font-bold text-emerald-700">{changeStats.count} kali</span> kembalian belanja mikro. Ini mencegah kebocoran uang kecil!
                   </p>
                 </div>
               </div>
