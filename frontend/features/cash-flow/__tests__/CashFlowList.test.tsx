@@ -31,7 +31,6 @@ const mockTransactions = [
     payment_method: 'Gopay',
     receipt_id: null,
     source_item_id: null,
-    user_id: 'user-123'
   },
   {
     id: 'tx-2',
@@ -45,7 +44,6 @@ const mockTransactions = [
     payment_method: 'Transfer Bank',
     receipt_id: null,
     source_item_id: 'statement-item-99',
-    user_id: 'user-123'
   }
 ]
 
@@ -265,5 +263,57 @@ describe('CashFlowList Component', () => {
     } as any)
     render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
     expect(screen.getByText('...')).toBeInTheDocument()
+  })
+
+  it('renders correctly when transaction has no description', () => {
+    const txWithoutDesc = {
+      ...mockTransactions[0],
+      id: 'tx-no-desc',
+      description: '',
+    }
+    vi.mocked(useCashFlowController).mockReturnValue({
+      ...mockControllerReturn,
+      paginatedTransactions: [txWithoutDesc],
+    } as any)
+    render(<CashFlowList transactions={[txWithoutDesc]} timeRange="ALL" />)
+    
+    // In desktop view, "Tanpa Deskripsi" should be rendered
+    expect(screen.getAllByText('Tanpa Deskripsi').length).toBeGreaterThan(0)
+    
+    // Verify aria-labels on Edit and Delete fallback to 'arus kas'
+    const editBtn = screen.getAllByRole('button').find(btn => btn.className.includes('text-indigo-700'))!
+    expect(editBtn.getAttribute('aria-label')).toBe('Edit arus kas')
+  })
+
+  it('handles mobile drawer rendering for income transaction', () => {
+    const incomeTx = mockTransactions[1] // Gaji Bulanan has income
+    vi.mocked(useCashFlowController).mockReturnValue({
+      ...mockControllerReturn,
+      activeMobileTx: incomeTx,
+    } as any)
+    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+
+    // Should render + 10.000.000 in emerald text (with potential Rp symbol)
+    const incomeEls = screen.getAllByText(/\+\s*(Rp\.?\s*)?10\.000\.000/)
+    expect(incomeEls.length).toBeGreaterThan(0)
+    expect(incomeEls[0].className).toContain('text-emerald-600')
+  })
+
+  it('does not call handleDelete if window.confirm returns false in mobile drawer', () => {
+    const activeMobileTx = mockTransactions[0]
+    vi.mocked(useCashFlowController).mockReturnValue({
+      ...mockControllerReturn,
+      activeMobileTx,
+    } as any)
+    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const deleteBtn = screen.getByText(/Hapus Transaksi/i)
+    fireEvent.click(deleteBtn)
+
+    // Should NOT call handleDelete
+    expect(mockControllerReturn.handleDelete).not.toHaveBeenCalled()
+    // Should NOT close the drawer immediately inside the click handler
+    expect(mockControllerReturn.setActiveMobileTx).not.toHaveBeenCalled()
   })
 })

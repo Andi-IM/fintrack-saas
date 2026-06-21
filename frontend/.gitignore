@@ -7,7 +7,7 @@
 # Environment files
 .env*
 !.env.example
-!.env.ci
+!.env.test*
 
 # Development and logs
 .DS_Store
@@ -16,3 +16,5 @@
 /report.junit.xml
 *.junit.xml
 
+# E2E test mock DB
+.e2e-db.json

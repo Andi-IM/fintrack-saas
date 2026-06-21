@@ -41,7 +41,7 @@ jobs:
       working-directory: frontend
 
     - name: Load CI environment
-      run: cp frontend/.env.ci frontend/.env.local
+      run: cp frontend/.env.test.local frontend/.env.local
 
     - name: Run tests with coverage
       run: pnpm test
@@ -56,7 +56,7 @@ jobs:
 
     - name: Run E2E and Performance Checks (Alternated)
       if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-      run: ENV_FILE=.env.ci pnpm test:alternated
+      run: ENV_FILE=.env.test.local pnpm test:alternated
       working-directory: frontend
 
     - name: Upload test results to Codecov

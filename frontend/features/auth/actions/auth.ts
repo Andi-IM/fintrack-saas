@@ -1,38 +1,18 @@
 'use server'
 
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getAuthService } from '@/lib/auth'
 import { OriginResolver, DefaultOriginResolver } from './auth-helpers'
 
 export async function login(originResolver?: OriginResolver | FormData): Promise<void> {
-  if (process.env.BYPASS_AUTH === 'true' && (process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_IS_TESTING === 'true')) {
-    redirect('/')
-    return
-  }
-  const supabase = await createClient()
   const resolver = (originResolver && 'resolve' in originResolver) ? originResolver : new DefaultOriginResolver()
   const origin = await resolver.resolve()
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'github',
-    options: {
-      redirectTo: `${origin}/auth/callback`,
-    },
-  })
-
-  if (error) {
-    console.error('Github auth error:', error)
-    redirect(`/login?message=${encodeURIComponent(error.message)}`)
-  }
-
-  if (data.url) {
-    redirect(data.url)
-  }
+  
+  const authService = getAuthService()
+  await authService.login(origin)
 }
 
 export async function logout(): Promise<void> {
-  const supabase = await createClient()
-  await supabase.auth.signOut()
-  redirect('/login')
+  const authService = getAuthService()
+  await authService.logout()
 }
 

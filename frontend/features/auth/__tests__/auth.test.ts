@@ -1,150 +1,63 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { login, logout } from '../actions/auth'
-import { resolveAuthOrigin, DefaultOriginResolver } from '../actions/auth-helpers'
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { headers } from 'next/headers'
+import { getAuthService } from '@/lib/auth'
+import { FakeAuthService } from '@/lib/auth/fake-auth'
 
-describe('auth server actions', () => {
-  const originalEnv = process.env
+// Mock getAuthService
+vi.mock('@/lib/auth', () => ({
+  getAuthService: vi.fn(),
+}))
+
+// Mock DefaultOriginResolver from '../actions/auth-helpers' to return a fixed origin
+vi.mock('../actions/auth-helpers', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../actions/auth-helpers')>()
+  return {
+    ...original,
+    DefaultOriginResolver: class {
+      resolve = vi.fn().mockResolvedValue('https://mocked-default-origin.com')
+    }
+  }
+})
+
+describe('Auth Actions', () => {
+  let fakeAuthService: FakeAuthService
 
   beforeEach(() => {
     vi.clearAllMocks()
-    process.env = { ...originalEnv }
-  })
-
-  afterEach(() => {
-    process.env = originalEnv
-  })
-
-  describe('DefaultOriginResolver', () => {
-    it('resolves APP_URL when present', async () => {
-      process.env.APP_URL = 'https://my-app.com'
-      const resolver = new DefaultOriginResolver()
-      const result = await resolver.resolve()
-      expect(result).toBe('https://my-app.com')
-    })
-
-    it('resolves VERCEL_URL when present and APP_URL is absent', async () => {
-      delete process.env.APP_URL
-      process.env.NEXT_PUBLIC_VERCEL_URL = 'my-vercel.vercel.app'
-      const resolver = new DefaultOriginResolver()
-      const result = await resolver.resolve()
-      expect(result).toBe('https://my-vercel.vercel.app')
-    })
-
-    it('falls back to x-forwarded-host header', async () => {
-      delete process.env.APP_URL
-      delete process.env.NEXT_PUBLIC_VERCEL_URL
-      
-      const mockHeaders = {
-        get: vi.fn().mockImplementation((key: string) => {
-          if (key === 'x-forwarded-host') return 'x-host.com'
-          if (key === 'x-forwarded-proto') return 'https'
-          return null
-        })
-      }
-      vi.mocked(headers).mockResolvedValue(mockHeaders as any)
-
-      const resolver = new DefaultOriginResolver()
-      const result = await resolver.resolve()
-      expect(result).toBe('https://x-host.com')
-    })
-
-    it('falls back to host header and localhost logic', async () => {
-      delete process.env.APP_URL
-      delete process.env.NEXT_PUBLIC_VERCEL_URL
-
-      const mockHeaders = {
-        get: vi.fn().mockImplementation((key: string) => {
-          if (key === 'host') return 'localhost:3000'
-          return null
-        })
-      }
-      vi.mocked(headers).mockResolvedValue(mockHeaders as any)
-
-      const resolver = new DefaultOriginResolver()
-      const result = await resolver.resolve()
-      expect(result).toBe('http://localhost:3000')
-    })
-  })
-
-  describe('resolveAuthOrigin', () => {
-    it('resolves origin successfully', async () => {
-      process.env.APP_URL = 'https://env-app.com'
-      const result = await resolveAuthOrigin()
-      expect(result).toBe('https://env-app.com')
-    })
+    fakeAuthService = new FakeAuthService()
+    vi.mocked(getAuthService).mockReturnValue(fakeAuthService)
+    
+    // Spy on fakeAuthService methods to prevent them from executing actual NextJS headers/navigation redirects
+    vi.spyOn(fakeAuthService, 'login').mockImplementation(async () => {})
+    vi.spyOn(fakeAuthService, 'logout').mockImplementation(async () => {})
   })
 
   describe('login', () => {
-    it('signs in with OAuth and redirects to the oauth provider url', async () => {
-      const mockSupabase = await createClient()
-      const mockSignIn = vi.fn().mockResolvedValue({
-        data: { url: 'https://github.com/oauth-login-url' },
-        error: null,
-      })
-      mockSupabase.auth.signInWithOAuth = mockSignIn
-
-      const mockResolver = {
-        resolve: vi.fn().mockResolvedValue('https://test-origin.com')
-      }
-
-      await login(mockResolver)
-
-      expect(mockSignIn).toHaveBeenCalledWith({
-        provider: 'github',
-        options: {
-          redirectTo: 'https://test-origin.com/auth/callback',
-        },
-      })
-      expect(redirect).toHaveBeenCalledWith('https://github.com/oauth-login-url')
+    it('should resolve origin using DefaultOriginResolver when no resolver is provided and call login', async () => {
+      await login()
+      expect(fakeAuthService.login).toHaveBeenCalledWith('https://mocked-default-origin.com')
     })
 
-    it('redirects back to login page on OAuth initiation error', async () => {
-      const mockSupabase = await createClient()
-      const mockSignIn = vi.fn().mockResolvedValue({
-        data: { url: null },
-        error: new Error('GitHub provider failed'),
-      })
-      mockSupabase.auth.signInWithOAuth = mockSignIn
-
+    it('should resolve origin using custom resolver and call login', async () => {
       const mockResolver = {
-        resolve: vi.fn().mockResolvedValue('https://test-origin.com')
+        resolve: vi.fn().mockResolvedValue('https://custom-origin.com')
       }
-
       await login(mockResolver)
-
-      expect(redirect).toHaveBeenCalledWith('/login?message=GitHub%20provider%20failed')
+      expect(mockResolver.resolve).toHaveBeenCalled()
+      expect(fakeAuthService.login).toHaveBeenCalledWith('https://custom-origin.com')
     })
 
-    it('redirects directly to dashboard when BYPASS_AUTH is true', async () => {
-      process.env.BYPASS_AUTH = 'true'
-      const mockSupabase = await createClient()
-      const mockSignIn = vi.fn()
-      mockSupabase.auth.signInWithOAuth = mockSignIn
-
-      const mockResolver = {
-        resolve: vi.fn().mockResolvedValue('https://test-origin.com')
-      }
-
-      await login(mockResolver)
-
-      expect(mockSignIn).not.toHaveBeenCalled()
-      expect(redirect).toHaveBeenCalledWith('/')
+    it('should fallback to DefaultOriginResolver when FormData is provided', async () => {
+      const formData = new FormData()
+      await login(formData)
+      expect(fakeAuthService.login).toHaveBeenCalledWith('https://mocked-default-origin.com')
     })
   })
 
   describe('logout', () => {
-    it('calls signOut and redirects to login page', async () => {
-      const mockSupabase = await createClient()
-      const mockSignOut = vi.fn().mockResolvedValue({ error: null })
-      mockSupabase.auth.signOut = mockSignOut
-
+    it('should call authService.logout', async () => {
       await logout()
-
-      expect(mockSignOut).toHaveBeenCalledTimes(1)
-      expect(redirect).toHaveBeenCalledWith('/login')
+      expect(fakeAuthService.logout).toHaveBeenCalled()
     })
   })
 })

@@ -1,14 +1,41 @@
+import { Suspense } from 'react'
+import { Skeleton } from '@/components/ui/skeleton'
 import { getReceipts } from '@/features/receipts/actions/receipts'
 import { ReceiptList } from '@/components/receipts/ReceiptList'
-import { setupE2eMockData } from '@/features/receipts/actions/e2e-setup'
 import Link from 'next/link'
 import { Camera } from 'lucide-react'
 
-export default async function ReceiptsPage() {
-  await setupE2eMockData()
+async function ReceiptsData() {
   const response = await getReceipts()
   const receipts = response.success ? (response.data || []) : []
+  console.log('[DEBUG] NEXT_PUBLIC_IS_TESTING:', process.env.NEXT_PUBLIC_IS_TESTING)
+  console.log('[DEBUG] Receipts count:', receipts.length)
 
+  if (!response.success) {
+    return (
+      <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-800 text-sm">
+        Gagal mengambil data struk: {response.error}
+      </div>
+    )
+  }
+
+  return <ReceiptList receipts={receipts} />
+}
+
+function ReceiptsSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-14 w-full" />
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-24 w-full" />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default function ReceiptsPage() {
   return (
     <div className="space-y-6">
       {/* Header Row */}
@@ -28,13 +55,9 @@ export default async function ReceiptsPage() {
         </div>
       </div>
 
-      {!response.success && (
-        <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-800 text-sm">
-          Gagal mengambil data struk: {response.error}
-        </div>
-      )}
-
-      <ReceiptList receipts={receipts} />
+      <Suspense fallback={<ReceiptsSkeleton />}>
+        <ReceiptsData />
+      </Suspense>
     </div>
   )
 }
