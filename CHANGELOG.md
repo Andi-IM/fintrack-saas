@@ -1,3 +1,10 @@
+# [1.5.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.5.0-rc.1...v1.5.0-rc.2) (2026-06-21)
+
+
+### Features
+
+* implement server actions for receipt management and add automated test documentation script ([a027545](https://github.com/Andi-IM/fintrack-saas/commit/a0275459c4b1b33549762d8a7a01cb521f238288))
+
 # [1.5.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.4.0...v1.5.0-rc.1) (2026-06-21)
 
 
