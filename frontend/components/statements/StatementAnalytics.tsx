@@ -1,5 +1,6 @@
 'use client'
 
+import { StatementAnalyticsSkeleton } from '@/components/ui/statements-skeleton'
 import { useState, useMemo, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getStatementAnalytics } from '@/features/bank-statements/actions/statements'
@@ -465,11 +466,7 @@ export default function StatementAnalytics() {
   })
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center p-12">
-        <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
-      </div>
-    )
+    return <StatementAnalyticsSkeleton />
   }
 
   if (!analytics || analytics.bankSummaries.length === 0) {

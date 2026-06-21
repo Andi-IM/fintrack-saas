@@ -18,7 +18,7 @@ describe('Receipts Feature E2E Test', () => {
         })
 
         it('should display mock receipt data', async () => {
-            const dataRow = await $('tbody tr')
+            const dataRow = await $('tbody[data-state="loaded"] tr')
             const emptyState = await $('[data-testid="empty-receipt-state"]')
             
             await browser.waitUntil(async () => {
@@ -154,7 +154,7 @@ describe('Receipts Feature E2E Test', () => {
             await browser.execute(() => { window.confirm = () => true })
 
             // Tunggu hingga tabel ter-render (atau empty state jika memang kosong)
-            const firstRow = await $('tbody tr')
+            const firstRow = await $('tbody[data-state="loaded"] tr')
             const emptyStateFallback = await $('[data-testid="empty-receipt-state"]')
             await browser.waitUntil(async () => {
                 return (await firstRow.isDisplayed()) || (await emptyStateFallback.isDisplayed())

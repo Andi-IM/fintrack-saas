@@ -49,3 +49,4 @@ Setiap keputusan desain yang signifikan dan berpengaruh besar terhadap struktur 
 - [ADR-042](042-fake-authentication-for-e2e.md) - Fake Authentication Strategy for Local E2E Testing
 - [ADR-043](043-server-action-redirect-preservation.md) - Server Action Error Handling and Redirect Preservation Pattern
 - [ADR-044](044-build-time-e2e-fakes-and-dynamic-wait.md) - Build-Time Environment Injection for E2E Fakes and Dynamic Wait Strategies
+- [ADR-045](045-instant-navigation-with-suspense-and-loading-states.md) - Instant Navigation with Suspense and Streaming (loading.tsx)

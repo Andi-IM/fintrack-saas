@@ -273,7 +273,7 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
                 <TableHead className="px-6 py-3 text-center font-bold text-slate-400 w-24">Aksi</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="divide-y divide-slate-100 text-sm">
+            <TableBody data-state="loaded" className="divide-y divide-slate-100 text-sm">
               {paginatedTransactions.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-slate-500 h-32">
