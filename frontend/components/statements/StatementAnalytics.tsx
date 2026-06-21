@@ -476,8 +476,10 @@ export default function StatementAnalytics() {
   return (
     <div className="space-y-5">
       <OverviewCards data={analytics} />
-      <BalanceChart data={analytics} />
-      <TotalSaldoChart data={analytics} />
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        <BalanceChart data={analytics} />
+        <TotalSaldoChart data={analytics} />
+      </div>
       <BankSummaryGrid data={analytics} />
     </div>
   )

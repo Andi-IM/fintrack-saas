@@ -13,7 +13,9 @@ import {
   CreditCard,
   FileText,
   Maximize2,
-  Pencil
+  Pencil,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 const ReceiptEditDialog = lazy(() => import('./ReceiptEditDialog').then(m => ({ default: m.ReceiptEditDialog })))
 import { Card, CardContent } from "@/components/ui/card"
@@ -27,6 +29,7 @@ import {
   DialogTitle, 
   DialogDescription
 } from "@/components/ui/dialog"
+import { cn } from "@/lib/utils"
 import { formatCurrency } from "@/lib/utils/transaction"
 import { deleteReceipt, getReceiptFileUrl, ReceiptWithItems } from "@/features/receipts/actions/receipts"
 
@@ -45,6 +48,20 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
   const [isZoomed, setIsZoomed] = useState(false)
   const [editingReceipt, setEditingReceipt] = useState<ReceiptWithItems | null>(null)
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1)
+  const [limit, setLimit] = useState(15)
+
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val)
+    setCurrentPage(1)
+  }
+
+  const handleTypeFilterChange = (val: 'all' | 'shopping' | 'atm') => {
+    setTypeFilter(val)
+    setCurrentPage(1)
+  }
+
   // Filtered receipts
   const filteredReceipts = useMemo(() => {
     return receipts.filter(receipt => {
@@ -57,6 +74,39 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
       return matchesSearch && matchesType
     })
   }, [receipts, searchQuery, typeFilter])
+
+  // Pagination calculations
+  const totalItems = filteredReceipts.length
+  const totalPages = Math.ceil(totalItems / limit)
+  const validPage = Math.max(1, Math.min(currentPage, totalPages || 1))
+  const startIndex = (validPage - 1) * limit
+  const paginatedReceipts = useMemo(() => {
+    return filteredReceipts.slice(startIndex, startIndex + limit)
+  }, [filteredReceipts, startIndex, limit])
+
+  const pageNumbers = useMemo(() => {
+    const pages: (number | string)[] = []
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i)
+    } else {
+      if (validPage <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i)
+        pages.push('...')
+        pages.push(totalPages)
+      } else if (validPage >= totalPages - 3) {
+        pages.push(1)
+        pages.push('...')
+        for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i)
+      } else {
+        pages.push(1)
+        pages.push('...')
+        for (let i = validPage - 1; i <= validPage + 1; i++) pages.push(i)
+        pages.push('...')
+        pages.push(totalPages)
+      }
+    }
+    return pages
+  }, [totalPages, validPage])
 
   const handleSelectReceipt = async (receipt: ReceiptWithItems) => {
     setSelectedReceipt(receipt)
@@ -109,7 +159,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
 <Input
            placeholder="Cari toko, bank, atau alamat..."
            value={searchQuery}
-           onChange={(e) => setSearchQuery(e.target.value)}
+           onChange={(e) => handleSearchChange(e.target.value)}
            className="pl-9"
            aria-label="Cari toko, bank, atau alamat"
          />
@@ -118,7 +168,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
           <Button
             variant={typeFilter === 'all' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setTypeFilter('all')}
+            onClick={() => handleTypeFilterChange('all')}
             className="rounded-full text-xs"
             aria-pressed={typeFilter === 'all'}
           >
@@ -127,7 +177,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
           <Button
             variant={typeFilter === 'shopping' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setTypeFilter('shopping')}
+            onClick={() => handleTypeFilterChange('shopping')}
             className="rounded-full text-xs"
             aria-pressed={typeFilter === 'shopping'}
           >
@@ -136,7 +186,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
           <Button
             variant={typeFilter === 'atm' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setTypeFilter('atm')}
+            onClick={() => handleTypeFilterChange('atm')}
             className="rounded-full text-xs"
             aria-pressed={typeFilter === 'atm'}
           >
@@ -157,7 +207,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
         <>
           {/* Mobile View (Cards) */}
           <div className="grid grid-cols-1 gap-4 md:hidden">
-            {filteredReceipts.map((receipt) => (
+            {paginatedReceipts.map((receipt) => (
               <Card
                 key={receipt.id}
                 className="overflow-hidden hover:shadow-lg hover:border-slate-300 transition-all cursor-pointer"
@@ -250,7 +300,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                 </TableRow>
               </TableHeader>
               <TableBody data-state="loaded">
-                {filteredReceipts.map((receipt) => (
+                {paginatedReceipts.map((receipt) => (
                   <TableRow
                     key={receipt.id}
                     className="cursor-pointer hover:bg-slate-100 transition-colors"
@@ -318,6 +368,97 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
             </Table>
           </div>
         </>
+      )}
+
+      {/* Pagination Controls */}
+      {totalItems > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
+          {/* Items Summary Info */}
+          <div className="text-xs text-slate-500 font-medium order-2 sm:order-1">
+            Menampilkan <span className="font-bold text-slate-800">{startIndex + 1}</span>–
+            <span className="font-bold text-slate-800">{Math.min(startIndex + limit, totalItems)}</span> dari{' '}
+            <span className="font-bold text-slate-800">{totalItems}</span> struk
+          </div>
+
+          {/* Controls Button Row */}
+          <div className="flex items-center gap-4 order-1 sm:order-2">
+            {/* Page Size Selector */}
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span>Tampilkan:</span>
+              <select
+                value={String(limit)}
+                onChange={(e) => {
+                  setLimit(Number(e.target.value))
+                  setCurrentPage(1)
+                }}
+                aria-label="Jumlah struk per halaman"
+                className="h-8 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+              >
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+
+            {/* Page Buttons List */}
+            <div className="flex items-center gap-1">
+              {/* Prev Button */}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={validPage === 1}
+                aria-label="Halaman sebelumnya"
+                className="h-8 w-8 text-slate-500 border-slate-200 disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+              </Button>
+
+              {/* Number Buttons */}
+              {pageNumbers.map((p, idx) => {
+                if (p === '...') {
+                  return (
+                    <span key={`ellipse-${idx}`} className="px-2 text-slate-400 text-xs font-bold">
+                      ...
+                    </span>
+                  )
+                }
+                const pageNum = p as number
+                return (
+                  <Button
+                    key={`page-${pageNum}`}
+                    variant={validPage === pageNum ? "default" : "outline"}
+                    onClick={() => setCurrentPage(pageNum)}
+                    aria-label={`Halaman ${pageNum}`}
+                    aria-current={validPage === pageNum ? 'page' : undefined}
+                    className={cn(
+                      "h-8 w-8 text-xs font-bold transition-all",
+                      validPage === pageNum
+                        ? "bg-indigo-600 hover:bg-indigo-700 text-white border-transparent shadow-sm"
+                        : "text-slate-600 border-slate-200 hover:bg-slate-50"
+                    )}
+                  >
+                    {pageNum}
+                  </Button>
+                )
+              })}
+
+              {/* Next Button */}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={validPage === totalPages}
+                aria-label="Halaman berikutnya"
+                className="h-8 w-8 text-slate-500 border-slate-200 disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                <ChevronRight className="w-4 h-4" aria-hidden="true" />
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Details Modal */}
