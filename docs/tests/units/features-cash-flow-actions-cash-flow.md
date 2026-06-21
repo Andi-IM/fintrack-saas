@@ -1,19 +1,19 @@
-# Test Case Document: cash_flow Server Actions
+# Test Case Document: cash_flow
 
 ## Test Cases
 
 | ID Test | Deskripsi | Langkah-langkah Pengujian | Data yang Diuji | Ekspektasi Hasil | Realita Hasil | Status |
 |---------|-----------|---------------------------|-----------------|------------------|---------------|--------|
-| TC-CFA-001 | getCashFlow mengembalikan array kosong ketika terjadi kesalahan database | 1. Mock repo.findAll melempar error 'DB connection lost'<br>2. Panggil getCashFlow() | Error: DB connection lost | - Mengembalikan array kosong [] | Sesuai ekspektasi | Lulus |
-| TC-CFA-002 | getCashFlow mengembalikan data ketika berhasil | 1. Mock repo.findAll mengembalikan array data transaksi<br>2. Panggil getCashFlow() | data: [{ id: '1', description: 'coffee' }] | - Mengembalikan array data transaksi | Sesuai ekspektasi | Lulus |
-| TC-CFA-003 | insertCashFlow gagal validasi ketika parameter mandatory tidak diberikan | 1. Panggil insertCashFlow dengan parameter {} kosong | args: {} | - Mengembalikan { success: false, error: 'Validation failed' } | Sesuai ekspektasi | Lulus |
-| TC-CFA-004 | insertCashFlow berhasil dan mengembalikan data ketika insert sukses | 1. Siapkan parameter valid<br>2. Mock repo.create mengembalikan record baru<br>3. Panggil insertCashFlow dengan parameter tersebut | validArgs: { date: '2026-06-19', income: 0, expense: 25000, main_category: 'Food', ... } | - Mengembalikan { success: true, data: record } | Sesuai ekspektasi | Lulus |
-| TC-CFA-005 | insertCashFlow mengembalikan error ketika terjadi kegagalan database | 1. Siapkan parameter valid<br>2. Mock repo.create melempar error 'Foreign key violation'<br>3. Panggil insertCashFlow | validArgs + Error: Foreign key violation | - Mengembalikan { success: false, error: 'Foreign key violation' } | Sesuai ekspektasi | Lulus |
-| TC-CFA-006 | insertCashFlow menggunakan pesan error fallback ketika error.message falsy | 1. Siapkan parameter valid<br>2. Mock repo.create melempar {} (tanpa message)<br>3. Panggil insertCashFlow | validArgs + {} | - Mengembalikan { success: false, error: 'Database error occurred' } | Sesuai ekspektasi | Lulus |
-| TC-CFA-007 | updateCashFlow gagal validasi pada opsi invalid | 1. Panggil updateCashFlow dengan parameter date: '' | args: { date: '' } | - Mengembalikan { success: false } | Sesuai ekspektasi | Lulus |
-| TC-CFA-008 | updateCashFlow berhasil memperbarui cash flow | 1. Siapkan parameter valid<br>2. Mock repo.update mengembalikan undefined<br>3. Panggil updateCashFlow | validArgs | - Mengembalikan { success: true } | Sesuai ekspektasi | Lulus |
-| TC-CFA-009 | updateCashFlow mengembalikan error ketika terjadi kegagalan database update | 1. Siapkan parameter valid<br>2. Mock repo.update melempar error 'Not Found'<br>3. Panggil updateCashFlow | validArgs + Error: Not Found | - Mengembalikan { success: false, error: 'Not Found' } | Sesuai ekspektasi | Lulus |
-| TC-CFA-010 | updateCashFlow menggunakan pesan error fallback ketika error.message falsy | 1. Siapkan parameter valid<br>2. Mock repo.update melempar {} (tanpa message)<br>3. Panggil updateCashFlow | validArgs + {} | - Mengembalikan { success: false, error: 'Database error occurred' } | Sesuai ekspektasi | Lulus |
-| TC-CFA-011 | deleteCashFlow berhasil menghapus record | 1. Mock repo.delete mengembalikan undefined<br>2. Panggil deleteCashFlow dengan id tertentu | id: 'tx-1' | - Mengembalikan { success: true } | Sesuai ekspektasi | Lulus |
-| TC-CFA-012 | deleteCashFlow mengembalikan error ketika terjadi kegagalan penghapusan | 1. Mock repo.delete melempar error 'Permission Denied'<br>2. Panggil deleteCashFlow dengan id tertentu | id: 'tx-1' + Error: Permission Denied | - Mengembalikan { success: false, error: 'Permission Denied' } | Sesuai ekspektasi | Lulus |
-| TC-CFA-013 | deleteCashFlow menggunakan pesan error fallback ketika error.message falsy | 1. Mock repo.delete melempar {} (tanpa message)<br>2. Panggil deleteCashFlow dengan id tertentu | id: 'tx-1' + {} | - Mengembalikan { success: false, error: 'Database error occurred' } | Sesuai ekspektasi | Lulus |
+| TC-FCF-001 | returns empty array on database error | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FCF-002 | returns data on success | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FCF-003 | fails validation when mandatory parameters are missing | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FCF-004 | returns success and data on successful insertion | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FCF-005 | returns error on insertion database failure | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FCF-006 | uses fallback error message when error.message is falsy | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FCF-007 | fails validation on invalid options | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FCF-008 | updates cash flow successfully | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FCF-009 | returns error response on DB update failure | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FCF-010 | uses fallback error message when error.message is falsy | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FCF-011 | deletes record successfully | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FCF-012 | returns error response on deletion failure | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FCF-013 | uses fallback error message when error.message is falsy | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |

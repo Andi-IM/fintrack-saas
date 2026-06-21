@@ -1,13 +1,15 @@
-# Test Case Document: ReceiptReviewForm Component
+# Test Case Document: ReceiptReviewFormx
 
 ## Test Cases
 
 | ID Test | Deskripsi | Langkah-langkah Pengujian | Data yang Diuji | Ekspektasi Hasil | Realita Hasil | Status |
 |---------|-----------|---------------------------|-----------------|------------------|---------------|--------|
-| TC-RRF-001 | Merender dan mengizinkan edit field receipt tipe shopping | 1. Siapkan scanResult tipe shopping<br>2. Render komponen<br>3. Ubah beberapa field | scanResult: { type: 'shopping', merchant: 'Alfamart', date: '2026-06-19T10:00:00.000Z', total: 10000, address: 'Jl. Kemang', paymentMethod: 'Cash', amountPaid: 10000, change: 0, referenceNumber: 'REF123', items: [{ name: 'Susu', amount: 10000 }] } | - Perubahan field memicu pemanggilan fungsi update di store<br>- Tombol "Tambah Item" dan "Hapus item" terlihat | Sesuai ekspektasi | Lulus |
-| TC-RRF-002 | Merender dan mengizinkan edit field receipt tipe ATM | 1. Siapkan scanResult tipe ATM<br>2. Render komponen<br>3. Ubah beberapa field | scanResult: { type: 'atm', merchant: 'Mandiri ATM', date: '2026-06-19T10:00:00.000Z', total: 100000, atmId: 'ATM001', transactionType: 'withdrawal', fee: 6500, referenceNumber: 'REF999' } | - Perubahan field memicu pemanggilan fungsi update di store<br>- Tombol "Tambah Item" TIDAK terlihat | Sesuai ekspektasi | Lulus |
-| TC-RRF-003 | Merender receipt tipe shopping tanpa item | 1. Siapkan scanResult dengan items array kosong<br>2. Render komponen | scanResult: { type: 'shopping', merchant: 'Alfamart', date: '2026-06-19T10:00:00.000Z', total: 10000, items: [] } | - Menampilkan teks "Belum ada item terdeteksi" | Sesuai ekspektasi | Lulus |
-| TC-RRF-004 | Merender receipt tipe shopping dengan items undefined | 1. Siapkan scanResult tanpa field items<br>2. Render komponen | scanResult: { type: 'shopping', merchant: 'Alfamart', date: '2026-06-19T10:00:00.000Z', total: 10000 } | - Komponen tetap merender dengan benar | Sesuai ekspektasi | Lulus |
-| TC-RRF-005 | Memanggil addScanResultItem ketika tombol Tambah Item diklik | 1. Siapkan scanResult tipe shopping<br>2. Render komponen<br>3. Klik tombol "Tambah Item" | scanResult tipe shopping | - Fungsi addScanResultItem di store dipanggil satu kali | Sesuai ekspektasi | Lulus |
-| TC-RRF-006 | Tidak menampilkan tombol Tambah Item ketika receipt tipe ATM | 1. Siapkan scanResult tipe ATM<br>2. Render komponen | scanResult tipe ATM | - Tombol "Tambah Item" tidak ada di DOM | Sesuai ekspektasi | Lulus |
-| TC-RRF-007 | Memanggil deleteScanResultItem ketika tombol Hapus item diklik | 1. Siapkan scanResult dengan satu item<br>2. Render komponen<br>3. Klik tombol "Hapus item ini" | scanResult dengan items | - Fungsi deleteScanResultItem di store dipanggil dengan index 0 | Sesuai ekspektasi | Lulus |
+| TC-FRC-001 | returns null if scanResult is null | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FRC-002 | renders and allows editing of "shopping" type receipt fields | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FRC-003 | renders and allows editing of "atm" type receipt fields | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FRC-004 | renders shopping type receipt with no items | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FRC-005 | renders shopping type receipt with scanResult.items undefined | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FRC-006 | calls addScanResultItem when add item button is clicked | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FRC-007 | does not show add item button when receipt type is atm | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FRC-008 | has accessible labels for all form fields in shopping mode | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
+| TC-FRC-009 | has accessible labels for all form fields in atm mode | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |
