@@ -1,6 +1,24 @@
+import { Suspense } from 'react'
 import { getCashFlow } from '@/features/cash-flow/actions/cash_flow'
 import { OverviewCards } from '@/components/dashboard/OverviewCards'
 import { TransactionChartLazy, FinancialInsightsLazy } from '@/components/dashboard/DynamicCharts'
+import { DashboardSkeleton } from '@/components/ui/dashboard-skeleton'
+
+async function DashboardData({ range }: { range: string }) {
+  const transactions = await getCashFlow()
+  
+  return (
+    <div className="space-y-8">
+      <OverviewCards transactions={transactions} timeRange={range} />
+      <section aria-label="Grafik Transaksi">
+        <TransactionChartLazy transactions={transactions} timeRange={range} />
+      </section>
+      <section aria-label="Wawasan Keuangan">
+        <FinancialInsightsLazy transactions={transactions} />
+      </section>
+    </div>
+  )
+}
 
 export default async function DashboardPage({
   searchParams,
@@ -8,7 +26,6 @@ export default async function DashboardPage({
   searchParams: Promise<{ range?: string }>
 }) {
   const { range = '1M' } = await searchParams
-  const transactions = await getCashFlow()
 
   return (
     <div className="space-y-6">
@@ -20,15 +37,9 @@ export default async function DashboardPage({
         </a>
       </header>
 
-      <div className="space-y-8">
-        <OverviewCards transactions={transactions} timeRange={range} />
-        <section aria-label="Grafik Transaksi">
-          <TransactionChartLazy transactions={transactions} timeRange={range} />
-        </section>
-        <section aria-label="Wawasan Keuangan">
-          <FinancialInsightsLazy transactions={transactions} />
-        </section>
-      </div>
+      <Suspense fallback={<DashboardSkeleton />}>
+        <DashboardData range={range} />
+      </Suspense>
     </div>
   )
 }
