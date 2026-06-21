@@ -164,7 +164,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
            aria-label="Cari toko, bank, atau alamat"
          />
         </div>
-        <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Button
             variant={typeFilter === 'all' ? 'default' : 'outline'}
             size="sm"

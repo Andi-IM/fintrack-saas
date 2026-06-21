@@ -45,3 +45,32 @@ For details on the testing setup, configuration, and coverage thresholds, see [A
 ### Coverage Threshold Guidelines
 - **Global Thresholds:** Initially set to `10%` statements and `9%` functions to accommodate initial setup and roll out incremental test cases without blocking the build pipelines.
 - **Goal:** Gradually increase global coverage thresholds to `80%+` as the project matures.
+
+---
+
+## Mocking Strategies for Frontend Repository Pattern
+
+Following the integration of the Frontend Repository Pattern (see [ADR-047](decisions/047-standardize-frontend-testing-repository-pattern.md)), our testing environment relies on strict separation of concerns. Adhere to the following rules when writing tests:
+
+1. **Mocking Server Actions (UI Tests)**
+   When testing UI components, **do not** mock the repository directly. Instead, mock the Server Action that the component calls.
+   ```typescript
+   vi.mock('@/features/cash-flow/actions/cash_flow', () => ({
+     deleteCashFlow: vi.fn().mockResolvedValue({ success: true })
+   }))
+   ```
+
+2. **Mocking Repositories (Server Action Tests)**
+   When testing Server Actions themselves, use Dependency Injection to inject Fake Repositories instead of mocking Supabase.
+   ```typescript
+   import { setCashFlowRepository } from '@/lib/repositories/cash_flow'
+   import { FakeCashFlowRepository } from '@/lib/repositories/fake-cash-flow'
+   
+   beforeEach(() => {
+     setCashFlowRepository(new FakeCashFlowRepository())
+   })
+   ```
+
+3. **Required Context Providers**
+   Ensure components that rely on `nuqs` or `@tanstack/react-query` are wrapped or mocked correctly. For global `nuqs` state, explicitly mock it and reset it in `beforeEach` to prevent state leakage.
+

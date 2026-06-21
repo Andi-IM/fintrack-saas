@@ -63,7 +63,10 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
       <CardHeader className="border-b border-slate-100 flex flex-col gap-4 pb-4 px-6 pt-5">
         <div className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-3">
-            <CardTitle className="text-sm font-bold text-slate-800">Riwayat Arus Kas</CardTitle>
+            <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+              Riwayat Arus Kas
+              <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{totalItems}</span>
+            </CardTitle>
             {dateFilter && (
               <button
                 onClick={handleClearDateFilter}
@@ -264,7 +267,6 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
           className="hidden md:block overflow-hidden"
         >
           <Table className="w-full text-left">
-            <caption className="sr-only">Riwayat arus kas — {totalItems} transaksi</caption>
             <TableHeader className="bg-slate-50 text-[10px] uppercase text-slate-400 font-bold border-b border-slate-100">
               <TableRow>
                 <TableHead className="px-6 py-3 font-bold text-slate-400 w-40">Waktu</TableHead>
@@ -331,12 +333,12 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
                         </div>
                       </TableCell>
                       <TableCell className="px-6 py-4 text-center whitespace-nowrap align-top">
-                        <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(tx.id)} className="h-8 w-8 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50" aria-label={`Edit ${tx.description || 'arus kas'}`}>
-                            <Edit2 className="w-4 h-4" />
+                        <div className="flex items-center justify-center gap-3 opacity-100 lg:opacity-40 lg:group-hover:opacity-100 focus-within:opacity-100 transition-all duration-200">
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(tx.id)} className="h-11 w-11 lg:h-8 lg:w-8 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50 transition-colors" aria-label={`Edit ${tx.description || 'arus kas'}`}>
+                            <Edit2 className="w-5 h-5 lg:w-4 lg:h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(tx.id)} className="h-8 w-8 text-rose-700 hover:text-rose-800 hover:bg-rose-50" aria-label={`Hapus ${tx.description || 'arus kas'}`}>
-                            <Trash2 className="w-4 h-4" />
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(tx.id)} className="h-11 w-11 lg:h-8 lg:w-8 text-rose-700 hover:text-rose-800 hover:bg-rose-50 transition-colors" aria-label={`Hapus ${tx.description || 'arus kas'}`}>
+                            <Trash2 className="w-5 h-5 lg:w-4 lg:h-4" />
                           </Button>
                         </div>
                       </TableCell>
