@@ -1,4 +1,4 @@
-# ADR-039: Robust E2E Testing Strategies and Stateful Fakes
+# ADR-040: Robust E2E Testing Strategies and Stateful Fakes
 
 ## Status
 Accepted
@@ -30,3 +30,4 @@ To ensure resilient, efficient, and 100% reliable E2E tests, the following strat
 - Implemented in `features/receipts/actions/e2e-setup.ts`
 - Applied in `e2e/test/specs/receipts.e2e.js`
 - Coverage rules configured in `vitest.config.ts`
+

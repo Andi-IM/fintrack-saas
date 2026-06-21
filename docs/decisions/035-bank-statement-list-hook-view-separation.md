@@ -1,4 +1,4 @@
-# ADR-034: Separate BankStatementList into Hook + View for Testability
+# ADR-035: Separate BankStatementList into Hook + View for Testability
 
 ## Status
 Accepted
@@ -38,3 +38,4 @@ Refactor `BankStatementList` following the existing feature hook pattern:
 - Follows pattern established in `features/cash-flow/hooks/use-cash-flow-controller.ts`
 - ADR-017 mandates TanStack Query for async state; hook extraction preserves this
 - ADR-033 feature-based architecture is maintained — hook stays inside the feature directory
+

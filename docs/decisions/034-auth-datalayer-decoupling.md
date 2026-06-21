@@ -1,4 +1,4 @@
-# ADR-001: Auth & Data Layer Decoupling Strategy
+# ADR-034: Auth & Data Layer Decoupling Strategy
 
 ## Status
 Accepted
@@ -75,3 +75,4 @@ Tambahkan mock untuk:
 - Referensi pola yang sudah ada: `lib/repositories/cash_flow.ts`
 - Test yang sudah ada: `lib/actions/__tests__/cash_flow.test.ts`
 -.file `docs/decisions/` baru dibuat untuk menampung ADR
+
