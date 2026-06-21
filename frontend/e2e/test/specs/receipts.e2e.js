@@ -153,6 +153,13 @@ describe('Receipts Feature E2E Test', () => {
 
             await browser.execute(() => { window.confirm = () => true })
 
+            // Tunggu hingga tabel ter-render (atau empty state jika memang kosong)
+            const firstRow = await $('tbody tr')
+            const emptyStateFallback = await $('[data-testid="empty-receipt-state"]')
+            await browser.waitUntil(async () => {
+                return (await firstRow.isDisplayed()) || (await emptyStateFallback.isDisplayed())
+            }, { timeout: 10000, timeoutMsg: 'Receipts list did not load' })
+
             let deleteBtns = await $$('tbody button[aria-label*="Hapus"]')
             
             // Lakukan looping selama masih ada tombol hapus

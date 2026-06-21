@@ -97,14 +97,15 @@ export const config = {
         }
         console.log('Starting Next.js development server in the background...');
         
-        // Load env vars from .env.ci or a custom ENV_FILE, without touching .env.local
+        // Load env vars from .env.test.local or a custom ENV_FILE, without touching .env.local
         const envFile = process.env.ENV_FILE
             ? path.resolve(process.env.ENV_FILE)
-            : path.resolve('../.env.ci');
+            : path.resolve('../.env.test.local');
         const ciEnv = loadEnvFile(envFile);
         if (Object.keys(ciEnv).length > 0) {
             console.log(`Loaded ${Object.keys(ciEnv).length} env vars from ${envFile}`);
         }
+        Object.assign(process.env, ciEnv);
 
         devServerProcess = spawn('npx', ['next', 'dev'], {
             cwd: '../', // Run in the parent directory (frontend)
@@ -180,9 +181,69 @@ export const config = {
               source_item_id: null,
             },
           ],
-          statements: [],
-          statementItems: [],
-          receipts: []
+          statements: [
+            {
+              id: 'test-statement-1',
+              bank_name: 'Bank JAGO',
+              statement_period: 'Juni 2026',
+              opening_balance: 1000000,
+              closing_balance: 500000,
+              file_path: 'test-path/statement.pdf',
+              total_items: 1,
+              created_at: '2026-06-01T00:00:00Z'
+            }
+          ],
+          statementItems: [
+            {
+              id: 'test-item-1',
+              statement_id: 'test-statement-1',
+              date: '2026-06-05T10:00:00Z',
+              description: 'Pembayaran Tagihan',
+              amount: 500000,
+              type: 'expense',
+              category: 'Tagihan',
+              balance: 500000,
+              cash_flow_id: null
+            }
+          ],
+          receipts: [
+            {
+              id: 'test-receipt-1',
+              created_at: '2024-06-15T10:00:00Z',
+              type: 'shopping',
+              store_name: 'Raudhah Swalayan',
+              store_address: 'Jl. Pemuda No. 123, Jakarta',
+              date: '2024-06-15T10:30:00Z',
+              total_price: 125500,
+              payment_method: 'Qris',
+              amount_paid: 150000,
+              change: 24500,
+              atm_id: null,
+              transaction_type: null,
+              fee: 0,
+              bank_statement_item_id: null,
+              file_path: null,
+              user_id: 'test-user-id'
+            },
+            {
+              id: 'test-receipt-2',
+              created_at: '2024-06-14T14:00:00Z',
+              type: 'atm',
+              store_name: 'Bank Syariah Indonesia',
+              store_address: 'Jl. Sudirman No. 456, Jakarta',
+              date: '2024-06-14T14:15:00Z',
+              total_price: 500000,
+              payment_method: null,
+              amount_paid: null,
+              change: null,
+              atm_id: 'S1ARJAGO',
+              transaction_type: 'withdrawal',
+              fee: 5000,
+              bank_statement_item_id: null,
+              file_path: null,
+              user_id: 'test-user-id'
+            }
+          ]
         };
         fs.writeFileSync(dbPath, JSON.stringify(defaultData, null, 2), 'utf-8');
     },

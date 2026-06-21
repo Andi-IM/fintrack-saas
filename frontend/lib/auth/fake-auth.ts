@@ -52,4 +52,25 @@ export class FakeAuthService implements AuthService {
 
     return NextResponse.next({ request })
   }
+
+  async getUser() {
+    const { cookies } = await import('next/headers')
+    const cookieStore = await cookies()
+    const isLoggedIn = cookieStore.has('fintrack_fake_session')
+
+    if (isLoggedIn) {
+      const mockUser = {
+        id: 'mock-user-id',
+        email: process.env.AUTHORIZED_EMAIL || 'ci@example.com',
+        role: 'authenticated',
+        aud: 'authenticated',
+        app_metadata: {},
+        user_metadata: {},
+        created_at: new Date().toISOString(),
+      }
+      return { data: { user: mockUser as any }, error: null }
+    }
+
+    return { data: { user: null }, error: { message: 'Auth session missing!' } }
+  }
 }

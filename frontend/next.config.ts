@@ -57,17 +57,6 @@ const nextConfig: NextConfig = {
       };
     }
 
-    // Replace Supabase clients with mocks during E2E testing
-    if (process.env.NEXT_PUBLIC_IS_TESTING === 'true') {
-      config.resolve = config.resolve || {};
-      config.resolve.alias = {
-        ...(config.resolve.alias || {}),
-        '@/lib/supabase/server': path.resolve(process.cwd(), 'lib/supabase/server.mock.ts'),
-        '@/lib/supabase/client': path.resolve(process.cwd(), 'lib/supabase/client.mock.ts'),
-        '@/lib/supabase/middleware': path.resolve(process.cwd(), 'lib/supabase/middleware.mock.ts'),
-      };
-    }
-
     // Solusi: Statically polyfill process.version for Supabase compilation warnings in Vercel Edge Runtime
     config.plugins.push(
       new options.webpack.DefinePlugin({

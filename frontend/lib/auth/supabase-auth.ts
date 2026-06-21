@@ -34,4 +34,9 @@ export class SupabaseAuthService implements AuthService {
   async updateSession(request: NextRequest): Promise<NextResponse> {
     return await supabaseUpdateSession(request)
   }
+
+  async getUser() {
+    const supabase = await createClient()
+    return await supabase.auth.getUser()
+  }
 }

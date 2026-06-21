@@ -55,7 +55,44 @@ export const DEFAULT_MOCK_DATA: MockDatabase = {
   ],
   statements: [],
   statementItems: [],
-  receipts: []
+  receipts: [
+    {
+      id: 'test-receipt-1',
+      created_at: '2024-06-15T10:00:00Z',
+      type: 'shopping',
+      store_name: 'Raudhah Swalayan',
+      store_address: 'Jl. Pemuda No. 123, Jakarta',
+      date: '2024-06-15T10:30:00Z',
+      total_price: 125500,
+      payment_method: 'Qris',
+      amount_paid: 150000,
+      change: 24500,
+      atm_id: null,
+      transaction_type: null,
+      fee: 0,
+      bank_statement_item_id: null,
+      file_path: null,
+      user_id: 'test-user-id'
+    },
+    {
+      id: 'test-receipt-2',
+      created_at: '2024-06-14T14:00:00Z',
+      type: 'atm',
+      store_name: 'Bank Syariah Indonesia',
+      store_address: 'Jl. Sudirman No. 456, Jakarta',
+      date: '2024-06-14T14:15:00Z',
+      total_price: 500000,
+      payment_method: null,
+      amount_paid: null,
+      change: null,
+      atm_id: 'S1ARJAGO',
+      transaction_type: 'withdrawal',
+      fee: 5000,
+      bank_statement_item_id: null,
+      file_path: null,
+      user_id: 'test-user-id'
+    }
+  ]
 }
 
 export function readDB(): MockDatabase {
