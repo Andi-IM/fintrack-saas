@@ -1,4 +1,4 @@
-# ADR-036: Fix Balance Persistence and UI Bugs from PR #3 Review
+# ADR-037: Fix Balance Persistence and UI Bugs from PR #3 Review
 
 ## Status
 Accepted
@@ -38,3 +38,4 @@ A code review (PR #3, gemini-code-assist) identified four issues:
 - `frontend/features/receipts/utils/scan-mapper.ts` — `mapReceiptResultToPayload`
 - `frontend/features/bank-statements/components/BankStatementListView.tsx`
 - `frontend/features/cash-flow/components/CashFlowList.tsx`
+
