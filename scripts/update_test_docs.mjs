@@ -55,9 +55,11 @@ while ((match = regex.exec(readmeContent)) !== null) {
   
   tests.forEach((desc, index) => {
     const id = `TC-${shortCode}-${String(index + 1).padStart(3, '0')}`;
-    markdown += `| ${id} | ${desc} | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |\n`;
+    const safeDesc = desc.replace(/\|/g, "\\|");
+    markdown += `| ${id} | ${safeDesc} | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |\n`;
   });
   
+  fs.mkdirSync(path.dirname(absoluteDocPath), { recursive: true });
   fs.writeFileSync(absoluteDocPath, markdown, 'utf-8');
   console.log(`Updated ${docFileName} with ${tests.length} tests.`);
 }
