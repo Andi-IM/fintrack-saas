@@ -10,35 +10,39 @@ export function Sidebar() {
   const isScanReceipt = pathname === '/add' && searchParams?.get('scan') === 'Receipt'
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col p-4 z-10 hidden md:flex">
+    <aside className="w-20 lg:w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col p-4 z-10 hidden md:flex transition-all duration-300">
       <nav className="flex flex-col gap-2 flex-1">
         <Link 
           href="/" 
-          className={["flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname === "/" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
+          title="Dashboard"
+          className={["flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname === "/" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
         >
-          <LayoutDashboard className="w-5 h-5" />
-          Dashboard
+          <LayoutDashboard className="w-6 h-6 lg:w-5 lg:h-5" />
+          <span className="hidden lg:block">Dashboard</span>
         </Link>
         <Link 
           href="/transactions" 
-          className={["flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname?.startsWith("/transactions") || (pathname === "/add" && !isScanReceipt) ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
+          title="Transactions"
+          className={["flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname?.startsWith("/transactions") || (pathname === "/add" && !isScanReceipt) ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
         >
-          <FileText className="w-5 h-5" />
-          Transactions
+          <FileText className="w-6 h-6 lg:w-5 lg:h-5" />
+          <span className="hidden lg:block">Transactions</span>
         </Link>
         <Link 
           href="/statements" 
-          className={["flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname?.startsWith("/statements") ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
+          title="Bank Statements"
+          className={["flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname?.startsWith("/statements") ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
         >
-          <Building2 className="w-5 h-5" />
-          Bank Statements
+          <Building2 className="w-6 h-6 lg:w-5 lg:h-5" />
+          <span className="hidden lg:block">Bank Statements</span>
         </Link>
         <Link 
           href="/receipts" 
-          className={["flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname?.startsWith("/receipts") || isScanReceipt ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
+          title="Receipts"
+          className={["flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname?.startsWith("/receipts") || isScanReceipt ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
         >
-          <Camera className="w-5 h-5" />
-          Receipts
+          <Camera className="w-6 h-6 lg:w-5 lg:h-5" />
+          <span className="hidden lg:block">Receipts</span>
         </Link>
       </nav>
     </aside>

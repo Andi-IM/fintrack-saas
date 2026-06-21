@@ -1,5 +1,7 @@
+import { Suspense } from 'react'
 import { getCashFlow } from '@/features/cash-flow/actions/cash_flow'
 import { CashFlowList } from '@/features/cash-flow/components/CashFlowList'
+import { CashFlowSkeleton } from '@/components/ui/cash-flow-skeleton'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 

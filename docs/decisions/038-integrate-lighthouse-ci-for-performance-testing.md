@@ -1,4 +1,4 @@
-# ADR-037: Integrate Lighthouse CI for Performance Testing
+# ADR-038: Integrate Lighthouse CI for Performance Testing
 
 ## Status
 Proposed
@@ -32,3 +32,4 @@ We will integrate **Lighthouse CI (LHCI)** into the `frontend/e2e` workspace to 
 - Lighthouse CI Configuration: [frontend/e2e/.lighthouserc.json](file:///D:/01_Projects/fintrack-saas/frontend/e2e/.lighthouserc.json)
 - CI Workflow: [.github/workflows/test.yml](file:///D:/01_Projects/fintrack-saas/.github/workflows/test.yml)
 - Next.js Web Vitals hooks: `@vercel/speed-insights` in [frontend/package.json](file:///D:/01_Projects/fintrack-saas/frontend/package.json#L25)
+

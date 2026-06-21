@@ -1,4 +1,4 @@
-# ADR-035: Decouple ScanDialog into Sub-components and Hooks for Testability
+# ADR-036: Decouple ScanDialog into Sub-components and Hooks for Testability
 
 ## Status
 Accepted
@@ -40,3 +40,4 @@ Refactor `ScanDialog` to separate its concerns into pure utility functions, hook
 - **Positive**: UI components (`ReceiptReviewForm`, `BankStatementReviewForm`) will be simple presentational inputs, making them easy to test via simple user events.
 - **Positive**: Separates Receipt scanner concerns from Bank Statement scanner concerns, reducing cyclomatic complexity.
 - **Trade-off**: Increases the number of files in `features/receipts`.
+

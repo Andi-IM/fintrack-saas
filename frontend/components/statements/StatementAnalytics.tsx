@@ -1,5 +1,6 @@
 'use client'
 
+import { StatementAnalyticsSkeleton } from '@/components/ui/statements-skeleton'
 import { useState, useMemo, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getStatementAnalytics } from '@/features/bank-statements/actions/statements'
@@ -62,7 +63,7 @@ function OverviewCards({ data }: { data: StatementAnalyticsData }) {
             <TrendingUp className="w-4 h-4 mr-2 text-emerald-500" />
             Total Income
           </p>
-          <p className="text-2xl xl:text-3xl font-bold tracking-tight text-emerald-600">
+          <p className="text-2xl xl:text-3xl font-bold tracking-tight text-emerald-700">
             {formatCurrency(data.totalIncome)}
           </p>
           <p className="text-xs text-slate-400 mt-1">
@@ -217,7 +218,7 @@ function BalanceChart({ data }: { data: StatementAnalyticsData }) {
                   {txs.map((tx, i) => (
                     <div key={i} className="flex justify-between gap-2 text-[11px]">
                       <span className="text-slate-500 truncate">{tx.description}</span>
-                      <span className={tx.type === 'income' ? 'text-emerald-600 font-mono shrink-0' : 'text-rose-600 font-mono shrink-0'}>
+                      <span className={tx.type === 'income' ? 'text-emerald-700 font-mono shrink-0' : 'text-rose-700 font-mono shrink-0'}>
                         {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
                       </span>
                     </div>
@@ -253,7 +254,7 @@ function BalanceChart({ data }: { data: StatementAnalyticsData }) {
                   'px-3 py-1 rounded-md text-[10px] font-bold transition-all',
                   range === r
                     ? 'bg-white shadow-sm text-indigo-700'
-                    : 'text-slate-500 hover:text-slate-700',
+                    : 'text-slate-600 hover:text-slate-800',
                 ].join(' ')}
               >
                 {r}
@@ -345,7 +346,7 @@ function TotalSaldoChart({ data }: { data: StatementAnalyticsData }) {
                   'px-3 py-1 rounded-md text-[10px] font-bold transition-all',
                   range === r
                     ? 'bg-white shadow-sm text-indigo-700'
-                    : 'text-slate-500 hover:text-slate-700',
+                    : 'text-slate-600 hover:text-slate-800',
                 ].join(' ')}
               >
                 {r}
@@ -465,11 +466,7 @@ export default function StatementAnalytics() {
   })
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center p-12">
-        <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
-      </div>
-    )
+    return <StatementAnalyticsSkeleton />
   }
 
   if (!analytics || analytics.bankSummaries.length === 0) {
@@ -479,8 +476,10 @@ export default function StatementAnalytics() {
   return (
     <div className="space-y-5">
       <OverviewCards data={analytics} />
-      <BalanceChart data={analytics} />
-      <TotalSaldoChart data={analytics} />
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        <BalanceChart data={analytics} />
+        <TotalSaldoChart data={analytics} />
+      </div>
       <BankSummaryGrid data={analytics} />
     </div>
   )

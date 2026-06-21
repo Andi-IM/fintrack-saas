@@ -1,7 +1,26 @@
+import { Suspense } from 'react'
 import { getCashFlow } from '@/features/cash-flow/actions/cash_flow'
 import { OverviewCards } from '@/components/dashboard/OverviewCards'
-import { TransactionChart } from '@/components/dashboard/TransactionChart'
-import { FinancialInsights } from '@/components/dashboard/FinancialInsights'
+import { TransactionChartLazy, FinancialInsightsLazy } from '@/components/dashboard/DynamicCharts'
+import { DashboardSkeleton } from '@/components/ui/dashboard-skeleton'
+
+async function DashboardData({ range }: { range: string }) {
+  const transactions = await getCashFlow()
+  
+  return (
+    <div className="space-y-8">
+      <OverviewCards transactions={transactions} timeRange={range} />
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <section aria-label="Grafik Transaksi" className="min-w-0">
+          <TransactionChartLazy transactions={transactions} timeRange={range} />
+        </section>
+        <section aria-label="Wawasan Keuangan" className="min-w-0">
+          <FinancialInsightsLazy transactions={transactions} />
+        </section>
+      </div>
+    </div>
+  )
+}
 
 export default async function DashboardPage({
   searchParams,
@@ -9,7 +28,6 @@ export default async function DashboardPage({
   searchParams: Promise<{ range?: string }>
 }) {
   const { range = '1M' } = await searchParams
-  const transactions = await getCashFlow()
 
   return (
     <div className="space-y-6">
@@ -21,15 +39,9 @@ export default async function DashboardPage({
         </a>
       </header>
 
-      <div className="space-y-8">
-        <OverviewCards transactions={transactions} timeRange={range} />
-        <section aria-label="Grafik Transaksi">
-          <TransactionChart transactions={transactions} timeRange={range} />
-        </section>
-        <section aria-label="Wawasan Keuangan">
-          <FinancialInsights transactions={transactions} />
-        </section>
-      </div>
+      <Suspense fallback={<DashboardSkeleton />}>
+        <DashboardData range={range} />
+      </Suspense>
     </div>
   )
 }
