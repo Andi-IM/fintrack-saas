@@ -306,10 +306,13 @@ export function getReceiptRepository(): ReceiptRepository {
     return globalForReceipts.receiptRepoInstance
   }
 
-  // Meskipun saat ini tidak ada FakeReceiptRepository,
-  // ini menyiapkan struktur singleton yang kebal terhadap hot-reload
-  globalForReceipts.receiptRepoInstance = new SupabaseReceiptsRepository()
-  return globalForReceipts.receiptRepoInstance
+  if (process.env.NEXT_PUBLIC_IS_TESTING === 'true') {
+    const { FakeReceiptRepository } = require('./fake-receipts')
+    globalForReceipts.receiptRepoInstance = new FakeReceiptRepository()
+  } else {
+    globalForReceipts.receiptRepoInstance = new SupabaseReceiptsRepository()
+  }
+  return globalForReceipts.receiptRepoInstance!
 }
 
 export function setReceiptRepository(mockRepo: ReceiptRepository): void {

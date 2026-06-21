@@ -91,6 +91,13 @@ describe('Bank Statements Feature E2E Test', () => {
         })
         
         it('should open edit item dialog when clicking edit action', async () => {
+             // Pastikan periode mutasi terbuka agar tabel transaksi dirender
+             const periodBtn = await $('button.focus-visible\\:outline-indigo-500[aria-expanded]')
+             if (await periodBtn.isExisting() && (await periodBtn.getAttribute('aria-expanded')) === 'false') {
+                 await periodBtn.click()
+                 await browser.pause(500)
+             }
+             
              // Tombol edit item pada tabel desktop
              const editBtn = await $('button[aria-label^="Edit item"]')
              await editBtn.waitForDisplayed({ timeout: 5000 })
@@ -127,6 +134,13 @@ describe('Bank Statements Feature E2E Test', () => {
             const bankBtn = await bankSection.$('button[aria-expanded]')
             if ((await bankBtn.getAttribute('aria-expanded')) === 'false') {
                 await bankBtn.click()
+                await browser.pause(500)
+            }
+
+            // Pastikan periode mutasi terbuka agar mobile cards dirender
+            const periodBtn = await bankSection.$('button.focus-visible\\:outline-indigo-500[aria-expanded]')
+            if (await periodBtn.isExisting() && (await periodBtn.getAttribute('aria-expanded')) === 'false') {
+                await periodBtn.click()
                 await browser.pause(500)
             }
 

@@ -2,12 +2,10 @@ import { Suspense } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getReceipts } from '@/features/receipts/actions/receipts'
 import { ReceiptList } from '@/components/receipts/ReceiptList'
-import { setupE2eMockData } from '@/features/receipts/actions/e2e-setup'
 import Link from 'next/link'
 import { Camera } from 'lucide-react'
 
 async function ReceiptsData() {
-  await setupE2eMockData()
   const response = await getReceipts()
   const receipts = response.success ? (response.data || []) : []
   console.log('[DEBUG] NEXT_PUBLIC_IS_TESTING:', process.env.NEXT_PUBLIC_IS_TESTING)

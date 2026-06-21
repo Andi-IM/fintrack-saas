@@ -1,5 +1,5 @@
 import { cache } from 'react'
-import { createClient } from '@/lib/supabase/server'
+import { getAuthService } from '@/lib/auth'
 import type { User } from '@supabase/supabase-js'
 
 /**
@@ -11,9 +11,9 @@ import type { User } from '@supabase/supabase-js'
  * if the user is not authenticated instead of redirecting.
  */
 export const getCachedUser = cache(async (): Promise<User | null> => {
-  const supabase = await createClient()
+  const authService = getAuthService()
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await authService.getUser()
   return user
 })
