@@ -1,9 +1,6 @@
-import { Suspense } from 'react'
 import { getCashFlow } from '@/features/cash-flow/actions/cash_flow'
 import { OverviewCards } from '@/components/dashboard/OverviewCards'
-import { TransactionChart } from '@/components/dashboard/TransactionChart'
-import { FinancialInsights } from '@/components/dashboard/FinancialInsights'
-import { DashboardSkeleton } from '@/components/ui/dashboard-skeleton'
+import { TransactionChartLazy, FinancialInsightsLazy } from '@/components/dashboard/DynamicCharts'
 
 export default async function DashboardPage({
   searchParams,
@@ -26,10 +23,10 @@ export default async function DashboardPage({
       <div className="space-y-8">
         <OverviewCards transactions={transactions} timeRange={range} />
         <section aria-label="Grafik Transaksi">
-          <TransactionChart transactions={transactions} timeRange={range} />
+          <TransactionChartLazy transactions={transactions} timeRange={range} />
         </section>
         <section aria-label="Wawasan Keuangan">
-          <FinancialInsights transactions={transactions} />
+          <FinancialInsightsLazy transactions={transactions} />
         </section>
       </div>
     </div>
