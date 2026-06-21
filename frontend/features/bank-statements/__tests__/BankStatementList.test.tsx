@@ -68,7 +68,6 @@ describe('BankStatementList Component', () => {
           closing_balance: 6500000,
           file_path: 'statements/jago-jun.pdf',
           created_at: '',
-          user_id: 'user-1',
           bank_statement_items: [
             {
               id: 'item-1',
@@ -145,7 +144,6 @@ describe('BankStatementList Component', () => {
           closing_balance: 6500000,
           file_path: 'statements/jago-jun.pdf',
           created_at: '',
-          user_id: 'user-1',
           bank_statement_items: [],
         },
       ],
@@ -158,7 +156,6 @@ describe('BankStatementList Component', () => {
           closing_balance: 3500000,
           file_path: 'statements/bri-jun.pdf',
           created_at: '',
-          user_id: 'user-1',
           bank_statement_items: [],
         },
       ],
@@ -206,7 +203,6 @@ describe('BankStatementList Component', () => {
           closing_balance: 12000000,
           file_path: 'statements/bni-may.pdf',
           created_at: '',
-          user_id: 'user-1',
           bank_statement_items: [
             {
               id: 'item-2',
@@ -268,7 +264,6 @@ describe('BankStatementList Component', () => {
           closing_balance: 5000000,
           file_path: 'statements/mandiri-apr.pdf',
           created_at: '',
-          user_id: 'user-1',
           bank_statement_items: [],
         },
       ],
@@ -316,7 +311,6 @@ describe('BankStatementList Component', () => {
           closing_balance: 11000000,
           file_path: 'statements/bca-jun.pdf',
           created_at: '',
-          user_id: 'user-1',
           bank_statement_items: [
             {
               id: 'item-4',
@@ -386,7 +380,6 @@ describe('BankStatementList Component', () => {
           closing_balance: 6000000,
           file_path: 'statements/multi-5.pdf',
           created_at: '',
-          user_id: 'user-1',
           bank_statement_items: [],
         },
         {
@@ -397,7 +390,6 @@ describe('BankStatementList Component', () => {
           closing_balance: 7000000,
           file_path: 'statements/multi-6.pdf',
           created_at: '',
-          user_id: 'user-1',
           bank_statement_items: [],
         },
       ],
@@ -430,7 +422,6 @@ describe('BankStatementList Component', () => {
           closing_balance: 1000000,
           file_path: 'statements/test.pdf',
           created_at: '',
-          user_id: 'user-1',
           bank_statement_items: [
             {
               id: 'item-income',
@@ -498,7 +489,6 @@ describe('BankStatementList Component', () => {
           closing_balance: 1000000,
           file_path: 'statements/test.pdf',
           created_at: '',
-          user_id: 'user-1',
           bank_statement_items: [
             {
               id: 'item-no-balance',
@@ -554,7 +544,6 @@ describe('BankStatementList Component', () => {
           closing_balance: 1000000,
           file_path: 'statements/test.pdf',
           created_at: '',
-          user_id: 'user-1',
           bank_statement_items: [],
         },
       ],
@@ -589,7 +578,6 @@ describe('BankStatementList Component', () => {
           closing_balance: 1000000,
           file_path: 'statements/test.pdf',
           created_at: '',
-          user_id: 'user-1',
           bank_statement_items: [
             {
               id: 'item-del',

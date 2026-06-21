@@ -66,7 +66,7 @@ export function CashFlowForm({
       main_category: 'Kebutuhan (Needs)',
       sub_category: '',
       description: '',
-      payment_method: 'Cash',
+      payment_method: 'Tunai',
       receipt_id: null,
       source_item_id: null,
     },
@@ -81,7 +81,7 @@ export function CashFlowForm({
         main_category: initialData.main_category,
         sub_category: initialData.sub_category || '',
         description: initialData.description || '',
-        payment_method: initialData.payment_method || 'Cash',
+        payment_method: initialData.payment_method || 'Tunai',
         receipt_id: initialData.receipt_id,
         source_item_id: initialData.source_item_id,
       })
@@ -99,7 +99,7 @@ export function CashFlowForm({
         main_category: data.main_category,
         sub_category: data.sub_category || '',
         description: data.description || '',
-        payment_method: data.payment_method || 'Cash',
+        payment_method: data.payment_method || 'Tunai',
         receipt_id: data.receipt_id || null,
         source_item_id: data.source_item_id || null,
       }
@@ -118,6 +118,7 @@ export function CashFlowForm({
         }
       }
 
+      router.refresh()
       router.push('/')
     } catch (err) {
       console.error(err)
@@ -142,7 +143,11 @@ export function CashFlowForm({
       <CardContent className="pt-6 space-y-6">
         <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-5">
           {serverError && (
-            <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 text-sm text-rose-700 font-semibold">
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="bg-rose-50 border border-rose-200 rounded-lg p-3 text-sm text-rose-700 font-semibold"
+            >
               {serverError}
             </div>
           )}
@@ -154,9 +159,11 @@ export function CashFlowForm({
                 id="date"
                 type="datetime-local" 
                 {...register('date')}
-                className="h-11 rounded-lg border-slate-200 font-mono" 
+                className="h-11 rounded-lg border-slate-200 font-mono"
+                aria-invalid={!!errors.date}
+                aria-describedby={errors.date ? 'date-error' : undefined}
               />
-              {errors.date && <p className="text-xs text-rose-500 font-semibold">{errors.date.message}</p>}
+              {errors.date && <p id="date-error" className="text-xs text-rose-500 font-semibold" role="alert">{errors.date.message}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -166,6 +173,8 @@ export function CashFlowForm({
                   id="main_category"
                   {...register('main_category')}
                   className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
+                  aria-invalid={!!errors.main_category}
+                  aria-describedby={errors.main_category ? 'main_category-error' : undefined}
                 >
                   <option value="Kebutuhan (Needs)">Kebutuhan (Needs)</option>
                   <option value="Keinginan (Wants)">Keinginan (Wants)</option>
@@ -173,7 +182,7 @@ export function CashFlowForm({
                   <option value="Pendapatan (Income)">Pendapatan (Income)</option>
                   <option value="Transfer/Lainnya">Transfer / Lainnya</option>
                 </select>
-                {errors.main_category && <p className="text-xs text-rose-500 font-semibold">{errors.main_category.message}</p>}
+                {errors.main_category && <p id="main_category-error" className="text-xs text-rose-500 font-semibold" role="alert">{errors.main_category.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="sub_category" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Sub Kategori</Label>
@@ -208,9 +217,11 @@ export function CashFlowForm({
                   type="number" 
                   {...register('income')}
                   className="h-11 rounded-lg border-emerald-200 font-mono focus-visible:ring-emerald-500" 
-                  placeholder="0" 
+                  placeholder="0"
+                  aria-invalid={!!errors.income}
+                  aria-describedby={errors.income ? 'income-error' : undefined}
                 />
-                {errors.income && <p className="text-[11px] text-rose-500 font-semibold">{errors.income.message}</p>}
+                {errors.income && <p id="income-error" className="text-[11px] text-rose-500 font-semibold" role="alert">{errors.income.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="expense" className="text-xs font-bold text-rose-600 uppercase tracking-wider flex items-center gap-1">
@@ -221,9 +232,11 @@ export function CashFlowForm({
                   type="number" 
                   {...register('expense')}
                   className="h-11 rounded-lg border-rose-200 font-mono focus-visible:ring-rose-500" 
-                  placeholder="0" 
+                  placeholder="0"
+                  aria-invalid={!!errors.expense}
+                  aria-describedby={errors.expense ? 'expense-error' : undefined}
                 />
-                {errors.expense && <p className="text-[11px] text-rose-500 font-semibold">{errors.expense.message}</p>}
+                {errors.expense && <p id="expense-error" className="text-[11px] text-rose-500 font-semibold" role="alert">{errors.expense.message}</p>}
               </div>
             </div>
 
@@ -324,10 +337,10 @@ export function CashFlowForm({
           </div>
           
           <div className="pt-4 flex gap-3">
-            <Button type="button" variant="outline" onClick={() => router.push('/')} className="flex-1 h-11 rounded-lg font-bold">
+            <Button type="button" variant="outline" onClick={() => router.push('/')} className="flex-1 h-11 rounded-lg font-bold" aria-label="Batal dan kembali ke dashboard">
               Batal
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1 h-11 rounded-lg font-bold bg-indigo-600 hover:bg-indigo-700 text-white">
+            <Button type="submit" data-testid="submit-cashflow-btn" disabled={loading} className="flex-1 h-11 rounded-lg font-bold bg-indigo-600 hover:bg-indigo-700 text-white">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {initialData ? 'Simpan Perubahan' : 'Simpan Arus Kas'}
             </Button>

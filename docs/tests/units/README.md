@@ -25,6 +25,7 @@ This directory contains test case documents for all test files in the project.
 | `frontend/features/receipts/__tests__/ocr.test.ts` | [features-receipts-actions-ocr.md](./features-receipts-actions-ocr.md) |
 | `frontend/features/receipts/__tests__/receipts.test.ts` | [features-receipts-actions-receipts.md](./features-receipts-actions-receipts.md) |
 | `frontend/features/auth/__tests__/auth.test.ts` | [features-auth-actions-auth.md](./features-auth-actions-auth.md) |
+| `frontend/features/auth/__tests__/auth-helpers.test.ts` | [features-auth-actions-auth-helpers.md](./features-auth-actions-auth-helpers.md) |
 | `frontend/hooks/__tests__/use-mobile.test.ts` | [hooks-use-mobile.md](./hooks-use-mobile.md) |
 | `frontend/lib/utils/__tests__/transaction.test.ts` | [lib-utils-transaction.md](./lib-utils-transaction.md) |
 

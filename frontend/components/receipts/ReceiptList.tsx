@@ -120,6 +120,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
             size="sm"
             onClick={() => setTypeFilter('all')}
             className="rounded-full text-xs"
+            aria-pressed={typeFilter === 'all'}
           >
             Semua
           </Button>
@@ -128,6 +129,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
             size="sm"
             onClick={() => setTypeFilter('shopping')}
             className="rounded-full text-xs"
+            aria-pressed={typeFilter === 'shopping'}
           >
             Belanja (Shopping)
           </Button>
@@ -136,6 +138,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
             size="sm"
             onClick={() => setTypeFilter('atm')}
             className="rounded-full text-xs"
+            aria-pressed={typeFilter === 'atm'}
           >
             Struk ATM
           </Button>
@@ -145,9 +148,9 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
       {/* Receipts List */}
       {filteredReceipts.length === 0 ? (
         <Card className="border-dashed border-2">
-          <CardContent className="h-48 flex flex-col justify-center items-center text-slate-400 space-y-2">
+          <CardContent className="h-48 flex flex-col justify-center items-center text-slate-500 space-y-2">
             <FileText className="w-12 h-12 stroke-[1.5]" />
-            <p className="text-sm">Tidak ada struk yang ditemukan.</p>
+            <p className="text-sm" data-testid="empty-receipt-state">Tidak ada struk yang ditemukan.</p>
           </CardContent>
         </Card>
       ) : (

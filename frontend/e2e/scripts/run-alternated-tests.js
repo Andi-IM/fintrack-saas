@@ -130,6 +130,8 @@ function runCommand(cmd, args, extraEnv = {}) {
         stdio: 'inherit',
         env: {
             ...process.env,
+            BYPASS_AUTH: 'true',
+            NEXT_PUBLIC_IS_TESTING: 'true',
             ...extraEnv
         }
     });
@@ -146,14 +148,20 @@ async function main() {
         setupEnv();
 
         console.log('\nBuilding Next.js application for testing...');
-        runCommand('pnpm', ['--dir', '..', 'build']);
+        runCommand('pnpm', ['--dir', '..', 'build'], {NEXT_PUBLIC_IS_TESTING: 'true'});
 
         console.log('\nStarting Next.js production server in the background...');
         serverProcess = spawn('pnpm', ['--dir', '..', 'start'], {
             shell: true,
             detached: process.platform !== 'win32',
             stdio: 'inherit',
-            env: { ...process.env, PORT: '3000', HOSTNAME: '127.0.0.1' }
+            env: { 
+                ...process.env, 
+                PORT: '3000', 
+                HOSTNAME: '127.0.0.1',
+                BYPASS_AUTH: 'true',
+                NEXT_PUBLIC_IS_TESTING: 'true'
+            }
         });
 
         // Wait for port 3000 to become available
@@ -162,12 +170,12 @@ async function main() {
 
         // Define tests queue
         const tests = [
-            // --- 1. LOGIN FEATURE ---
+            // --- 1. AUTH FEATURE (Login + Logout) ---
             {
-                name: 'E2E Login Test',
+                name: 'E2E Auth Test',
                 type: 'e2e',
-                spec: './test/specs/login.e2e.js',
-                action: () => runCommand('npx', ['wdio', 'run', 'wdio.conf.js', '--spec', './test/specs/login.e2e.js'], { NO_START_SERVER: 'true' })
+                spec: './test/specs/auth.e2e.js',
+                action: () => runCommand('npx', ['wdio', 'run', 'wdio.conf.js', '--spec', './test/specs/auth.e2e.js'], { NO_START_SERVER: 'true' })
             },
             {
                 name: 'Performance Login Test',
@@ -193,20 +201,53 @@ async function main() {
                 type: 'perf',
                 spec: './test/specs/receipts.e2e.js',
                 action: () => runCommand('npx', ['lhci', 'autorun', '--config=../.lighthouserc.mobile.json', '--collect.url=http://127.0.0.1:3000/receipts'])
+            },
+
+            // --- 3. CASH FLOW (TRANSACTIONS) FEATURE ---
+            {
+                name: 'E2E Cash Flow Test',
+                type: 'e2e',
+                spec: './test/specs/cash-flow.e2e.js',
+                action: () => runCommand('npx', ['wdio', 'run', 'wdio.conf.js', '--spec', './test/specs/cash-flow.e2e.js'], { NO_START_SERVER: 'true' })
+            },
+            {
+                name: 'Performance Transactions Test (Desktop)',
+                type: 'perf',
+                action: () => runCommand('npx', ['lhci', 'autorun', '--config=../.lighthouserc.json', '--collect.url=http://127.0.0.1:3000/transactions'])
             }
         ];
 
         // Execute tests sequentially
+        const resultsSummary = [];
+        let hasFailures = false;
+
         for (const test of tests) {
             // If the test target is bound to a specific spec file that doesn't exist yet, skip it.
             if (test.spec && !fs.existsSync(test.spec)) {
                 console.log(`\n[SKIP] ${test.name} - Spec file not found: ${test.spec}`);
+                resultsSummary.push({ Test: test.name, Type: test.type.toUpperCase(), Status: 'SKIPPED ⏭️' });
                 continue;
             }
 
             console.log(`\n[RUN] Starting: ${test.name}`);
-            test.action();
-            console.log(`[PASS] Completed: ${test.name}`);
+            try {
+                test.action();
+                console.log(`[PASS] Completed: ${test.name}`);
+                resultsSummary.push({ Test: test.name, Type: test.type.toUpperCase(), Status: 'PASSED ✅' });
+            } catch (err) {
+                console.error(`[FAIL] Failed: ${test.name}`);
+                resultsSummary.push({ Test: test.name, Type: test.type.toUpperCase(), Status: 'FAILED ❌' });
+                hasFailures = true;
+            }
+        }
+
+        console.log('\n======================================================');
+        console.log('                 TEST RESULTS SUMMARY                 ');
+        console.log('======================================================\n');
+        console.table(resultsSummary);
+
+        if (hasFailures) {
+            throw new Error('One or more tests failed during execution.');
         }
 
         console.log('\n======================================================');
