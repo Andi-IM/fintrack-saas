@@ -1,63 +1,7 @@
 import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/server'
-
-export interface StatementRepository {
-  findAllWithItems(): Promise<Tables<'bank_statements'>[]>
-  findById(id: string): Promise<Tables<'bank_statements'> | null>
-  delete(id: string, filePath: string): Promise<void>
-
-  save({
-    bankName,
-    statementPeriod,
-    openingBalance,
-    closingBalance,
-    items,
-    file,
-  }: {
-    bankName: string
-    statementPeriod: string
-    openingBalance: number | null
-    closingBalance: number | null
-    items: any[]
-    file: File
-  }): Promise<{ id: string }>
-
-  insertItems(items: any[]): Promise<void>
-  deleteItem(itemId: string): Promise<Tables<'bank_statement_items'> | null>
-  updateItem(
-    itemId: string,
-    data: {
-      date: string
-      description: string
-      amount: number
-      type: string
-      category?: string | null
-      balance?: number | null
-      metadata?: Record<string, unknown>
-    }
-  ): Promise<{ statementId: string }>
-  addItem(data: {
-    statement_id: string
-    date: string
-    description: string
-    amount: number
-    type: string
-    category?: string | null
-    balance?: number
-  }): Promise<void>
-  findItemsByStatementId(statementId: string): Promise<Tables<'bank_statement_items'>[]>
-  updateItemBalance(itemId: string, balance: number): Promise<void>
-  updateClosingBalance(itemId: string, closingBalance: number, totalItems: number): Promise<void>
-
-  getSignedUrl(path: string): Promise<string>
-  uploadFile(path: string, buffer: Buffer, contentType: string): Promise<void>
-  removeFile(path: string): Promise<void>
-  upload(path: string, buffer: Buffer, contentType: string): Promise<{ path: string }>
-  remove(paths: string[]): Promise<void>
-
-  checkExistingForBank(bankName: string): Promise<Pick<Tables<'bank_statements'>, 'id' | 'statement_period' | 'file_path'>[]>
-}
-
+import { FakeStatementRepository } from './fake-statements'
+import { StatementRepository } from './types'
 export class SupabaseStatementsRepository implements StatementRepository {
   async checkExistingForBank(bankName: string): Promise<Pick<Tables<'bank_statements'>, 'id' | 'statement_period' | 'file_path'>[]> {
     const supabase = await createClient()
@@ -401,18 +345,24 @@ export class SupabaseStatementsRepository implements StatementRepository {
   }
 }
 
-let statementRepoInstance: StatementRepository = new SupabaseStatementsRepository()
-
-if (process.env.NEXT_PUBLIC_IS_TESTING === 'true') {
-  // Gunakan require agar tidak menyebabkan masalah circular dependency atau type check di browser/edge jika tidak didukung
-  const { FakeStatementRepository } = require('./fake-statements')
-  statementRepoInstance = new FakeStatementRepository()
+const globalForStatements = globalThis as unknown as {
+  statementRepoInstance: StatementRepository | undefined
 }
 
 export function getStatementRepository(): StatementRepository {
-  return statementRepoInstance
+  if (globalForStatements.statementRepoInstance) {
+    return globalForStatements.statementRepoInstance
+  }
+
+  if (process.env.NEXT_PUBLIC_IS_TESTING === 'true') {
+    globalForStatements.statementRepoInstance = new FakeStatementRepository()
+  } else {
+    globalForStatements.statementRepoInstance = new SupabaseStatementsRepository()
+  }
+  
+  return globalForStatements.statementRepoInstance
 }
 
 export function setStatementRepository(mockRepo: StatementRepository): void {
-  statementRepoInstance = mockRepo
+  globalForStatements.statementRepoInstance = mockRepo
 }

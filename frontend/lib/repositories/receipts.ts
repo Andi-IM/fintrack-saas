@@ -297,12 +297,21 @@ export class SupabaseReceiptsRepository implements ReceiptRepository {
   }
 }
 
-let receiptRepoInstance: ReceiptRepository = new SupabaseReceiptsRepository()
+const globalForReceipts = globalThis as unknown as {
+  receiptRepoInstance: ReceiptRepository | undefined
+}
 
 export function getReceiptRepository(): ReceiptRepository {
-  return receiptRepoInstance
+  if (globalForReceipts.receiptRepoInstance) {
+    return globalForReceipts.receiptRepoInstance
+  }
+
+  // Meskipun saat ini tidak ada FakeReceiptRepository,
+  // ini menyiapkan struktur singleton yang kebal terhadap hot-reload
+  globalForReceipts.receiptRepoInstance = new SupabaseReceiptsRepository()
+  return globalForReceipts.receiptRepoInstance
 }
 
 export function setReceiptRepository(mockRepo: ReceiptRepository): void {
-  receiptRepoInstance = mockRepo
+  globalForReceipts.receiptRepoInstance = mockRepo
 }

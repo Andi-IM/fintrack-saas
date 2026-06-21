@@ -10,6 +10,8 @@ async function ReceiptsData() {
   await setupE2eMockData()
   const response = await getReceipts()
   const receipts = response.success ? (response.data || []) : []
+  console.log('[DEBUG] NEXT_PUBLIC_IS_TESTING:', process.env.NEXT_PUBLIC_IS_TESTING)
+  console.log('[DEBUG] Receipts count:', receipts.length)
 
   if (!response.success) {
     return (

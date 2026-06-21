@@ -1,4 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+vi.mock('@/lib/supabase/cached-user', () => ({
+  getCachedUser: vi.fn().mockResolvedValue({ id: 'user-1' }),
+}))
+
+import { getCachedUser } from '@/lib/supabase/cached-user'
 import {
   saveReceipt,
   getReceipts,
@@ -76,6 +82,13 @@ describe('receipts server actions', () => {
       expect(result.success).toBe(false)
       expect(result.error).toBe('Storage full')
     })
+
+    it('uses fallback error message when error.message is falsy', async () => {
+      mockRepo.save = vi.fn().mockRejectedValue({})
+      const result = await saveReceipt(validInput)
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Database error occurred')
+    })
   })
 
   describe('getReceipts', () => {
@@ -95,6 +108,13 @@ describe('receipts server actions', () => {
       expect(result.success).toBe(false)
       expect(result.error).toBe('Failed to fetch receipts: DB error')
     })
+
+    it('returns error when user is not authenticated', async () => {
+      vi.mocked(getCachedUser).mockResolvedValueOnce(null)
+      const result = await getReceipts()
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('User not authenticated')
+    })
   })
 
   describe('deleteReceipt', () => {
@@ -107,6 +127,17 @@ describe('receipts server actions', () => {
       expect(result.success).toBe(true)
       expect(mockRepo.delete).toHaveBeenCalledWith('rec-1')
       expect(mockRepo.removeFile).toHaveBeenCalledWith('path/to/file.jpg')
+    })
+
+    it('deletes receipt successfully without file', async () => {
+      mockRepo.getFilePathById = vi.fn().mockResolvedValue(null)
+      mockRepo.delete = vi.fn().mockResolvedValue(undefined)
+      mockRepo.removeFile = vi.fn().mockResolvedValue(undefined)
+
+      const result = await deleteReceipt('rec-1')
+      expect(result.success).toBe(true)
+      expect(mockRepo.delete).toHaveBeenCalledWith('rec-1')
+      expect(mockRepo.removeFile).not.toHaveBeenCalled()
     })
 
     it('returns error on delete failure', async () => {
@@ -138,6 +169,12 @@ describe('receipts server actions', () => {
   })
 
   describe('updateReceipt', () => {
+    it('returns validation error for missing required fields', async () => {
+      const result = await updateReceipt('rec-1', {} as SaveReceiptInput)
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Validation failed')
+    })
+
     it('updates receipt successfully', async () => {
       const updated = { id: 'rec-1', store_name: 'Updated Store' } as Tables<'receipts'>
       mockRepo.update = vi.fn().mockResolvedValue(updated)
@@ -157,6 +194,32 @@ describe('receipts server actions', () => {
       expect(result.data?.receiptId).toBe('rec-1')
     })
 
+    it('updates receipt and inserts items when type is shopping and items exist', async () => {
+      const updated = { id: 'rec-1', store_name: 'Updated Store' } as Tables<'receipts'>
+      mockRepo.update = vi.fn().mockResolvedValue(updated)
+      mockRepo.deleteItemsByReceiptId = vi.fn().mockResolvedValue(undefined)
+      mockRepo.insertItems = vi.fn().mockResolvedValue(undefined)
+
+      const input: SaveReceiptInput = {
+        storeName: 'Updated Store',
+        date: '2026-06-19',
+        totalPrice: 60000,
+        type: 'shopping',
+        items: [{ productName: 'Es Teh', quantity: 1, price: 5000 }],
+        file: null,
+      }
+
+      const result = await updateReceipt('rec-1', input)
+      expect(result.success).toBe(true)
+      expect(mockRepo.deleteItemsByReceiptId).toHaveBeenCalledWith('rec-1')
+      expect(mockRepo.insertItems).toHaveBeenCalledWith([{
+        receipt_id: 'rec-1',
+        product_name: 'Es Teh',
+        quantity: 1,
+        price: 5000
+      }])
+    })
+
     it('returns error on update failure', async () => {
       mockRepo.update = vi.fn().mockRejectedValue(new Error('Update failed'))
 
@@ -172,6 +235,23 @@ describe('receipts server actions', () => {
       const result = await updateReceipt('rec-1', input)
       expect(result.success).toBe(false)
       expect(result.error).toBe('Update failed')
+    })
+
+    it('uses fallback error message when update throws an empty error object', async () => {
+      mockRepo.update = vi.fn().mockRejectedValue({})
+      
+      const input: SaveReceiptInput = {
+        storeName: 'Store',
+        date: '2026-06-19',
+        totalPrice: 60000,
+        type: 'shopping',
+        items: [],
+        file: null,
+      }
+
+      const result = await updateReceipt('rec-1', input)
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Database error occurred')
     })
   })
 })

@@ -1,54 +1,13 @@
 import { Tables } from '@/lib/database.types'
-import { CashFlowRepository } from './cash_flow'
+import { CashFlowRepository } from './types'
 
-const mockCashFlows: Tables<'cash_flow'>[] = [
-  {
-    id: 'cf-e2e-1',
-    created_at: '2026-06-01T08:00:00Z',
-    date: '2026-06-01T08:00:00Z',
-    income: 5000000,
-    expense: 0,
-    main_category: 'Pendapatan (Income)',
-    sub_category: 'Gaji',
-    description: 'Gaji Bulan Juni',
-    payment_method: 'Bank JAGO',
-    receipt_id: null,
-    source_item_id: null,
-  },
-  {
-    id: 'cf-e2e-2',
-    created_at: '2026-06-10T12:00:00Z',
-    date: '2026-06-10T12:00:00Z',
-    income: 0,
-    expense: 150000,
-    main_category: 'Kebutuhan (Needs)',
-    sub_category: 'Makanan',
-    description: 'Makan Siang',
-    payment_method: 'Tunai',
-    receipt_id: null,
-    source_item_id: null,
-  },
-  {
-    id: 'cf-e2e-3',
-    created_at: '2026-06-15T19:00:00Z',
-    date: '2026-06-15T19:00:00Z',
-    income: 0,
-    expense: 500000,
-    main_category: 'Keinginan (Wants)',
-    sub_category: 'Hiburan',
-    description: 'Nonton Bioskop',
-    payment_method: 'Gopay',
-    receipt_id: null,
-    source_item_id: null,
-  },
-]
+import { readDB, writeDB } from './fs-mock-db'
 
 export class FakeCashFlowRepository implements CashFlowRepository {
-  public cashFlows: Tables<'cash_flow'>[] = [...mockCashFlows]
-
   async findAll(): Promise<Tables<'cash_flow'>[]> {
+    const db = readDB()
     // Mengembalikan data diurutkan berdasarkan tanggal menurun (descending)
-    return [...this.cashFlows].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return [...db.cashFlows].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   }
 
   async create(data: Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id' | 'source_item_id'> & { source_item_id?: string | null }): Promise<Tables<'cash_flow'>> {
@@ -66,29 +25,36 @@ export class FakeCashFlowRepository implements CashFlowRepository {
       created_at: new Date().toISOString(),
     }
     
-    this.cashFlows.push(newEntry)
+    const db = readDB()
+    db.cashFlows.push(newEntry)
+    writeDB(db)
+    
     return newEntry
   }
 
   async update(id: string, data: Partial<Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id'>>): Promise<void> {
-    const index = this.cashFlows.findIndex((cf) => cf.id === id)
+    const db = readDB()
+    const index = db.cashFlows.findIndex((cf) => cf.id === id)
     if (index === -1) {
       throw new Error(`Cash flow entry with ID ${id} not found`)
     }
     
-    this.cashFlows[index] = {
-      ...this.cashFlows[index],
+    db.cashFlows[index] = {
+      ...db.cashFlows[index],
       ...data,
-      source_item_id: data.source_item_id !== undefined ? data.source_item_id : this.cashFlows[index].source_item_id
+      source_item_id: data.source_item_id !== undefined ? data.source_item_id : db.cashFlows[index].source_item_id
     }
+    writeDB(db)
   }
 
   async delete(id: string): Promise<void> {
-    const initialLength = this.cashFlows.length
-    this.cashFlows = this.cashFlows.filter((cf) => cf.id !== id)
+    const db = readDB()
+    const initialLength = db.cashFlows.length
+    db.cashFlows = db.cashFlows.filter((cf) => cf.id !== id)
     
-    if (this.cashFlows.length === initialLength) {
+    if (db.cashFlows.length === initialLength) {
       throw new Error(`Cash flow entry with ID ${id} not found`)
     }
+    writeDB(db)
   }
 }

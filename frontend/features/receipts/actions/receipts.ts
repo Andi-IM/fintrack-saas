@@ -6,6 +6,7 @@ import { invalidateCache, invalidateCacheTags } from '@/lib/cache'
 import { getReceiptRepository } from '@/lib/repositories/receipts'
 import { Tables } from '@/lib/database.types'
 import { ActionResponse } from '@/lib/actions/types'
+import { getCachedUser } from '@/lib/supabase/cached-user'
 
 const receiptItemSchema = z.object({
   productName: z.string().min(1, 'Product name is required'),
@@ -80,7 +81,7 @@ export type ReceiptWithItems = Tables<'receipts'> & {
   }) | null
 }
 
-const _fetchReceipts = async (): Promise<ActionResponse<ReceiptWithItems[]>> => {
+const _fetchReceipts = async (userId: string): Promise<ActionResponse<ReceiptWithItems[]>> => {
   try {
     const repo = getReceiptRepository()
     const data = await repo.findAll()
@@ -98,7 +99,17 @@ const _getCachedReceipts = unstable_cache(
 )
 
 export async function getReceipts(): Promise<ActionResponse<ReceiptWithItems[]>> {
-  return _getCachedReceipts()
+  const user = await getCachedUser()
+  if (!user) {
+    return { success: false, error: 'User not authenticated' }
+  }
+
+  // Bypass cache during testing to ensure fresh mock data is always retrieved
+  if (process.env.NEXT_PUBLIC_IS_TESTING === 'true') {
+    return _fetchReceipts(user.id)
+  }
+
+  return _getCachedReceipts(user.id)
 }
 
 export async function deleteReceipt(id: string): Promise<ActionResponse<void>> {

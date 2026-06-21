@@ -1,5 +1,6 @@
 import { AuthService } from './types'
 import { SupabaseAuthService } from './supabase-auth'
+import { FakeAuthService } from './fake-auth'
 
 let authServiceInstance: AuthService | null = null
 
@@ -13,7 +14,6 @@ export function getAuthService(): AuthService {
     process.env.BYPASS_AUTH === 'true' && 
     (process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_IS_TESTING === 'true')
   ) {
-    const { FakeAuthService } = require('./fake-auth')
     authServiceInstance = new FakeAuthService()
   } else {
     authServiceInstance = new SupabaseAuthService()
