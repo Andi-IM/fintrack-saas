@@ -29,7 +29,7 @@ export function OverviewCards({ transactions, timeRange }: { transactions: Table
     if (savingsRate >= 20) {
       return {
         text: 'Aman (Sehat)',
-        color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+        color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
         dot: 'bg-emerald-500',
         borderColor: 'hover:border-emerald-200'
       }
@@ -37,14 +37,14 @@ export function OverviewCards({ transactions, timeRange }: { transactions: Table
     if (savingsRate > 0) {
       return {
         text: 'Rentan',
-        color: 'text-amber-600 bg-amber-50 border-amber-200',
+        color: 'text-amber-700 bg-amber-50 border-amber-200',
         dot: 'bg-amber-500',
         borderColor: 'hover:border-amber-200'
       }
     }
     return {
       text: 'Bahaya (Defisit)',
-      color: 'text-rose-600 bg-rose-50 border-rose-200',
+      color: 'text-rose-700 bg-rose-50 border-rose-200',
       dot: 'bg-rose-500',
       borderColor: 'hover:border-rose-200'
     }
@@ -69,7 +69,7 @@ export function OverviewCards({ transactions, timeRange }: { transactions: Table
           <CardDescription className="font-semibold flex items-center text-slate-500 text-xs tracking-wider uppercase mb-1">
             <TrendingUp className="w-4 h-4 mr-2 text-emerald-500"/> Total Income
           </CardDescription>
-          <CardTitle className="text-2xl xl:text-3xl font-bold tracking-tight text-emerald-600">{formatCurrency(totalIncome)}</CardTitle>
+          <CardTitle className="text-2xl xl:text-3xl font-bold tracking-tight text-emerald-700">{formatCurrency(totalIncome)}</CardTitle>
         </CardHeader>
       </Card>
       

@@ -61,8 +61,11 @@ export function TransactionChart({ transactions, timeRange: initialRange }: { tr
         <CardTitle className="text-sm font-bold text-slate-800">Financial Overview</CardTitle>
         <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
           {['1W', '1M', '3M', '1Y'].map(r => (
-            <button key={r} onClick={() => handleRangeChange(r)} className={["px-3 py-1 rounded-md text-[10px] font-bold transition-all", range === r ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-500 hover:text-slate-700'].join(" ")}>
-              {r}
+            <button 
+              key={r} 
+              onClick={() => handleRangeChange(r)}
+              className={["px-3 py-1 rounded-md text-[10px] font-bold transition-all", range === r ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-600 hover:text-slate-800'].join(" ")}
+            >  {r}
             </button>
           ))}
         </div>
