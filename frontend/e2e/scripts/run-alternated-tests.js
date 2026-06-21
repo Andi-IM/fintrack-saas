@@ -148,7 +148,7 @@ async function main() {
         setupEnv();
 
         console.log('\nBuilding Next.js application for testing...');
-        runCommand('pnpm', ['--dir', '..', 'build']);
+        runCommand('pnpm', ['--dir', '..', 'build'], {NEXT_PUBLIC_IS_TESTING: 'true'});
 
         console.log('\nStarting Next.js production server in the background...');
         serverProcess = spawn('pnpm', ['--dir', '..', 'start'], {
@@ -218,16 +218,36 @@ async function main() {
         ];
 
         // Execute tests sequentially
+        const resultsSummary = [];
+        let hasFailures = false;
+
         for (const test of tests) {
             // If the test target is bound to a specific spec file that doesn't exist yet, skip it.
             if (test.spec && !fs.existsSync(test.spec)) {
                 console.log(`\n[SKIP] ${test.name} - Spec file not found: ${test.spec}`);
+                resultsSummary.push({ Test: test.name, Type: test.type.toUpperCase(), Status: 'SKIPPED ⏭️' });
                 continue;
             }
 
             console.log(`\n[RUN] Starting: ${test.name}`);
-            test.action();
-            console.log(`[PASS] Completed: ${test.name}`);
+            try {
+                test.action();
+                console.log(`[PASS] Completed: ${test.name}`);
+                resultsSummary.push({ Test: test.name, Type: test.type.toUpperCase(), Status: 'PASSED ✅' });
+            } catch (err) {
+                console.error(`[FAIL] Failed: ${test.name}`);
+                resultsSummary.push({ Test: test.name, Type: test.type.toUpperCase(), Status: 'FAILED ❌' });
+                hasFailures = true;
+            }
+        }
+
+        console.log('\n======================================================');
+        console.log('                 TEST RESULTS SUMMARY                 ');
+        console.log('======================================================\n');
+        console.table(resultsSummary);
+
+        if (hasFailures) {
+            throw new Error('One or more tests failed during execution.');
         }
 
         console.log('\n======================================================');

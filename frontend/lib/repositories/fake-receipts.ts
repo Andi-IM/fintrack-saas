@@ -12,7 +12,6 @@ export class FakeReceiptRepository implements ReceiptRepository {
     // Create mock receipt
     const newReceipt: Tables<'receipts'> = {
       id,
-      user_id: 'test-user-id',
       created_at: new Date().toISOString(),
       type: data.type,
       store_name: data.storeName,

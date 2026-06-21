@@ -297,46 +297,35 @@ describe('Cash Flow (Transactions) E2E Test', () => {
             const sourceSelect = await $('[aria-label="Filter berdasarkan sumber data"]')
             await sourceSelect.waitForDisplayed({ timeout: 5000, timeoutMsg: 'Filter sumber data tidak muncul' })
             await sourceSelect.selectByAttribute('value', 'manual')
-            await browser.pause(1000)
             
             // Override confirm dialog
             await browser.execute(() => { window.confirm = () => true })
 
-            // Get all data rows (exclude the empty state row if it exists)
-            let getValidRows = async () => {
-                const trs = await $$('tbody tr')
-                // A valid row has a delete button
-                const validRows = []
-                for (const tr of trs) {
-                    if (await tr.$('button[aria-label*="Hapus"]').isExisting()) {
-                        validRows.push(tr)
-                    }
+            // Get all valid delete buttons
+            let getValidDeleteButtons = async () => {
+                try {
+                    await $('button[aria-label*="Hapus"]').waitForExist({ timeout: 3000 })
+                } catch (e) {
+                    // Timeout is fine if table is truly empty
                 }
-                return validRows
+                return await $$('button[aria-label*="Hapus"]')
             }
 
-            let validRows = await getValidRows()
+            let validButtons = await getValidDeleteButtons()
             console.log('DEBUG sourceSelect.getValue() =', await sourceSelect.getValue())
-            console.log('DEBUG initial validRows.length =', validRows.length)
-            console.log('DEBUG initial tbody rows total =', (await $$('tbody tr')).length)
+            console.log('DEBUG initial validButtons.length =', validButtons.length)
 
-            while (validRows.length > 0) {
-                const currentCount = validRows.length
+            while (validButtons.length > 0) {
+                const currentCount = validButtons.length
+                const deleteBtn = validButtons[0]
 
-                // B4: Force hover + klik via JS untuk bypass opacity:0
-                const firstRow = validRows[0]
-                await browser.action('pointer')
-                    .move({ origin: firstRow })
-                    .pause(300)
-                    .perform()
-
-                const deleteBtn = await firstRow.$('button[aria-label*="Hapus"]')
+                // Klik delete via JavaScript untuk bypass opacity:0
                 await browser.execute((el) => el.click(), deleteBtn)
 
                 await browser.waitUntil(
                     async () => {
-                        const newRows = await getValidRows()
-                        return newRows.length < currentCount
+                        const newBtns = await getValidDeleteButtons()
+                        return newBtns.length < currentCount
                     },
                     {
                         timeout: 5000,
@@ -344,7 +333,7 @@ describe('Cash Flow (Transactions) E2E Test', () => {
                     }
                 )
 
-                validRows = await getValidRows()
+                validButtons = await getValidDeleteButtons()
             }
 
             // CF-20: Verifikasi empty state
