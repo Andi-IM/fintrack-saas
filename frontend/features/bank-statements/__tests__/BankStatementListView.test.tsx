@@ -37,7 +37,6 @@ const mockStatement = {
   closing_balance: 2000000,
   file_path: 'statements/test.pdf',
   created_at: '',
-  user_id: 'user-1',
   bank_statement_items: [mockItem],
 }
 

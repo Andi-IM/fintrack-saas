@@ -72,7 +72,6 @@ export const DEFAULT_MOCK_DATA: MockDatabase = {
       fee: 0,
       bank_statement_item_id: null,
       file_path: null,
-      user_id: 'test-user-id'
     },
     {
       id: 'test-receipt-2',
@@ -90,7 +89,6 @@ export const DEFAULT_MOCK_DATA: MockDatabase = {
       fee: 5000,
       bank_statement_item_id: null,
       file_path: null,
-      user_id: 'test-user-id'
     }
   ]
 }

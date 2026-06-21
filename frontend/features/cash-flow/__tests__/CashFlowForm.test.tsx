@@ -178,7 +178,6 @@ describe('CashFlowForm Component', () => {
       receipt_id: null,
       source_item_id: null,
       created_at: '',
-      user_id: 'user-1',
     }
 
     render(<CashFlowForm initialData={initialData} />)
@@ -232,7 +231,6 @@ describe('CashFlowForm Component', () => {
       receipt_id: null,
       source_item_id: null,
       created_at: '',
-      user_id: 'user-1',
     }
 
     render(<CashFlowForm initialData={initialData} />)
@@ -283,7 +281,6 @@ describe('CashFlowForm Component', () => {
       receipt_id: null,
       source_item_id: null,
       created_at: '',
-      user_id: 'user-1',
     }
 
     render(<CashFlowForm initialData={initialData} />)

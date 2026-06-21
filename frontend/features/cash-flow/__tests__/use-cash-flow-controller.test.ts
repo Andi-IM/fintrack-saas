@@ -54,7 +54,6 @@ const mockTransactions = [
     payment_method: 'Gopay',
     receipt_id: null,
     source_item_id: null,
-    user_id: 'user-123'
   },
   {
     id: 'tx-2',
@@ -68,7 +67,6 @@ const mockTransactions = [
     payment_method: 'Transfer Bank',
     receipt_id: null,
     source_item_id: 'statement-item-99',
-    user_id: 'user-123'
   },
   {
     id: 'tx-3',
@@ -82,7 +80,6 @@ const mockTransactions = [
     payment_method: 'Cash',
     receipt_id: 'receipt-123',
     source_item_id: null,
-    user_id: 'user-123'
   }
 ]
 
@@ -98,7 +95,6 @@ const manyMockTransactions = Array.from({ length: 30 }, (_, i) => ({
   payment_method: 'Cash',
   receipt_id: null,
   source_item_id: null,
-  user_id: 'user-123'
 }))
 
 describe('useCashFlowController hook', () => {

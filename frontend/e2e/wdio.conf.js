@@ -222,8 +222,7 @@ export const config = {
               transaction_type: null,
               fee: 0,
               bank_statement_item_id: null,
-              file_path: null,
-              user_id: 'test-user-id'
+              file_path: null
             },
             {
               id: 'test-receipt-2',
@@ -240,8 +239,7 @@ export const config = {
               transaction_type: 'withdrawal',
               fee: 5000,
               bank_statement_item_id: null,
-              file_path: null,
-              user_id: 'test-user-id'
+              file_path: null
             }
           ]
         };

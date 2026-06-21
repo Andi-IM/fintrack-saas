@@ -27,7 +27,6 @@ describe('transaction utils', () => {
         payment_method: 'Cash',
         receipt_id: null,
         source_item_id: null,
-        user_id: 'user-1'
       }
     }
 

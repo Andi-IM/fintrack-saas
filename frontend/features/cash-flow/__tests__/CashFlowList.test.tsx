@@ -31,7 +31,6 @@ const mockTransactions = [
     payment_method: 'Gopay',
     receipt_id: null,
     source_item_id: null,
-    user_id: 'user-123'
   },
   {
     id: 'tx-2',
@@ -45,7 +44,6 @@ const mockTransactions = [
     payment_method: 'Transfer Bank',
     receipt_id: null,
     source_item_id: 'statement-item-99',
-    user_id: 'user-123'
   }
 ]
 
