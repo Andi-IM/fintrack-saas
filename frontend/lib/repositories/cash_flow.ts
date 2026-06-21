@@ -1,13 +1,7 @@
 import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/server'
-
-// Interface representing the cash flow database access layer
-export interface CashFlowRepository {
-  findAll(): Promise<Tables<'cash_flow'>[]>
-  create(data: Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id' | 'source_item_id'> & { source_item_id?: string | null }): Promise<Tables<'cash_flow'>>
-  update(id: string, data: Partial<Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id'>>): Promise<void>
-  delete(id: string): Promise<void>
-}
+import { CashFlowRepository } from './types'
+import { FakeCashFlowRepository } from './fake-cash-flow'
 
 // Concrete implementation using Supabase client
 export class SupabaseCashFlowRepository implements CashFlowRepository {
@@ -63,21 +57,22 @@ export class SupabaseCashFlowRepository implements CashFlowRepository {
   }
 }
 
-let repositoryInstance: CashFlowRepository | null = null
+const globalForRepos = globalThis as unknown as {
+  cashFlowRepositoryInstance: CashFlowRepository | undefined
+}
 
 export function getCashFlowRepository(): CashFlowRepository {
-  if (repositoryInstance) return repositoryInstance
+  if (globalForRepos.cashFlowRepositoryInstance) return globalForRepos.cashFlowRepositoryInstance
 
   if (process.env.NEXT_PUBLIC_IS_TESTING === 'true') {
-    const { FakeCashFlowRepository } = require('./fake-cash-flow')
-    repositoryInstance = new FakeCashFlowRepository()
+    globalForRepos.cashFlowRepositoryInstance = new FakeCashFlowRepository()
   } else {
-    repositoryInstance = new SupabaseCashFlowRepository()
+    globalForRepos.cashFlowRepositoryInstance = new SupabaseCashFlowRepository()
   }
-  return repositoryInstance!
+  return globalForRepos.cashFlowRepositoryInstance!
 }
 
 // Helper function to inject mock repository during test suites
 export function setCashFlowRepository(mockRepo: CashFlowRepository) {
-  repositoryInstance = mockRepo
+  globalForRepos.cashFlowRepositoryInstance = mockRepo
 }

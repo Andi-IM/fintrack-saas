@@ -192,7 +192,7 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
           {paginatedTransactions.length === 0 ? (
             <div className="text-center text-slate-500 py-8">
               <FileText className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-              <p className="text-xs">Tidak ada transaksi yang cocok dengan filter.</p>
+              <p className="text-xs" data-testid="empty-cashflow-state">Tidak ada transaksi yang cocok dengan filter.</p>
             </div>
           ) : (
             paginatedTransactions.map((tx) => {
@@ -279,7 +279,7 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
                   <TableCell colSpan={4} className="text-center text-slate-500 h-32">
                     <div className="flex flex-col items-center justify-center space-y-2">
                       <FileText className="w-8 h-8 text-slate-200" />
-                      <p>Tidak ada transaksi yang cocok dengan filter.</p>
+                      <p data-testid="empty-cashflow-state-desktop">Tidak ada transaksi yang cocok dengan filter.</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -289,16 +289,16 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
                   const nominal = isIncome ? Number(tx.income) : Number(tx.expense);
 
                   return (
-                    <TableRow key={tx.id} className="hover:bg-slate-50 transition-colors group">
+                    <TableRow key={tx.id} data-testid="tx-row" className="hover:bg-slate-50 transition-colors group">
                       <TableCell className="px-6 py-4 text-slate-500 whitespace-nowrap align-top text-xs">
                         {format(new Date(tx.date), "dd MMM yyyy, HH:mm")}
                       </TableCell>
                       <TableCell className="px-6 py-4 font-medium text-slate-900 min-w-[300px] max-w-md">
-                        <span className="block mb-1 group-hover:text-indigo-600 transition-colors break-words leading-relaxed text-sm">
+                        <span data-testid="tx-desc" className="block mb-1 group-hover:text-indigo-600 transition-colors break-words leading-relaxed text-sm">
                           {tx.description || "Tanpa Deskripsi"}
                         </span>
                         <div className="flex items-center gap-2 flex-wrap mt-1.5">
-                          <span className="inline-block px-2 py-0.5 bg-slate-100 rounded text-[10px] text-slate-600 border border-slate-200 font-bold uppercase tracking-tight">
+                          <span data-testid="tx-main-cat" className="inline-block px-2 py-0.5 bg-slate-100 rounded text-[10px] text-slate-600 border border-slate-200 font-bold uppercase tracking-tight">
                             {tx.main_category}
                           </span>
                           {tx.sub_category && (
@@ -324,7 +324,8 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
                         </div>
                       </TableCell>
                       <TableCell className={cn("px-6 py-4 text-right font-bold whitespace-nowrap align-top font-mono", isIncome ? 'text-emerald-600' : 'text-rose-600')}>
-                        <div className="flex items-center justify-end gap-1" aria-label={`${isIncome ? 'Pemasukan' : 'Pengeluaran'} ${formatCurrency(nominal)}`}>
+                        <div className="flex items-center justify-end gap-1">
+                          <span className="sr-only">{isIncome ? 'Pemasukan' : 'Pengeluaran'}</span>
                           {isIncome ? <Plus className="w-3 h-3" aria-hidden="true" /> : <Minus className="w-3 h-3" aria-hidden="true" />}
                           {formatCurrency(nominal)}
                         </div>

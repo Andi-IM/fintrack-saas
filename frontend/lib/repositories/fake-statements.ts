@@ -1,24 +1,26 @@
 import { Tables } from '@/lib/database.types'
-import { StatementRepository } from './statements'
+import { StatementRepository } from './types'
+import { readDB, writeDB } from './fs-mock-db'
 
 export class FakeStatementRepository implements StatementRepository {
-  public statements: Tables<'bank_statements'>[] = []
-  public items: Tables<'bank_statement_items'>[] = []
-
   async findAllWithItems(): Promise<(Tables<'bank_statements'> & { bank_statement_items: Tables<'bank_statement_items'>[] })[]> {
-    return this.statements.map((statement) => ({
+    const db = readDB()
+    return db.statements.map((statement) => ({
       ...statement,
-      bank_statement_items: this.items.filter((item) => item.statement_id === statement.id)
+      bank_statement_items: db.statementItems.filter((item) => item.statement_id === statement.id)
     }))
   }
 
   async findById(id: string): Promise<Tables<'bank_statements'> | null> {
-    return this.statements.find((s) => s.id === id) || null
+    const db = readDB()
+    return db.statements.find((s) => s.id === id) || null
   }
 
   async delete(id: string, filePath: string): Promise<void> {
-    this.statements = this.statements.filter((s) => s.id !== id)
-    this.items = this.items.filter((i) => i.statement_id !== id)
+    const db = readDB()
+    db.statements = db.statements.filter((s) => s.id !== id)
+    db.statementItems = db.statementItems.filter((i) => i.statement_id !== id)
+    writeDB(db)
   }
 
   async save(data: {
@@ -30,7 +32,9 @@ export class FakeStatementRepository implements StatementRepository {
     file: File
   }): Promise<{ id: string }> {
     const id = `stmt-${Date.now()}`
-    this.statements.push({
+    const db = readDB()
+    
+    db.statements.push({
       id,
       bank_name: data.bankName,
       statement_period: data.statementPeriod,
@@ -55,23 +59,28 @@ export class FakeStatementRepository implements StatementRepository {
       cash_flow_id: null,
     }))
 
-    this.items.push(...newItems)
+    db.statementItems.push(...newItems)
+    writeDB(db)
 
     return { id }
   }
 
   async insertItems(items: any[]): Promise<void> {
-    this.items.push(...items.map((item, index) => ({
+    const db = readDB()
+    db.statementItems.push(...items.map((item, index) => ({
       ...item,
       id: item.id || `item-inserted-${Date.now()}-${index}`,
       cash_flow_id: item.cash_flow_id || null,
     })))
+    writeDB(db)
   }
 
   async deleteItem(itemId: string): Promise<Tables<'bank_statement_items'> | null> {
-    const item = this.items.find((i) => i.id === itemId)
+    const db = readDB()
+    const item = db.statementItems.find((i) => i.id === itemId)
     if (!item) return null
-    this.items = this.items.filter((i) => i.id !== itemId)
+    db.statementItems = db.statementItems.filter((i) => i.id !== itemId)
+    writeDB(db)
     return item
   }
 
@@ -87,11 +96,12 @@ export class FakeStatementRepository implements StatementRepository {
       metadata?: any
     }
   ): Promise<{ statementId: string }> {
-    const index = this.items.findIndex((i) => i.id === itemId)
+    const db = readDB()
+    const index = db.statementItems.findIndex((i) => i.id === itemId)
     if (index === -1) throw new Error('Item not found')
 
-    const existing = this.items[index]
-    this.items[index] = {
+    const existing = db.statementItems[index]
+    db.statementItems[index] = {
       ...existing,
       date: data.date,
       description: data.description,
@@ -99,9 +109,9 @@ export class FakeStatementRepository implements StatementRepository {
       type: data.type,
       category: data.category ?? existing.category,
       balance: data.balance ?? existing.balance,
-      metadata: data.metadata ?? existing.metadata,
+      metadata: data.metadata ?? existing.metadata
     }
-
+    writeDB(db)
     return { statementId: existing.statement_id! }
   }
 
@@ -114,8 +124,12 @@ export class FakeStatementRepository implements StatementRepository {
     category?: string | null
     balance?: number
   }): Promise<void> {
-    this.items.push({
-      id: `item-added-${Date.now()}`,
+    const db = readDB()
+    const isManual = data.balance !== undefined
+    const metadata = isManual ? { manual_balance: true as any } : {}
+    
+    db.statementItems.push({
+      id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
       statement_id: data.statement_id,
       date: data.date,
       description: data.description,
@@ -123,50 +137,55 @@ export class FakeStatementRepository implements StatementRepository {
       type: data.type,
       category: data.category ?? null,
       balance: data.balance ?? 0,
-      metadata: {},
+      metadata,
       cash_flow_id: null,
     })
+    writeDB(db)
   }
 
   async findItemsByStatementId(statementId: string): Promise<Tables<'bank_statement_items'>[]> {
-    return this.items.filter((i) => i.statement_id === statementId).sort((a, b) => a.date.localeCompare(b.date))
+    const db = readDB()
+    return db.statementItems
+      .filter(i => i.statement_id === statementId)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime() || a.id.localeCompare(b.id))
   }
 
   async updateItemBalance(itemId: string, balance: number): Promise<void> {
-    const item = this.items.find((i) => i.id === itemId)
-    if (item) item.balance = balance
+    const db = readDB()
+    const index = db.statementItems.findIndex(i => i.id === itemId)
+    if (index !== -1) {
+      db.statementItems[index].balance = balance
+      writeDB(db)
+    }
   }
 
   async updateClosingBalance(statementId: string, closingBalance: number, totalItems: number): Promise<void> {
-    const statement = this.statements.find((s) => s.id === statementId)
-    if (statement) {
-      statement.closing_balance = closingBalance
-      statement.total_items = totalItems
+    const db = readDB()
+    const index = db.statements.findIndex(s => s.id === statementId)
+    if (index !== -1) {
+      db.statements[index].closing_balance = closingBalance
+      db.statements[index].total_items = totalItems
+      writeDB(db)
     }
   }
 
   async getSignedUrl(path: string): Promise<string> {
-    return `https://fake-signed-url.com/${path}`
+    return `fake-url-for-${path}`
   }
 
-  async uploadFile(path: string, buffer: Buffer, contentType: string): Promise<void> {
-    // Fake upload
-  }
+  async uploadFile(path: string, buffer: Buffer, contentType: string): Promise<void> {}
 
-  async removeFile(path: string): Promise<void> {
-    // Fake remove
-  }
+  async removeFile(path: string): Promise<void> {}
 
   async upload(path: string, buffer: Buffer, contentType: string): Promise<{ path: string }> {
     return { path }
   }
 
-  async remove(paths: string[]): Promise<void> {
-    // Fake remove
-  }
+  async remove(paths: string[]): Promise<void> {}
 
   async checkExistingForBank(bankName: string): Promise<Pick<Tables<'bank_statements'>, 'id' | 'statement_period' | 'file_path'>[]> {
-    return this.statements
+    const db = readDB()
+    return db.statements
       .filter((s) => s.bank_name === bankName)
       .map((s) => ({ id: s.id, statement_period: s.statement_period, file_path: s.file_path }))
   }

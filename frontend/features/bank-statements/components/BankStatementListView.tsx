@@ -59,9 +59,12 @@ export function BankStatementListView({
 
   if (!groupedData || Object.keys(groupedData).length === 0) {
     return (
-      <Card className="border-dashed border-slate-200">
-        <CardContent className="p-8 text-center text-slate-500">
+      <Card className="border-dashed border-2 bg-slate-50/50" data-testid="empty-statement-state">
+        <CardContent className="h-64 flex flex-col items-center justify-center text-slate-500 space-y-4">
+          <FileText className="w-16 h-16 stroke-[1.5] text-slate-300" />
+          <p className="text-sm font-medium">
           No bank statements found. Upload one to get started.
+          </p>
         </CardContent>
       </Card>
     )
@@ -417,6 +420,7 @@ export function BankStatementListView({
               variant="ghost"
               className="w-full text-slate-500 hover:bg-slate-100 font-bold h-11 rounded-xl"
               onClick={() => setActiveMobileItem(null)}
+              data-testid="batal-btn"
             >
               Batal
             </Button>

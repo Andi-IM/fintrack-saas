@@ -18,15 +18,15 @@ describe('Receipts Feature E2E Test', () => {
         })
 
         it('should display mock receipt data', async () => {
-            const storeName = await $('h4')
+            const dataRow = await $('tbody tr')
             const emptyState = await $('[data-testid="empty-receipt-state"]')
             
             await browser.waitUntil(async () => {
-                return (await storeName.isDisplayed()) || (await emptyState.isDisplayed())
+                return (await dataRow.isDisplayed()) || (await emptyState.isDisplayed())
             }, { timeout: 10000, timeoutMsg: 'Neither receipt data nor empty state appeared' })
             
             // Mock data should populate the page
-            await expect(storeName).toBeDisplayed()
+            await expect(dataRow).toBeDisplayed()
 
             // Ambil screenshot daftar struk
             await browser.saveScreenshot(path.join(process.cwd(), '../../docs/tests/e2e/screenshots/receipts-list.png'))

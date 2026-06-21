@@ -130,6 +130,8 @@ function runCommand(cmd, args, extraEnv = {}) {
         stdio: 'inherit',
         env: {
             ...process.env,
+            BYPASS_AUTH: 'true',
+            NEXT_PUBLIC_IS_TESTING: 'true',
             ...extraEnv
         }
     });
@@ -153,7 +155,13 @@ async function main() {
             shell: true,
             detached: process.platform !== 'win32',
             stdio: 'inherit',
-            env: { ...process.env, PORT: '3000', HOSTNAME: '127.0.0.1' }
+            env: { 
+                ...process.env, 
+                PORT: '3000', 
+                HOSTNAME: '127.0.0.1',
+                BYPASS_AUTH: 'true',
+                NEXT_PUBLIC_IS_TESTING: 'true'
+            }
         });
 
         // Wait for port 3000 to become available

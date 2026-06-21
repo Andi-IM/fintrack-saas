@@ -1,0 +1,67 @@
+import { Tables } from '@/lib/database.types'
+
+// Interface representing the cash flow database access layer
+export interface CashFlowRepository {
+  findAll(): Promise<Tables<'cash_flow'>[]>
+  create(data: Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id' | 'source_item_id'> & { source_item_id?: string | null }): Promise<Tables<'cash_flow'>>
+  update(id: string, data: Partial<Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id'>>): Promise<void>
+  delete(id: string): Promise<void>
+}
+
+export interface StatementRepository {
+  findAllWithItems(): Promise<Tables<'bank_statements'>[]>
+  findById(id: string): Promise<Tables<'bank_statements'> | null>
+  delete(id: string, filePath: string): Promise<void>
+
+  save({
+    bankName,
+    statementPeriod,
+    openingBalance,
+    closingBalance,
+    items,
+    file,
+  }: {
+    bankName: string
+    statementPeriod: string
+    openingBalance: number | null
+    closingBalance: number | null
+    items: any[]
+    file: File
+  }): Promise<{ id: string }>
+
+  insertItems(items: any[]): Promise<void>
+  deleteItem(itemId: string): Promise<Tables<'bank_statement_items'> | null>
+  updateItem(
+    itemId: string,
+    data: {
+      date: string
+      description: string
+      amount: number
+      type: string
+      category?: string | null
+      balance?: number | null
+      metadata?: Record<string, unknown>
+    }
+  ): Promise<{ statementId: string }>
+  addItem(data: {
+    statement_id: string
+    date: string
+    description: string
+    amount: number
+    type: string
+    category?: string | null
+    balance?: number
+  }): Promise<void>
+  findItemsByStatementId(statementId: string): Promise<Tables<'bank_statement_items'>[]>
+  updateItemBalance(itemId: string, balance: number): Promise<void>
+  updateClosingBalance(itemId: string, closingBalance: number, totalItems: number): Promise<void>
+  
+  getSignedUrl(path: string): Promise<string>
+  uploadFile(path: string, buffer: Buffer, contentType: string): Promise<void>
+  removeFile(path: string): Promise<void>
+  
+  upload(path: string, buffer: Buffer, contentType: string): Promise<{ path: string }>
+  remove(paths: string[]): Promise<void>
+
+  checkExistingForBank(bankName: string): Promise<Pick<Tables<'bank_statements'>, 'id' | 'statement_period' | 'file_path'>[]>
+}

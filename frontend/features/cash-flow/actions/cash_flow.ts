@@ -47,7 +47,7 @@ export async function insertCashFlow(
       receipt_id: parsed.data.receipt_id ?? null,
       date: parsed.data.date || new Date().toISOString()
     })
-    invalidateCache(['/'])
+    invalidateCache(['/', '/transactions'])
     return { success: true, data: insertedData }
   } catch (error: any) {
     console.error("Error inserting cash flow:", error)
@@ -71,7 +71,7 @@ export async function updateCashFlow(
   try {
     const repo = getCashFlowRepository()
     await repo.update(id, parsed.data)
-    invalidateCache(['/'])
+    invalidateCache(['/', '/transactions'])
     return { success: true }
   } catch (error: any) {
     console.error("Error updating cash flow:", error)
@@ -83,7 +83,7 @@ export async function deleteCashFlow(id: string): Promise<ActionResponse<void>> 
   try {
     const repo = getCashFlowRepository()
     await repo.delete(id)
-    invalidateCache(['/'])
+    invalidateCache(['/', '/transactions'])
     return { success: true }
   } catch (error: any) {
     console.error("Error deleting cash flow:", error)

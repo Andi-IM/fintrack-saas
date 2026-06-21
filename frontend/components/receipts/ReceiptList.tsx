@@ -150,7 +150,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
         <Card className="border-dashed border-2">
           <CardContent className="h-48 flex flex-col justify-center items-center text-slate-500 space-y-2">
             <FileText className="w-12 h-12 stroke-[1.5]" />
-            <p className="text-sm">Tidak ada struk yang ditemukan.</p>
+            <p className="text-sm" data-testid="empty-receipt-state">Tidak ada struk yang ditemukan.</p>
           </CardContent>
         </Card>
       ) : (

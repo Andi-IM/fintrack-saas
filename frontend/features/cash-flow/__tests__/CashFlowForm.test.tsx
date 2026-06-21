@@ -141,9 +141,11 @@ vi.mock('@/features/cash-flow/actions/cash_flow', () => ({
 }))
 
 const mockPush = vi.fn()
+const mockRefresh = vi.fn()
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: mockPush,
+    refresh: mockRefresh,
   }),
 }))
 

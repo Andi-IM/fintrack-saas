@@ -66,7 +66,7 @@ export function CashFlowForm({
       main_category: 'Kebutuhan (Needs)',
       sub_category: '',
       description: '',
-      payment_method: 'Cash',
+      payment_method: 'Tunai',
       receipt_id: null,
       source_item_id: null,
     },
@@ -81,7 +81,7 @@ export function CashFlowForm({
         main_category: initialData.main_category,
         sub_category: initialData.sub_category || '',
         description: initialData.description || '',
-        payment_method: initialData.payment_method || 'Cash',
+        payment_method: initialData.payment_method || 'Tunai',
         receipt_id: initialData.receipt_id,
         source_item_id: initialData.source_item_id,
       })
@@ -99,7 +99,7 @@ export function CashFlowForm({
         main_category: data.main_category,
         sub_category: data.sub_category || '',
         description: data.description || '',
-        payment_method: data.payment_method || 'Cash',
+        payment_method: data.payment_method || 'Tunai',
         receipt_id: data.receipt_id || null,
         source_item_id: data.source_item_id || null,
       }
@@ -118,6 +118,7 @@ export function CashFlowForm({
         }
       }
 
+      router.refresh()
       router.push('/')
     } catch (err) {
       console.error(err)
@@ -339,7 +340,7 @@ export function CashFlowForm({
             <Button type="button" variant="outline" onClick={() => router.push('/')} className="flex-1 h-11 rounded-lg font-bold" aria-label="Batal dan kembali ke dashboard">
               Batal
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1 h-11 rounded-lg font-bold bg-indigo-600 hover:bg-indigo-700 text-white">
+            <Button type="submit" data-testid="submit-cashflow-btn" disabled={loading} className="flex-1 h-11 rounded-lg font-bold bg-indigo-600 hover:bg-indigo-700 text-white">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {initialData ? 'Simpan Perubahan' : 'Simpan Arus Kas'}
             </Button>

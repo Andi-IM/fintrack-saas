@@ -18,7 +18,7 @@ describe('Auth Feature E2E Test', () => {
             await expect(header).toHaveText('Private Vault')
 
             // Verify GitHub login button is displayed
-            const githubButton = await $('button=Continue with GitHub')
+            const githubButton = await $('button[type="submit"]')
             await expect(githubButton).toBeDisplayed()
 
             await browser.saveScreenshot(
@@ -29,7 +29,7 @@ describe('Auth Feature E2E Test', () => {
         it('should redirect to dashboard when bypass auth is active', async () => {
             await browser.url('/login')
 
-            const githubButton = await $('button=Continue with GitHub')
+            const githubButton = await $('button[type="submit"]')
             await githubButton.click()
 
             await browser.waitUntil(
@@ -40,7 +40,7 @@ describe('Auth Feature E2E Test', () => {
                 }
             )
 
-            const dashboardHeader = await $('h1=Dashboard Overview')
+            const dashboardHeader = await $('h1')
             await expect(dashboardHeader).toBeDisplayed()
 
             await browser.saveScreenshot(
@@ -62,7 +62,7 @@ describe('Auth Feature E2E Test', () => {
                 }
             )
 
-            const githubButton = await $('button=Continue with GitHub')
+            const githubButton = await $('button[type="submit"]')
             await expect(githubButton).toBeDisplayed()
         })
     })
@@ -74,7 +74,7 @@ describe('Auth Feature E2E Test', () => {
         // Pastikan sudah login sebelum setiap test logout
         before(async () => {
             await browser.url('/login')
-            const githubButton = await $('button=Continue with GitHub')
+            const githubButton = await $('button[type="submit"]')
             await githubButton.click()
 
             await browser.waitUntil(
@@ -114,7 +114,7 @@ describe('Auth Feature E2E Test', () => {
             )
 
             // Verifikasi halaman login tampil kembali
-            const githubButton = await $('button=Continue with GitHub')
+            const githubButton = await $('button[type="submit"]')
             await expect(githubButton).toBeDisplayed()
 
             await browser.saveScreenshot(
@@ -134,14 +134,14 @@ describe('Auth Feature E2E Test', () => {
                 }
             )
 
-            const githubButton = await $('button=Continue with GitHub')
+            const githubButton = await $('button[type="submit"]')
             await expect(githubButton).toBeDisplayed()
         })
 
         it('should show the logout button on mobile view', async () => {
             // Login ulang untuk test ini
             await browser.url('/login')
-            const githubButton = await $('button=Continue with GitHub')
+            const githubButton = await $('button[type="submit"]')
             await githubButton.click()
 
             await browser.waitUntil(

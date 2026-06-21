@@ -3,6 +3,10 @@ import net from 'net';
 import fs from 'fs';
 import path from 'path';
 
+// Pastikan variabel lingkungan ini tersedia untuk *seluruh* proses (WebdriverIO main, workers, dan Next.js)
+process.env.BYPASS_AUTH = 'true';
+process.env.NEXT_PUBLIC_IS_TESTING = 'true';
+
 /**
  * Parse a .env file into a key-value object.
  * Lines starting with # are comments. Supports KEY=value and KEY="value".
@@ -74,6 +78,17 @@ export const config = {
         ui: 'bdd',
         timeout: 60000
     },
+    // Gets executed before test execution begins
+    before: async function (capabilities, specs) {
+        if (process.env.BYPASS_AUTH === 'true' || process.env.NEXT_PUBLIC_IS_TESTING === 'true') {
+            await browser.url('/');
+            await browser.setCookies({
+                name: 'fintrack_fake_session',
+                value: 'valid_test_session',
+                path: '/'
+            });
+        }
+    },
     // Gets executed once before all workers get launched.
     onPrepare: async function () {
         if (process.env.NO_START_SERVER === 'true') {
@@ -98,9 +113,7 @@ export const config = {
             stdio: 'inherit',
             env: {
                 ...process.env,
-                ...ciEnv,
-                BYPASS_AUTH: 'true',
-                NEXT_PUBLIC_IS_TESTING: 'true'
+                ...ciEnv
             }
         });
 
@@ -120,6 +133,60 @@ export const config = {
             process.exit(1);
         }
     },
+
+    // Executed before a WebdriverIO test suite starts.
+    beforeSuite: function (suite) {
+        console.log(`\n--- Resetting E2E Database for suite: ${suite.title} ---`);
+        const dbPath = path.resolve('..', '.e2e-db.json');
+        const defaultData = {
+          cashFlows: [
+            {
+              id: 'cf-e2e-1',
+              created_at: '2026-06-01T08:00:00Z',
+              date: '2026-06-01T08:00:00Z',
+              income: 5000000,
+              expense: 0,
+              main_category: 'Pendapatan (Income)',
+              sub_category: 'Gaji',
+              description: 'Gaji Bulan Juni',
+              payment_method: 'Bank JAGO',
+              receipt_id: null,
+              source_item_id: null,
+            },
+            {
+              id: 'cf-e2e-2',
+              created_at: '2026-06-10T12:00:00Z',
+              date: '2026-06-10T12:00:00Z',
+              income: 0,
+              expense: 150000,
+              main_category: 'Kebutuhan (Needs)',
+              sub_category: 'Makanan',
+              description: 'Makan Siang',
+              payment_method: 'Tunai',
+              receipt_id: null,
+              source_item_id: null,
+            },
+            {
+              id: 'cf-e2e-3',
+              created_at: '2026-06-15T19:00:00Z',
+              date: '2026-06-15T19:00:00Z',
+              income: 0,
+              expense: 500000,
+              main_category: 'Keinginan (Wants)',
+              sub_category: 'Hiburan',
+              description: 'Nonton Bioskop',
+              payment_method: 'Gopay',
+              receipt_id: null,
+              source_item_id: null,
+            },
+          ],
+          statements: [],
+          statementItems: [],
+          receipts: []
+        };
+        fs.writeFileSync(dbPath, JSON.stringify(defaultData, null, 2), 'utf-8');
+    },
+
     // Gets executed after all workers have shut down and the session has ended.
     onComplete: function () {
         if (process.env.NO_START_SERVER === 'true') {
