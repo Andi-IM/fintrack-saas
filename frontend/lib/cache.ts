@@ -8,6 +8,6 @@ export function invalidateCache(paths: string[]): void {
 
 export function invalidateCacheTags(tags: string[]): void {
   for (const tag of tags) {
-    revalidateTag(tag)
+    revalidateTag(tag, 'max')
   }
 }
