@@ -1,3 +1,10 @@
+## [1.6.1-rc.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.1-rc.3...v1.6.1-rc.4) (2026-06-22)
+
+
+### Bug Fixes
+
+* remove --no-lint from build script — not supported in Next.js 16 ([27ef33e](https://github.com/Andi-IM/fintrack-saas/commit/27ef33ee31b005b249a39742043e6268912db84c))
+
 ## [1.6.1-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.1-rc.2...v1.6.1-rc.3) (2026-06-22)
 
 
