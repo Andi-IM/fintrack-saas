@@ -1,3 +1,10 @@
+## [1.6.1-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.0...v1.6.1-rc.1) (2026-06-22)
+
+
+### Bug Fixes
+
+* set pnpm minimumReleaseAge to 6h to resolve CI supply-chain policy failure ([3744106](https://github.com/Andi-IM/fintrack-saas/commit/3744106edac4e06bc03e17708aa56d4ced650b26))
+
 # [1.6.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.5.0...v1.6.0) (2026-06-22)
 
 
