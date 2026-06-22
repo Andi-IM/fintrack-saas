@@ -1,3 +1,10 @@
+## [1.6.1-rc.5](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.1-rc.4...v1.6.1-rc.5) (2026-06-22)
+
+
+### Bug Fixes
+
+* replace Github icon from lucide-react with inline SVG ([13130b0](https://github.com/Andi-IM/fintrack-saas/commit/13130b0d7d6fe1fca7de0f146ea89150f214528e))
+
 ## [1.6.1-rc.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.1-rc.3...v1.6.1-rc.4) (2026-06-22)
 
 
