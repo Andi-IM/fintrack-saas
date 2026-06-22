@@ -2,11 +2,6 @@ packages:
   - '.'
   - 'e2e'
 
-# Reject packages published within the last 6 hours (default in pnpm 11 is 24h).
-# Prevents supply-chain attacks via freshly-published malicious versions while
-# keeping CI flexible for fast-moving transitive dependencies.
-minimumReleaseAge: 360
-
 allowBuilds:
   '@google/genai': false
   '@tailwindcss/oxide': false
