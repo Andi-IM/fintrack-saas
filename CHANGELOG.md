@@ -1,9 +1,15 @@
-# [1.5.0-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.5.0-rc.2...v1.5.0-rc.3) (2026-06-22)
+# [1.5.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.4.0...v1.5.0) (2026-06-21)
 
 
 ### Features
 
-* add E2E test suite for receipt lifecycle and capture UI screenshots ([efff06d](https://github.com/Andi-IM/fintrack-saas/commit/efff06d9356d4311fed8364bbbac22b4089fdf27))
+* add dashboard components and analytics views for financial insights ([e46f26b](https://github.com/Andi-IM/fintrack-saas/commit/e46f26b520f2ced63b5809f958b962583b08af8e))
+* add lighthouse report and initial dashboard page structure ([66af572](https://github.com/Andi-IM/fintrack-saas/commit/66af572a40cc42773de076200fa1da6368d359d6))
+* implement dashboard sidebar navigation and receipt management UI components ([4edff69](https://github.com/Andi-IM/fintrack-saas/commit/4edff6941e982c936b058747822bd73c7a9bca7b))
+* implement instant navigation using Next.js loading.tsx files and skeleton components to optimize UX across dashboard modules. ([9e16551](https://github.com/Andi-IM/fintrack-saas/commit/9e1655182f1c6e45da4113a286f1bf5d0cc0334f))
+* implement lazy-loaded dynamic dashboard charts with skeleton fallbacks ([968b82a](https://github.com/Andi-IM/fintrack-saas/commit/968b82a4c654b8d93f685afaee973006e3fcc7e2))
+* implement mobile bottom navigation and optimize TBT via lazy-loaded statement components ([eb3e959](https://github.com/Andi-IM/fintrack-saas/commit/eb3e9597f04ab4ed2e9e25e81a6a397c41957a58))
+* implement server actions for receipt management and add automated test documentation script ([a027545](https://github.com/Andi-IM/fintrack-saas/commit/a0275459c4b1b33549762d8a7a01cb521f238288))
 
 # [1.5.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.5.0-rc.1...v1.5.0-rc.2) (2026-06-21)
 
