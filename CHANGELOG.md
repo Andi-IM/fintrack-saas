@@ -1,3 +1,10 @@
+## [1.6.1-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.1-rc.1...v1.6.1-rc.2) (2026-06-22)
+
+
+### Bug Fixes
+
+* resolve Next.js 16 build error — add turbopack config and remove deprecated eslint option ([2ffcc99](https://github.com/Andi-IM/fintrack-saas/commit/2ffcc9921b5797f1b824a4ea57ea7e71ebce7f45))
+
 ## [1.6.1-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.0...v1.6.1-rc.1) (2026-06-22)
 
 
