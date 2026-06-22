@@ -1,3 +1,10 @@
+## [1.6.1-rc.6](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.1-rc.5...v1.6.1-rc.6) (2026-06-22)
+
+
+### Bug Fixes
+
+* add required profile argument to revalidateTag for Next.js 16 ([53ffa6f](https://github.com/Andi-IM/fintrack-saas/commit/53ffa6f9bd15222bc066dbb3c12ade6ef64e4e92))
+
 ## [1.6.1-rc.5](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.1-rc.4...v1.6.1-rc.5) (2026-06-22)
 
 
