@@ -1,3 +1,10 @@
+## [1.6.1-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.1-rc.2...v1.6.1-rc.3) (2026-06-22)
+
+
+### Bug Fixes
+
+* move minimumReleaseAge to pnpm-workspace.yaml (pnpm v11 ignores .npmrc for non-auth settings) ([7671316](https://github.com/Andi-IM/fintrack-saas/commit/7671316beafc57f9f4676101214b5c64119db444))
+
 ## [1.6.1-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.1-rc.1...v1.6.1-rc.2) (2026-06-22)
 
 
