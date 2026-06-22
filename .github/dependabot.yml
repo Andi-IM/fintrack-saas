@@ -1,0 +1,31 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "monthly"
+      # Dependabot natively only supports 'daily', 'weekly', or 'monthly'.
+      # For a 6-month cycle, you will need to manually review the monthly PRs
+      # or group them and merge them every 6 months.
+    groups:
+      all-frontend-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "pip"
+    directory: "/backend/document-reader-service"
+    schedule:
+      interval: "monthly"
+    groups:
+      all-backend-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      all-actions-dependencies:
+        patterns:
+          - "*"
