@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.5.0...v1.6.0) (2026-06-22)
+
+
+### Features
+
+* add E2E test suite for receipt lifecycle and capture UI screenshots ([efff06d](https://github.com/Andi-IM/fintrack-saas/commit/efff06d9356d4311fed8364bbbac22b4089fdf27))
+
 # [1.5.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.4.0...v1.5.0) (2026-06-21)
 
 
