@@ -4,9 +4,9 @@ import { codecovNextJSWebpackPlugin } from "@codecov/nextjs-webpack-plugin";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // Use webpack-based build (Turbopack default in Next.js 16 is incompatible
+  // with the custom webpack config needed for Codecov bundle analysis).
+  turbopack: {},
   typescript: {
     ignoreBuildErrors: false,
   },
