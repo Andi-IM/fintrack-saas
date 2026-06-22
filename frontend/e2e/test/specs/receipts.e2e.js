@@ -7,8 +7,9 @@ describe('Receipts Feature E2E Test', () => {
             await browser.setWindowSize(1200, 800)
             await browser.url('/receipts')
 
-            const heading = await $('h1')
-            await expect(heading).toBeDisplayed()
+            // Pastikan data selesai dimuat (loading hilang)
+            await expect($('h1')).toHaveText('Receipts')
+            await expect($('h1')).toBeDisplayed()
 
             const searchInput = await $('[aria-label="Cari toko, bank, atau alamat"]')
             await expect(searchInput).toBeDisplayed()
@@ -132,8 +133,9 @@ describe('Receipts Feature E2E Test', () => {
         })
 
         it('should adjust layout for mobile screens', async () => {
-            const heading = await $('h1')
-            await expect(heading).toBeDisplayed()
+            // Tunggu loading.tsx selesai (h1 berubah dari "Dashboard Overview" menjadi "Receipts")
+            await expect($('h1')).toHaveText('Receipts')
+            await expect($('h1')).toBeDisplayed()
 
             const scanButton = await $('a[href="/add?scan=Receipt"]')
             await expect(scanButton).toBeDisplayed()
