@@ -1,3 +1,15 @@
+## [1.6.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.0...v1.6.1) (2026-06-22)
+
+
+### Bug Fixes
+
+* add required profile argument to revalidateTag for Next.js 16 ([53ffa6f](https://github.com/Andi-IM/fintrack-saas/commit/53ffa6f9bd15222bc066dbb3c12ade6ef64e4e92))
+* move minimumReleaseAge to pnpm-workspace.yaml (pnpm v11 ignores .npmrc for non-auth settings) ([7671316](https://github.com/Andi-IM/fintrack-saas/commit/7671316beafc57f9f4676101214b5c64119db444))
+* remove --no-lint from build script — not supported in Next.js 16 ([27ef33e](https://github.com/Andi-IM/fintrack-saas/commit/27ef33ee31b005b249a39742043e6268912db84c))
+* replace Github icon from lucide-react with inline SVG ([13130b0](https://github.com/Andi-IM/fintrack-saas/commit/13130b0d7d6fe1fca7de0f146ea89150f214528e))
+* resolve Next.js 16 build error — add turbopack config and remove deprecated eslint option ([2ffcc99](https://github.com/Andi-IM/fintrack-saas/commit/2ffcc9921b5797f1b824a4ea57ea7e71ebce7f45))
+* set pnpm minimumReleaseAge to 6h to resolve CI supply-chain policy failure ([3744106](https://github.com/Andi-IM/fintrack-saas/commit/3744106edac4e06bc03e17708aa56d4ced650b26))
+
 ## [1.6.1-rc.6](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.1-rc.5...v1.6.1-rc.6) (2026-06-22)
 
 
