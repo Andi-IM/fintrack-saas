@@ -4,6 +4,7 @@ import { SeabankParser } from './banks/seabank-parser'
 import { JagoParser } from './banks/jago-parser'
 import { BniParser } from './banks/bni-parser'
 import { BsiParser } from './banks/bsi-parser'
+import { GeminiBankStatementParser } from './gemini-parser'
 
 export class BankStatementParser implements IParser {
   context: 'BankStatement' = 'BankStatement'
@@ -15,13 +16,14 @@ export class BankStatementParser implements IParser {
       new JagoParser(),
       new SeabankParser(),
       new BsiParser(),
+      new GeminiBankStatementParser(),
     ]
   }
 
-  parse(text: string, timezoneOffset?: string, filename?: string): OCRResult {
+  async parse(text: string, timezoneOffset?: string, filename?: string): Promise<OCRResult> {
     for (const bankParser of this.bankParsers) {
       if (bankParser.identify(text)) {
-        return bankParser.parse(text, timezoneOffset, filename)
+        return await bankParser.parse(text, timezoneOffset, filename)
       }
     }
 

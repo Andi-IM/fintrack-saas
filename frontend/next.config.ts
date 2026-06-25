@@ -1,5 +1,4 @@
 import type {NextConfig} from 'next';
-import path from 'path';
 import { codecovNextJSWebpackPlugin } from "@codecov/nextjs-webpack-plugin";
 
 const nextConfig: NextConfig = {

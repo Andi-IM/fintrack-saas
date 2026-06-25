@@ -20,3 +20,6 @@
 
 # Supabase backend ignores
 supabase/.temp/
+
+.vercel
+.env*

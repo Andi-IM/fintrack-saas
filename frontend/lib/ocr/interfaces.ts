@@ -8,17 +8,17 @@ export interface IExtractor {
 
 export interface IParser {
   context: 'Receipt' | 'BankStatement'
-  parse(text: string, timezoneOffset?: string, filename?: string): OCRResult
+  parse(text: string, timezoneOffset?: string, filename?: string): OCRResult | Promise<OCRResult>
 }
 
 export interface IBankParser {
   identify(text: string): boolean
   bankName: string
-  parse(text: string, timezoneOffset?: string, filename?: string): OCRResult
+  parse(text: string, timezoneOffset?: string, filename?: string): OCRResult | Promise<OCRResult>
 }
 
 export interface IReceiptParser {
   identify(text: string): boolean
   receiptName: string
-  parse(text: string, timezoneOffset?: string, filename?: string): OCRResult
+  parse(text: string, timezoneOffset?: string, filename?: string): OCRResult | Promise<OCRResult>
 }

@@ -6,6 +6,7 @@ import { ShoppingReceiptParser } from './receipts/shopping-parser'
 import { AciakMartReceiptParser } from './receipts/aciak-parser'
 import { CitraSwalayanReceiptParser } from './receipts/citra-parser'
 import { MinaSwalayanReceiptParser } from './receipts/mina-parser'
+import { GeminiReceiptParser } from './gemini-parser'
 
 export class ReceiptParser implements IParser {
   context: 'Receipt' = 'Receipt'
@@ -19,13 +20,14 @@ export class ReceiptParser implements IParser {
       new CitraSwalayanReceiptParser(),
       new MinaSwalayanReceiptParser(),
       new ShoppingReceiptParser(),
+      new GeminiReceiptParser(),
     ]
   }
 
-  parse(text: string, timezoneOffset?: string, filename?: string): OCRResult {
+  async parse(text: string, timezoneOffset?: string, filename?: string): Promise<OCRResult> {
     for (const receiptParser of this.receiptParsers) {
       if (receiptParser.identify(text)) {
-        return receiptParser.parse(text, timezoneOffset, filename)
+        return await receiptParser.parse(text, timezoneOffset, filename)
       }
     }
 
