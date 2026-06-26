@@ -3,6 +3,7 @@ import { LoginForm } from '@/features/auth/components/LoginForm'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LockIcon } from 'lucide-react'
+import { checkIsLocalSupabase } from '@/lib/supabase'
 
 export default async function LoginPage({
   searchParams,
@@ -11,8 +12,7 @@ export default async function LoginPage({
 }) {
   const { message } = await searchParams
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-  const isLocalSupabase = supabaseUrl.includes('localhost') || supabaseUrl.includes('127.0.0.1')
+  const isLocalSupabase = checkIsLocalSupabase()
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4 font-sans relative overflow-hidden">

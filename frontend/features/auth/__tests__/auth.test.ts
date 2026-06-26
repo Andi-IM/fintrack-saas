@@ -110,6 +110,39 @@ describe('Auth Actions', () => {
       expect(fakeAuthService.signUpWithPassword).toHaveBeenCalledWith('authorized@example.com', 'password123')
       expect(redirect).toHaveBeenCalledWith('/')
     })
+
+    it('should catch generic errors and return unexpected error message', async () => {
+      process.env.AUTHORIZED_EMAIL = 'authorized@example.com'
+      vi.spyOn(fakeAuthService, 'loginWithPassword').mockRejectedValue(new Error('DB error') as any)
+      
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const result = await loginWithCredentials({ email: 'authorized@example.com', password: 'password123' })
+      
+      expect(result.success).toBe(false)
+      expect((result as any).error).toBe('Terjadi kesalahan yang tidak terduga.')
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      consoleErrorSpy.mockRestore()
+    })
+
+    it('should rethrow redirect errors', async () => {
+      process.env.AUTHORIZED_EMAIL = 'authorized@example.com'
+      const redirectError = new Error('NEXT_REDIRECT')
+      ;(redirectError as any).digest = 'NEXT_REDIRECT;replace;/;307;'
+      vi.spyOn(fakeAuthService, 'loginWithPassword').mockRejectedValue(redirectError as any)
+      
+      await expect(loginWithCredentials({ email: 'authorized@example.com', password: 'password123' })).rejects.toThrow('NEXT_REDIRECT')
+    })
+
+    it('should default to ci@example.com when AUTHORIZED_EMAIL env is not set', async () => {
+      const originalEnv = process.env.AUTHORIZED_EMAIL
+      delete process.env.AUTHORIZED_EMAIL
+      
+      await loginWithCredentials({ email: 'ci@example.com', password: 'password123' })
+      expect(fakeAuthService.loginWithPassword).toHaveBeenCalledWith('ci@example.com', 'password123')
+      expect(redirect).toHaveBeenCalledWith('/')
+      
+      process.env.AUTHORIZED_EMAIL = originalEnv
+    })
   })
 
   describe('signUpWithCredentials', () => {
@@ -140,6 +173,39 @@ describe('Auth Actions', () => {
       const result = await signUpWithCredentials({ email: 'authorized@example.com', password: 'password123' })
       expect(result.success).toBe(false)
       expect((result as any).error).toBe('User already exists')
+    })
+
+    it('should catch generic errors and return unexpected error message', async () => {
+      process.env.AUTHORIZED_EMAIL = 'authorized@example.com'
+      vi.spyOn(fakeAuthService, 'signUpWithPassword').mockRejectedValue(new Error('DB error') as any)
+      
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const result = await signUpWithCredentials({ email: 'authorized@example.com', password: 'password123' })
+      
+      expect(result.success).toBe(false)
+      expect((result as any).error).toBe('Terjadi kesalahan yang tidak terduga.')
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      consoleErrorSpy.mockRestore()
+    })
+
+    it('should rethrow redirect errors', async () => {
+      process.env.AUTHORIZED_EMAIL = 'authorized@example.com'
+      const redirectError = new Error('NEXT_REDIRECT')
+      ;(redirectError as any).digest = 'NEXT_REDIRECT;replace;/;307;'
+      vi.spyOn(fakeAuthService, 'signUpWithPassword').mockRejectedValue(redirectError as any)
+      
+      await expect(signUpWithCredentials({ email: 'authorized@example.com', password: 'password123' })).rejects.toThrow('NEXT_REDIRECT')
+    })
+
+    it('should default to ci@example.com when AUTHORIZED_EMAIL env is not set', async () => {
+      const originalEnv = process.env.AUTHORIZED_EMAIL
+      delete process.env.AUTHORIZED_EMAIL
+      
+      await signUpWithCredentials({ email: 'ci@example.com', password: 'password123' })
+      expect(fakeAuthService.signUpWithPassword).toHaveBeenCalledWith('ci@example.com', 'password123')
+      expect(redirect).toHaveBeenCalledWith('/')
+      
+      process.env.AUTHORIZED_EMAIL = originalEnv
     })
   })
 })

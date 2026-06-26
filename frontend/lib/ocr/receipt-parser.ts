@@ -1,6 +1,6 @@
 import { OCRResult } from './types'
 import { IParser, IReceiptParser } from './interfaces'
-import { GeminiReceiptParser } from './gemini-parser'
+import { OpenAIReceiptParser } from './openai-parser'
 
 export class ReceiptParser implements IParser {
   context: 'Receipt' = 'Receipt'
@@ -8,7 +8,7 @@ export class ReceiptParser implements IParser {
 
   constructor(receiptParsers?: IReceiptParser[]) {
     this.receiptParsers = receiptParsers ?? [
-      new GeminiReceiptParser(),
+      new OpenAIReceiptParser(),
     ]
   }
 

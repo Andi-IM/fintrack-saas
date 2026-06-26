@@ -71,7 +71,7 @@ export function LoginForm({ defaultEmail = '' }: LoginFormProps) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
         <div className="space-y-2">
           <Label htmlFor="email" className="text-xs font-bold text-slate-400 uppercase tracking-wider">
             Email

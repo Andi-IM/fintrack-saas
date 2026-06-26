@@ -28,7 +28,7 @@ export async function logout(): Promise<void> {
 export async function loginWithCredentials(input: unknown): Promise<ActionResponse> {
   const result = authCredentialsSchema.safeParse(input)
   if (!result.success) {
-    const errorMsg = result.error.issues[0]?.message || 'Input tidak valid'
+    const errorMsg = result.error.issues[0].message
     return { success: false, error: errorMsg }
   }
 
@@ -71,7 +71,7 @@ export async function loginWithCredentials(input: unknown): Promise<ActionRespon
 export async function signUpWithCredentials(input: unknown): Promise<ActionResponse> {
   const result = authCredentialsSchema.safeParse(input)
   if (!result.success) {
-    const errorMsg = result.error.issues[0]?.message || 'Input tidak valid'
+    const errorMsg = result.error.issues[0].message
     return { success: false, error: errorMsg }
   }
 
