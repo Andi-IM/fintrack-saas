@@ -1,4 +1,4 @@
-# ADR-053: Server-Side Data Filtering for Dashboard and Data Grids
+# ADR-053: Server-Side Data Filtering and Pagination
 
 ## Status
 Accepted
@@ -14,13 +14,13 @@ As user data grows over time, this results in:
 3. Database strain due to unbounded `SELECT *` operations on a growing table.
 
 ## Decision
-We will push data filtering down to the database layer (Server-Side Filtering) and introduce targeted repository methods. 
+We will push data filtering and pagination down to the database layer (Server-Side Filtering) and introduce targeted repository methods. 
 
 Specific actions:
 1. Update `CashFlowRepository.findAll` to accept `FilterOptions` (e.g., `range`, `date`).
 2. Translate time ranges ("1W", "1M", "3M", "1Y") into PostgreSQL `.gte('date', ...)` queries on the Supabase client.
 3. Introduce `CashFlowRepository.findById` to look up individual records efficiently instead of scanning lists.
-4. Remove client-side array filtering mechanisms (like `filterTransactionsByRange`).
+5. Remove client-side array filtering mechanisms and local array slicing. (like `filterTransactionsByRange`).
 
 ## Alternatives Considered
 - **Pagination via infinite scroll**: Too complex for a quick win on the dashboard overview, which primarily needs summary data based on specific date buckets rather than paginated lists.
