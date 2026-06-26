@@ -1,6 +1,7 @@
 import { CheckCircle2, Trash2, Plus } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { NumericFormat } from 'react-number-format'
 import { useScanStore } from '@/features/receipts/hooks/use-scan-store'
 import { useSubmitScannedData } from '@/features/receipts/hooks/use-submit-scanned-data'
 import { isReceiptItem } from '../utils/scan-mapper'
@@ -32,9 +33,9 @@ export function ReceiptReviewForm() {
         </div>
       </div>
       <div className="p-4 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="receipt-type" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Receipt Type</label>
+            <label htmlFor="receipt-type" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Receipt Type</label>
             <select
               id="receipt-type"
               aria-label="Receipt Type"
@@ -47,7 +48,7 @@ export function ReceiptReviewForm() {
             </select>
           </div>
           <div>
-            <label htmlFor="merchant" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Merchant / Bank</label>
+            <label htmlFor="merchant" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Merchant / Bank</label>
             <Input
               id="merchant"
               aria-label="Merchant / Bank"
@@ -57,7 +58,7 @@ export function ReceiptReviewForm() {
             />
           </div>
           <div>
-            <label htmlFor="receipt-date" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Date & Time</label>
+            <label htmlFor="receipt-date" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Date & Time</label>
             <Input
               id="receipt-date"
               type="datetime-local"
@@ -68,13 +69,15 @@ export function ReceiptReviewForm() {
             />
           </div>
           <div>
-            <label htmlFor="total-amount" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Total Amount</label>
-            <Input
+            <label htmlFor="total-amount" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 sm:text-right">Total Amount</label>
+            <NumericFormat
+              customInput={Input}
               id="total-amount"
-              type="number"
               aria-label="Total Amount"
               value={scanResult.total || 0}
-              onChange={(e) => updateScanResultField('total', parseFloat(e.target.value) || 0)}
+              onValueChange={(values) => updateScanResultField('total', values.floatValue || 0)}
+              thousandSeparator="."
+              decimalSeparator=","
               className="h-8 text-sm font-bold text-right text-indigo-600 font-mono"
             />
           </div>
@@ -82,7 +85,7 @@ export function ReceiptReviewForm() {
           {(scanResult.type || 'shopping') === 'atm' ? (
             <>
               <div>
-                <label htmlFor="atm-id" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">ATM ID / Terminal</label>
+                <label htmlFor="atm-id" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">ATM ID / Terminal</label>
                 <Input
                   id="atm-id"
                   aria-label="ATM ID / Terminal"
@@ -93,7 +96,7 @@ export function ReceiptReviewForm() {
                 />
               </div>
               <div>
-                <label htmlFor="transaction-type" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Transaction Type</label>
+                <label htmlFor="transaction-type" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Transaction Type</label>
                 <select
                   id="transaction-type"
                   aria-label="Transaction Type"
@@ -107,18 +110,20 @@ export function ReceiptReviewForm() {
                 </select>
               </div>
               <div>
-                <label htmlFor="admin-fee" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Admin Fee</label>
-                <Input
+                <label htmlFor="admin-fee" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 sm:text-right">Admin Fee</label>
+                <NumericFormat
+                  customInput={Input}
                   id="admin-fee"
-                  type="number"
                   aria-label="Admin Fee"
                   value={scanResult.fee || 0}
-                  onChange={(e) => updateScanResultField('fee', parseFloat(e.target.value) || 0)}
-                  className="h-8 text-xs font-bold font-mono"
+                  onValueChange={(values) => updateScanResultField('fee', values.floatValue || 0)}
+                  thousandSeparator="."
+                  decimalSeparator=","
+                  className="h-8 text-xs font-bold font-mono text-right"
                 />
               </div>
               <div>
-                <label htmlFor="atm-reference" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nomor Referensi</label>
+                <label htmlFor="atm-reference" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nomor Referensi</label>
                 <Input
                   id="atm-reference"
                   aria-label="Nomor Referensi"
@@ -131,8 +136,8 @@ export function ReceiptReviewForm() {
             </>
           ) : (
             <>
-              <div className="col-span-2">
-                <label htmlFor="store-address" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Store Address</label>
+              <div className="sm:col-span-2">
+                <label htmlFor="store-address" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Store Address</label>
                 <Input
                   id="store-address"
                   aria-label="Store Address"
@@ -143,7 +148,7 @@ export function ReceiptReviewForm() {
                 />
               </div>
               <div>
-                <label htmlFor="payment-method" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Payment Method</label>
+                <label htmlFor="payment-method" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Payment Method</label>
                 <Input
                   id="payment-method"
                   aria-label="Payment Method"
@@ -153,29 +158,33 @@ export function ReceiptReviewForm() {
                 />
               </div>
               <div>
-                <label htmlFor="cash-paid" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 text-right">Cash Paid</label>
-                <Input
+                <label htmlFor="cash-paid" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 sm:text-right">Cash Paid</label>
+                <NumericFormat
+                  customInput={Input}
                   id="cash-paid"
-                  type="number"
                   aria-label="Cash Paid"
                   value={scanResult.amountPaid || scanResult.total || 0}
-                  onChange={(e) => updateScanResultField('amountPaid', parseFloat(e.target.value) || 0)}
+                  onValueChange={(values) => updateScanResultField('amountPaid', values.floatValue || 0)}
+                  thousandSeparator="."
+                  decimalSeparator=","
                   className="h-8 text-xs font-bold text-right font-mono"
                 />
               </div>
               <div>
-                <label htmlFor="change-amount" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Change (Kembalian)</label>
-                <Input
+                <label htmlFor="change-amount" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 sm:text-right">Change (Kembalian)</label>
+                <NumericFormat
+                  customInput={Input}
                   id="change-amount"
-                  type="number"
                   aria-label="Change"
                   value={scanResult.change || 0}
-                  onChange={(e) => updateScanResultField('change', parseFloat(e.target.value) || 0)}
-                  className="h-8 text-xs font-bold font-mono"
+                  onValueChange={(values) => updateScanResultField('change', values.floatValue || 0)}
+                  thousandSeparator="."
+                  decimalSeparator=","
+                  className="h-8 text-xs font-bold text-right font-mono"
                 />
               </div>
               <div>
-                <label htmlFor="shopping-reference" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nomor Referensi</label>
+                <label htmlFor="shopping-reference" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nomor Referensi</label>
                 <Input
                   id="shopping-reference"
                   aria-label="Nomor Referensi"
@@ -190,7 +199,7 @@ export function ReceiptReviewForm() {
         </div>
 
         {(scanResult.type || 'shopping') !== 'atm' && (
-          <div className="bg-slate-50 rounded-lg p-3 space-y-2 border border-slate-100 max-h-[200px] overflow-y-auto shadow-inner">
+          <div className="bg-slate-50 rounded-lg p-3 space-y-2 border border-slate-100 max-h-none overflow-y-visible sm:max-h-[200px] sm:overflow-y-auto overflow-x-hidden shadow-inner">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Identified Items</p>
               <button
@@ -202,36 +211,86 @@ export function ReceiptReviewForm() {
                 Tambah Item
               </button>
             </div>
-{receiptItems.length > 0 ? (
+            {receiptItems.length > 0 ? (
                receiptItems.map((item, i) => (
-                 <div key={i} className="flex gap-2 items-center border-b border-slate-200 border-dashed pb-2 last:border-0 last:pb-0">
-                   <Input
-                     aria-label={`Nama produk item ${i + 1}`}
-                     value={item.name}
-                     onChange={(e) => updateScanResultItem(i, 'name', e.target.value)}
-                     className="h-7 text-[11px] flex-1 bg-transparent border-none focus-visible:ring-1"
-                     placeholder="Nama produk"
-                   />
-                   <Input
-                     aria-label={`Harga item ${i + 1}`}
-                     type="number"
-                     value={item.amount}
-                     onChange={(e) => updateScanResultItem(i, 'amount', parseFloat(e.target.value))}
-                     className="h-7 text-[11px] w-24 text-right bg-transparent border-none focus-visible:ring-1 font-mono"
-                     placeholder="Harga"
-                   />
-                   <button
-                 onClick={() => deleteScanResultItem(i)}
-                 className="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded transition-colors"
-                 aria-label="Hapus item ini"
-               >
-                 <Trash2 className="w-3.5 h-3.5" />
-               </button>
+                 <div
+                   key={i}
+                   className="flex flex-col gap-2 p-2.5 bg-white rounded-xl border border-slate-200/60 shadow-sm sm:flex-row sm:items-center sm:gap-2 sm:p-0 sm:bg-transparent sm:border-none sm:shadow-none sm:border-b sm:border-slate-200 sm:border-dashed sm:pb-2 sm:last:border-0 sm:last:pb-0"
+                 >
+                   {/* Row 1: Product Name and Delete button */}
+                   <div className="flex items-center gap-2 w-full sm:flex-1">
+                     <Input
+                       aria-label={`Nama produk item ${i + 1}`}
+                       value={item.name}
+                       onChange={(e) => updateScanResultItem(i, 'name', e.target.value)}
+                       className="h-8 text-xs flex-1 bg-slate-50 border-slate-200 focus-visible:ring-1 sm:h-7 sm:text-[11px] sm:bg-transparent sm:border-none rounded-lg"
+                       placeholder="Nama produk"
+                     />
+                     <button
+                       onClick={() => deleteScanResultItem(i)}
+                       className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors sm:p-1"
+                       aria-label="Hapus item ini"
+                     >
+                       <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                     </button>
+                   </div>
+
+                   <div className="flex items-center gap-2 w-full sm:w-auto">
+                     <div className="flex items-center gap-1.5 flex-1 sm:flex-none">
+                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider sm:hidden">QTY</span>
+                       <Input
+                         aria-label={`Jumlah item ${i + 1}`}
+                         type="number"
+                         value={item.quantity ?? 1}
+                         onChange={(e) => {
+                           const qty = parseFloat(e.target.value) || 0
+                           const price = item.price ?? item.amount ?? 0
+                           updateScanResultItem(i, 'quantity', qty)
+                           updateScanResultItem(i, 'price', price)
+                           updateScanResultItem(i, 'amount', qty * price)
+                         }}
+                         className="h-8 text-xs w-full text-center bg-slate-50 border-slate-200 focus-visible:ring-1 font-mono sm:h-7 sm:text-[11px] sm:w-12 sm:bg-transparent sm:border-none rounded-lg"
+                         placeholder="Qty"
+                       />
+                       <span className="text-slate-400 text-[10px] px-0.5 hidden sm:inline">×</span>
+                     </div>
+
+                     <div className="flex items-center gap-1.5 flex-2 sm:flex-none">
+                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider sm:hidden">HARGA</span>
+                       <NumericFormat
+                         customInput={Input}
+                         aria-label={`Harga satuan item ${i + 1}`}
+                         value={item.price ?? item.amount ?? 0}
+                         onValueChange={(values) => {
+                           const price = values.floatValue || 0
+                           const qty = item.quantity ?? 1
+                           updateScanResultItem(i, 'price', price)
+                           updateScanResultItem(i, 'quantity', qty)
+                           updateScanResultItem(i, 'amount', qty * price)
+                         }}
+                         thousandSeparator="."
+                         decimalSeparator=","
+                         className="h-8 text-xs w-full text-right bg-slate-50 border-slate-200 focus-visible:ring-1 font-mono sm:h-7 sm:text-[11px] sm:w-20 sm:bg-transparent sm:border-none rounded-lg"
+                         placeholder="Harga"
+                       />
+                       <span className="text-slate-400 text-[10px] px-0.5 hidden sm:inline">=</span>
+                     </div>
+                   </div>
+
+                   <div className="flex items-center justify-between w-full border-t border-slate-100 pt-1.5 mt-0.5 sm:w-auto sm:border-none sm:pt-0 sm:mt-0 sm:justify-end">
+                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider sm:hidden">TOTAL</span>
+                     <span
+                       aria-label={`Subtotal item ${i + 1}`}
+                       className="text-xs font-bold text-slate-700 font-mono w-20 text-right px-1 sm:text-[11px] sm:text-slate-600 sm:font-bold"
+                     >
+                       {(item.amount || 0).toLocaleString('id-ID')}
+                     </span>
+                   </div>
                  </div>
                ))
              ) : (
-              <p className="text-[11px] text-slate-400 italic text-center py-2">Belum ada item terdeteksi. Klik &quot;Tambah Item&quot; untuk menambahkan.</p>
-            )}
+               <p className="text-[11px] text-slate-400 italic text-center py-2">Belum ada item terdeteksi. Klik &quot;Tambah Item&quot; untuk menambahkan.</p>
+             )}
           </div>
         )}
 

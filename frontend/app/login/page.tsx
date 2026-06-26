@@ -3,7 +3,6 @@ import { LoginForm } from '@/features/auth/components/LoginForm'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LockIcon } from 'lucide-react'
-import { checkIsLocalSupabase } from '@/lib/supabase'
 
 export default async function LoginPage({
   searchParams,
@@ -12,7 +11,7 @@ export default async function LoginPage({
 }) {
   const { message } = await searchParams
 
-  const isLocalSupabase = checkIsLocalSupabase()
+  const isLocalSupabase = process.env.NODE_ENV === 'development' || !process.env.VERCEL
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4 font-sans relative overflow-hidden">
@@ -40,8 +39,8 @@ export default async function LoginPage({
             </>
           ) : (
             <form action={login} className="space-y-6">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full h-12 text-sm font-bold bg-white hover:bg-slate-100 text-slate-950 rounded-xl transition-all shadow-lg shadow-white/5 flex items-center justify-center gap-3 border border-slate-200"
               >
                 <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-slate-950">
@@ -49,7 +48,7 @@ export default async function LoginPage({
                 </svg>
                 Continue with GitHub
               </Button>
-              
+
               {message && (
                 <div className="p-4 bg-rose-950/40 text-rose-300 rounded-xl text-sm font-medium border border-rose-900/60 text-center break-words">
                   {message}

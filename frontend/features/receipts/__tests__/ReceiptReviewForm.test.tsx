@@ -75,8 +75,8 @@ describe('ReceiptReviewForm Component', () => {
     fireEvent.change(dateInput, { target: { value: '' } })
     expect(mockStore.updateScanResultField).toHaveBeenCalledWith('date', '')
 
-    // Get all input fields with value 10000
-    const inputs10k = screen.getAllByDisplayValue('10000')
+    // Get all input fields with value 10.000
+    const inputs10k = screen.getAllByDisplayValue('10.000')
     const totalInput = inputs10k[0]
     const amountPaidInput = inputs10k[1]
     const itemAmountInput = inputs10k[2]
@@ -126,9 +126,16 @@ describe('ReceiptReviewForm Component', () => {
     fireEvent.change(itemNameInput, { target: { value: 'Susu UHT' } })
     expect(mockStore.updateScanResultItem).toHaveBeenCalledWith(0, 'name', 'Susu UHT')
 
-    // Edit item amount (price)
+    // Edit item price (Harga Satuan)
     fireEvent.change(itemAmountInput, { target: { value: '12000' } })
+    expect(mockStore.updateScanResultItem).toHaveBeenCalledWith(0, 'price', 12000)
     expect(mockStore.updateScanResultItem).toHaveBeenCalledWith(0, 'amount', 12000)
+
+    // Edit item quantity
+    const quantityInput = screen.getByDisplayValue('1')
+    fireEvent.change(quantityInput, { target: { value: '3' } })
+    expect(mockStore.updateScanResultItem).toHaveBeenCalledWith(0, 'quantity', 3)
+    expect(mockStore.updateScanResultItem).toHaveBeenCalledWith(0, 'amount', 30000)
 
     // Click Add Item button
     const addBtn = screen.getByRole('button', { name: /Tambah Item/i })
@@ -173,7 +180,7 @@ describe('ReceiptReviewForm Component', () => {
     expect(mockStore.updateScanResultField).toHaveBeenCalledWith('transactionType', 'transfer')
 
     // Edit Admin Fee
-    const feeInput = screen.getByDisplayValue('6500')
+    const feeInput = screen.getByDisplayValue('6.500')
     fireEvent.change(feeInput, { target: { value: '0' } })
     expect(mockStore.updateScanResultField).toHaveBeenCalledWith('fee', 0)
 

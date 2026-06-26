@@ -28,21 +28,21 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col overflow-hidden">
+    <div className="h-[100dvh] bg-slate-50 font-sans text-slate-900 flex flex-col overflow-hidden w-full">
       <Suspense fallback={<TopbarSkeleton />}>
         <UserTopbar />
       </Suspense>
-      <div className="flex flex-1 overflow-hidden h-[calc(100vh-56px)]">
-        <Suspense fallback={<div className="w-20 lg:w-64 bg-white border-r border-slate-200 hidden md:block"></div>}>
+      <div className="flex flex-1 overflow-hidden relative w-full">
+        <Suspense fallback={<div className="w-20 lg:w-64 bg-white border-r border-slate-200 hidden md:block shrink-0"></div>}>
           <Sidebar />
         </Suspense>
-        <main className="flex-1 overflow-y-auto p-4 pb-20 md:p-8 relative">
+        <main className="flex-1 overflow-y-auto p-4 pb-6 md:p-8 relative scroll-smooth">
           <div className="max-w-6xl mx-auto space-y-8">
             {children}
           </div>
         </main>
       </div>
-      <Suspense fallback={<div className="h-16 bg-white border-t border-slate-200 fixed bottom-0 w-full md:hidden"></div>}>
+      <Suspense fallback={<div className="h-16 shrink-0 bg-white border-t border-slate-200 w-full md:hidden box-content pb-[env(safe-area-inset-bottom)]"></div>}>
         <BottomNav />
       </Suspense>
     </div>

@@ -135,7 +135,7 @@ describe('ScanDialog Component', () => {
     
     expect(screen.getByText('Extraction Successful - Review & Edit')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Indomaret')).toBeInTheDocument()
-    expect(screen.getAllByDisplayValue('50000').length).toBeGreaterThan(0)
+    expect(screen.getAllByDisplayValue('50.000').length).toBeGreaterThan(0)
     expect(screen.getByDisplayValue('Roti')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Susu')).toBeInTheDocument()
   })
