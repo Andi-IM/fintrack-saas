@@ -261,7 +261,7 @@ export function ReceiptReviewForm() {
                        <NumericFormat
                          customInput={Input}
                          aria-label={`Harga satuan item ${i + 1}`}
-                         value={item.price ?? item.amount ?? 0}
+                         value={item.price ?? ((item.quantity ?? 1) > 0 ? (item.amount ?? 0) / (item.quantity ?? 1) : (item.amount ?? 0))}
                          onValueChange={(values) => {
                            const price = values.floatValue || 0
                            const qty = item.quantity ?? 1
