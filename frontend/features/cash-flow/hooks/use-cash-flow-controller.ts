@@ -2,7 +2,6 @@ import { useMemo, useState, useEffect } from 'react'
 import { useQueryState } from 'nuqs'
 import { Tables } from '@/lib/database.types'
 import { deleteCashFlow } from '@/features/cash-flow/actions/cash_flow'
-import { filterTransactionsByRange } from '@/lib/utils/transaction'
 
 export interface UseCashFlowControllerProps {
   initialTransactions: Tables<'cash_flow'>[]
@@ -139,7 +138,8 @@ export function useCashFlowController({ initialTransactions, timeRange }: UseCas
 
   // Filter pipeline
   const filteredTransactions = useMemo(() => {
-    let result = filterTransactionsByRange(localTransactions, range || 'ALL')
+    // Data is already filtered by timeRange on the server
+    let result = [...localTransactions]
 
     if (dateFilter) {
       result = result.filter(tx => tx.date.split('T')[0] === dateFilter)

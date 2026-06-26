@@ -1,4 +1,4 @@
-import { getCashFlow } from '@/features/cash-flow/actions/cash_flow'
+import { getCashFlowById } from '@/features/cash-flow/actions/cash_flow'
 import { CashFlowForm } from '@/features/cash-flow/components/CashFlowForm'
 import { ScanDialog } from '@/features/receipts/components/ScanDialog'
 
@@ -11,8 +11,7 @@ export default async function AddTransactionPage({
 
   let initialData: any = null
   if (edit) {
-    const cashFlows = await getCashFlow()
-    initialData = cashFlows.find((t) => t.id === edit) || null
+    initialData = await getCashFlowById(edit)
   }
 
   return (

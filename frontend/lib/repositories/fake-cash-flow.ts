@@ -1,13 +1,49 @@
 import { Tables } from '@/lib/database.types'
-import { CashFlowRepository } from './types'
+import { CashFlowRepository, CashFlowFilterOptions } from './types'
 
 import { readDB, writeDB } from './fs-mock-db'
 
 export class FakeCashFlowRepository implements CashFlowRepository {
-  async findAll(): Promise<Tables<'cash_flow'>[]> {
+  async findAll(options?: CashFlowFilterOptions): Promise<Tables<'cash_flow'>[]> {
     const db = readDB()
+    let results = [...db.cashFlows]
+
+    if (options?.date) {
+      results = results.filter(cf => cf.date.startsWith(options.date!))
+    } else if (options?.range && options.range !== 'ALL') {
+      const now = new Date()
+      let daysToSubtract = 0
+      
+      switch (options.range) {
+        case '1W': daysToSubtract = 7; break
+        case '1M': daysToSubtract = 30; break
+        case '3M': daysToSubtract = 90; break
+        case '1Y': daysToSubtract = 365; break
+      }
+      
+      let startDate = new Date(now)
+      if (options.range === 'YTD') {
+        startDate = new Date(now.getFullYear(), 0, 1) // Jan 1st
+        results = results.filter(cf => new Date(cf.date) >= startDate)
+      } else if (options.range === 'MTD') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1) // 1st of current month
+        results = results.filter(cf => new Date(cf.date) >= startDate)
+      } else if (options.range === 'TODAY') {
+        startDate.setHours(0, 0, 0, 0) // Midnight today
+        results = results.filter(cf => new Date(cf.date) >= startDate)
+      } else if (daysToSubtract > 0) {
+        startDate.setDate(startDate.getDate() - daysToSubtract)
+        results = results.filter(cf => new Date(cf.date) >= startDate)
+      }
+    }
+
     // Mengembalikan data diurutkan berdasarkan tanggal menurun (descending)
-    return [...db.cashFlows].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  }
+
+  async findById(id: string): Promise<Tables<'cash_flow'> | null> {
+    const db = readDB()
+    return db.cashFlows.find(cf => cf.id === id) || null
   }
 
   async create(data: Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id' | 'source_item_id'> & { source_item_id?: string | null }): Promise<Tables<'cash_flow'>> {

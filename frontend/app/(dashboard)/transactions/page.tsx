@@ -11,7 +11,7 @@ export default async function TransactionsPage({
   searchParams: Promise<{ date?: string, range?: string }>
 }) {
   const { date, range = 'ALL' } = await searchParams
-  const transactions = await getCashFlow()
+  const transactions = await getCashFlow({ range, date })
 
   return (
     <div className="space-y-6">

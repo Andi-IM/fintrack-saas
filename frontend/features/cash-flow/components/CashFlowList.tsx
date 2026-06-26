@@ -177,9 +177,12 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
               className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none cursor-pointer"
             >
               <option value="ALL">Semua Waktu</option>
+              <option value="TODAY">Hari Ini</option>
               <option value="1W">1 Minggu Terakhir</option>
+              <option value="MTD">Bulan Ini (MTD)</option>
               <option value="1M">1 Bulan Terakhir</option>
               <option value="3M">3 Bulan Terakhir</option>
+              <option value="YTD">Tahun Ini (YTD)</option>
               <option value="1Y">1 Tahun Terakhir</option>
             </select>
             <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
