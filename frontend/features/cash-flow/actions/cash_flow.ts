@@ -17,14 +17,26 @@ const cashFlowSchema = z.object({
   receipt_id: z.string().uuid().optional().nullable(),
 })
 
+import { CashFlowFilterOptions, PaginatedResult } from '@/lib/repositories/types'
+
 // Data-fetching action - called from Server Components, returns raw data.
-export async function getCashFlow(): Promise<Tables<'cash_flow'>[]> {
+export async function getCashFlow(options?: CashFlowFilterOptions): Promise<PaginatedResult<Tables<'cash_flow'>>> {
   try {
     const repo = getCashFlowRepository()
-    return await repo.findAll()
+    return await repo.findAll(options)
   } catch (error: any) {
     console.error("Error fetching cash flow:", error)
-    return []
+    return { data: [], count: 0 }
+  }
+}
+
+export async function getCashFlowById(id: string): Promise<Tables<'cash_flow'> | null> {
+  try {
+    const repo = getCashFlowRepository()
+    return await repo.findById(id)
+  } catch (error: any) {
+    console.error("Error fetching cash flow by id:", error)
+    return null
   }
 }
 

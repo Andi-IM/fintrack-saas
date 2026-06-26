@@ -55,3 +55,7 @@ Setiap keputusan desain yang signifikan dan berpengaruh besar terhadap struktur 
 - [ADR-048](048-fully-gemini-based-receipt-parsing-and-vision-only.md) - Fully Gemini-Based Receipt Parsing and Google AI Vision Only
 - [ADR-049](049-local-email-password-authentication.md) - Local Email & Password Authentication Support
 
+- [ADR-050](050-migrate-to-openai-compatible-parser-via-groq.md) - Migrate to OpenAI Compatible Parser via Groq
+- [ADR-051](051-decouple-login-page-from-supabase-client.md) - Decouple Login Page from Supabase Client
+- [ADR-052](052-production-rls-implementation.md) - Production Row Level Security Implementation
+- [ADR-053](053-server-side-filtering.md) - Server-Side Data Filtering and Pagination

@@ -19,7 +19,7 @@ import { Edit2, Trash2, FileText, Plus, Minus, Receipt, Link as LinkIcon, Search
 import { cn } from "@/lib/utils"
 import { useCashFlowController } from "@/features/cash-flow/hooks/use-cash-flow-controller"
 
-export function CashFlowList({ transactions, timeRange }: { transactions: Tables<'cash_flow'>[], dateFilter?: string, timeRange: string }) {
+export function CashFlowList({ transactions, totalItems, timeRange }: { transactions: Tables<'cash_flow'>[], totalItems: number, timeRange: string }) {
   const router = useRouter()
   
   // Delegate state management to custom hook controller abstraction
@@ -50,9 +50,12 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
     validPage,
     limit,
     startIndex,
-    totalItems,
     totalPages,
-  } = useCashFlowController({ initialTransactions: transactions, timeRange })
+  } = useCashFlowController({ 
+    initialTransactions: transactions, 
+    serverTotalItems: totalItems,
+    timeRange 
+  })
 
   const handleEdit = (id: string) => {
     router.push(`/add?edit=${id}`)
@@ -177,9 +180,12 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
               className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none cursor-pointer"
             >
               <option value="ALL">Semua Waktu</option>
+              <option value="TODAY">Hari Ini</option>
               <option value="1W">1 Minggu Terakhir</option>
+              <option value="MTD">Bulan Ini (MTD)</option>
               <option value="1M">1 Bulan Terakhir</option>
               <option value="3M">3 Bulan Terakhir</option>
+              <option value="YTD">Tahun Ini (YTD)</option>
               <option value="1Y">1 Tahun Terakhir</option>
             </select>
             <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">

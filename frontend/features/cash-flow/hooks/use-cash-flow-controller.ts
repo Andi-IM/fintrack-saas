@@ -2,51 +2,52 @@ import { useMemo, useState, useEffect } from 'react'
 import { useQueryState } from 'nuqs'
 import { Tables } from '@/lib/database.types'
 import { deleteCashFlow } from '@/features/cash-flow/actions/cash_flow'
-import { filterTransactionsByRange } from '@/lib/utils/transaction'
 
 export interface UseCashFlowControllerProps {
   initialTransactions: Tables<'cash_flow'>[]
+  serverTotalItems: number
   timeRange: string
 }
 
-export function useCashFlowController({ initialTransactions, timeRange }: UseCashFlowControllerProps) {
+export function useCashFlowController({ initialTransactions, serverTotalItems, timeRange }: UseCashFlowControllerProps) {
   // Mobile Drawer State
   const [activeMobileTx, setActiveMobileTx] = useState<Tables<'cash_flow'> | null>(null)
 
   // URL-synchronized query states for search and filters
+  // shallow: false means changing these will trigger a server-side fetch
   const [search, setSearch] = useQueryState('search', {
     defaultValue: '',
-    shallow: true,
+    shallow: false,
   })
 
   const [category, setCategory] = useQueryState('category', {
     defaultValue: 'all',
-    shallow: true,
+    shallow: false,
   })
 
   const [payment, setPayment] = useQueryState('payment', {
     defaultValue: 'all',
-    shallow: true,
+    shallow: false,
   })
 
   const [source, setSource] = useQueryState('source', {
     defaultValue: 'all',
-    shallow: true,
+    shallow: false,
   })
 
   const [page, setPage] = useQueryState('page', {
     defaultValue: '1',
-    shallow: true,
+    shallow: false,
   })
 
   const [pageSize, setPageSize] = useQueryState('pageSize', {
     defaultValue: '15',
-    shallow: true,
+    shallow: false,
   })
 
   const [range, setRange] = useQueryState('range', {
     defaultValue: timeRange || 'ALL',
-    shallow: true,
+    shallow: false,
   })
 
   const [dateFilter, setDateFilter] = useQueryState('date', {
@@ -137,55 +138,16 @@ export function useCashFlowController({ initialTransactions, timeRange }: UseCas
     return Array.from(methods).sort()
   }, [localTransactions])
 
-  // Filter pipeline
-  const filteredTransactions = useMemo(() => {
-    let result = filterTransactionsByRange(localTransactions, range || 'ALL')
-
-    if (dateFilter) {
-      result = result.filter(tx => tx.date.split('T')[0] === dateFilter)
-    }
-
-    if (search) {
-      const q = search.toLowerCase()
-      result = result.filter(tx => 
-        (tx.description && tx.description.toLowerCase().includes(q)) ||
-        (tx.sub_category && tx.sub_category.toLowerCase().includes(q)) ||
-        (tx.main_category && tx.main_category.toLowerCase().includes(q))
-      )
-    }
-
-    if (category && category !== 'all') {
-      result = result.filter(tx => tx.main_category === category)
-    }
-
-    if (payment && payment !== 'all') {
-      result = result.filter(tx => tx.payment_method === payment)
-    }
-
-    if (source && source !== 'all') {
-      if (source === 'receipt') {
-        result = result.filter(tx => tx.receipt_id !== null)
-      } else if (source === 'statement') {
-        result = result.filter(tx => tx.source_item_id !== null)
-      } else if (source === 'manual') {
-        result = result.filter(tx => tx.receipt_id === null && tx.source_item_id === null)
-      }
-    }
-
-    return result
-  }, [localTransactions, range, dateFilter, search, category, payment, source])
-
-  // Pagination calculation
+  // Pagination calculation based on serverTotalItems
   const currentPage = parseInt(page || '1', 10) || 1
   const limit = parseInt(pageSize || '15', 10) || 15
-  const totalItems = filteredTransactions.length
+  const totalItems = serverTotalItems
   const totalPages = Math.ceil(totalItems / limit) || 1
   const validPage = Math.min(Math.max(currentPage, 1), totalPages)
   const startIndex = (validPage - 1) * limit
 
-  const paginatedTransactions = useMemo(() => {
-    return filteredTransactions.slice(startIndex, startIndex + limit)
-  }, [filteredTransactions, startIndex, limit])
+  // Since data is fully paginated and filtered on the server, localTransactions IS the paginated view.
+  const paginatedTransactions = localTransactions
 
   const hasActiveFilters = !!(search || category !== 'all' || payment !== 'all' || source !== 'all' || (range && range !== 'ALL'))
 
@@ -229,7 +191,7 @@ export function useCashFlowController({ initialTransactions, timeRange }: UseCas
     handleResetFilters,
     uniqueCategories,
     uniquePaymentMethods,
-    filteredTransactions,
+    filteredTransactions: localTransactions,
     paginatedTransactions,
     hasActiveFilters,
     pageNumbers,

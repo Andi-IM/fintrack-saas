@@ -9,9 +9,9 @@ import { useQueryState } from 'nuqs'
 import { Tables } from "@/lib/database.types"
 
 import { useMemo } from 'react'
-import { formatCurrency, filterTransactionsByRange } from '@/lib/utils/transaction'
+import { formatCurrency } from '@/lib/utils/transaction'
 
-export function TransactionChart({ transactions, timeRange: initialRange }: { transactions: Tables<'cash_flow'>[], timeRange: string }) {
+export function TransactionChart({ transactions, }: { transactions: Tables<'cash_flow'>[] }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isMounted, setIsMounted] = useState(false)
@@ -29,9 +29,8 @@ export function TransactionChart({ transactions, timeRange: initialRange }: { tr
     setRange(newRange)
   }
 
-  const timeFilteredTransactions = useMemo(() => {
-    return filterTransactionsByRange(transactions, range)
-  }, [transactions, range])
+  // Data is already filtered by timeRange on the server
+  const timeFilteredTransactions = transactions
 
   const chartData = useMemo(() => {
     const chartDataMap = timeFilteredTransactions.reduce((acc, tx) => {
@@ -59,12 +58,12 @@ export function TransactionChart({ transactions, timeRange: initialRange }: { tr
     <Card className="shadow-sm border-slate-200 rounded-xl bg-white">
       <CardHeader className="border-b border-slate-100 flex flex-row items-center justify-between pb-3 pt-4 px-6">
         <CardTitle className="text-sm font-bold text-slate-800">Financial Overview</CardTitle>
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
-          {['1W', '1M', '3M', '1Y'].map(r => (
+        <div className="flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200 justify-end">
+          {['TODAY', '1W', 'MTD', '1M', '3M', 'YTD', '1Y'].map(r => (
             <button 
               key={r} 
               onClick={() => handleRangeChange(r)}
-              className={["px-3 py-1 rounded-md text-[10px] font-bold transition-all", range === r ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-600 hover:text-slate-800'].join(" ")}
+              className={["px-2 py-1 rounded-md text-[10px] font-bold transition-all", range === r ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-600 hover:text-slate-800'].join(" ")}
             >  {r}
             </button>
           ))}

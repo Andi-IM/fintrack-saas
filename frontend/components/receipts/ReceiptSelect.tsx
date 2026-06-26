@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from "react"
-import { Check, ChevronsUpDown, Receipt, Calendar as CalendarIcon, Store } from "lucide-react"
+import { Check, ChevronsUpDown, Calendar as CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -47,7 +47,7 @@ export function ReceiptSelect({ value, onChange, onSelect, disabled }: ReceiptSe
         if (receiptsRes.success && receiptsRes.data) {
           // Get all receipt IDs that are already linked in cash_flow
           const linkedReceiptIds = new Set(
-            cashFlows
+            cashFlows.data
               .filter((cf: Tables<'cash_flow'>) => cf.receipt_id)
               .map((cf: Tables<'cash_flow'>) => cf.receipt_id)
           )

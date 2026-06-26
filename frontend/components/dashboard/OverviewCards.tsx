@@ -2,13 +2,12 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/ca
 import { Banknote, TrendingUp, TrendingDown, PiggyBank } from "lucide-react"
 import { Tables } from "@/lib/database.types"
 import { useMemo } from 'react'
-import { formatCurrency, filterTransactionsByRange } from "@/lib/utils/transaction"
+import { formatCurrency } from "@/lib/utils/transaction"
 import { cn } from "@/lib/utils"
 
-export function OverviewCards({ transactions, timeRange }: { transactions: Tables<'cash_flow'>[], timeRange: string }) {
-  const timeFilteredTransactions = useMemo(() => {
-    return filterTransactionsByRange(transactions, timeRange)
-  }, [transactions, timeRange])
+export function OverviewCards({ transactions }: { transactions: Tables<'cash_flow'>[] }) {
+  // Data is already filtered by timeRange on the server
+  const timeFilteredTransactions = transactions
 
   const { totalIncome, totalExpense } = useMemo(() => {
     const income = timeFilteredTransactions.reduce((acc, t) => acc + Number(t.income || 0), 0)

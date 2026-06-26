@@ -1,17 +1,33 @@
-import { Suspense } from 'react'
 import { getCashFlow } from '@/features/cash-flow/actions/cash_flow'
 import { CashFlowList } from '@/features/cash-flow/components/CashFlowList'
-import { CashFlowSkeleton } from '@/components/ui/cash-flow-skeleton'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string, range?: string }>
+  searchParams: Promise<{ 
+    date?: string, 
+    range?: string,
+    search?: string,
+    category?: string,
+    payment?: string,
+    source?: string,
+    page?: string,
+    pageSize?: string
+  }>
 }) {
-  const { date, range = 'ALL' } = await searchParams
-  const transactions = await getCashFlow()
+  const { date, range = 'ALL', search, category, payment, source, page = '1', pageSize = '15' } = await searchParams
+  const result = await getCashFlow({ 
+    range, 
+    date,
+    search,
+    category,
+    payment_method: payment,
+    source,
+    page: parseInt(page, 10) || 1,
+    limit: parseInt(pageSize, 10) || 15
+  })
 
   return (
     <div className="space-y-6">
@@ -32,7 +48,11 @@ export default async function TransactionsPage({
         </div>
       </div>
 
-      <CashFlowList transactions={transactions} dateFilter={date} timeRange={range} />
+      <CashFlowList 
+        transactions={result.data} 
+        totalItems={result.count}
+        timeRange={range} 
+      />
     </div>
   )
 }

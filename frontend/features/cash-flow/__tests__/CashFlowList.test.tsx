@@ -85,7 +85,7 @@ describe('CashFlowList Component', () => {
   })
 
   it('renders transactions successfully on desktop view', () => {
-    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    render(<CashFlowList transactions={mockTransactions} totalItems={mockTransactions.length} timeRange="ALL" />)
 
     expect(screen.getAllByText('Beli Kopi Susu')[0]).toBeInTheDocument()
     expect(screen.getAllByText('Gaji Bulanan')[0]).toBeInTheDocument()
@@ -94,14 +94,14 @@ describe('CashFlowList Component', () => {
   })
 
   it('renders categorized tags correctly', () => {
-    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    render(<CashFlowList transactions={mockTransactions} totalItems={mockTransactions.length} timeRange="ALL" />)
 
     expect(screen.getAllByText('Makanan & Minuman').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Gaji').length).toBeGreaterThan(0)
   })
 
   it('toggles mobile drawer on card tap', () => {
-    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    render(<CashFlowList transactions={mockTransactions} totalItems={mockTransactions.length} timeRange="ALL" />)
 
     const mobileHeading = screen.getAllByText('Beli Kopi Susu').find(el => el.tagName === 'H4')
     const cardElement = mobileHeading?.closest('.cursor-pointer')
@@ -115,7 +115,7 @@ describe('CashFlowList Component', () => {
   })
 
   it('triggers search filter changes', async () => {
-    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    render(<CashFlowList transactions={mockTransactions} totalItems={mockTransactions.length} timeRange="ALL" />)
 
     const searchInput = screen.getByPlaceholderText('Cari deskripsi / kategori...')
     fireEvent.change(searchInput, { target: { value: 'Gaji' } })
@@ -124,7 +124,7 @@ describe('CashFlowList Component', () => {
   })
 
   it('calls router.push when edit button is clicked on desktop', () => {
-    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    render(<CashFlowList transactions={mockTransactions} totalItems={mockTransactions.length} timeRange="ALL" />)
     const editBtn = screen.getAllByRole('button').find(btn => btn.className.includes('text-indigo-700'))!
     fireEvent.click(editBtn)
     expect(mockPush).toHaveBeenCalledWith('/add?edit=tx-1')
@@ -135,7 +135,7 @@ describe('CashFlowList Component', () => {
       ...mockControllerReturn,
       dateFilter: '2026-06-19',
     } as any)
-    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    render(<CashFlowList transactions={mockTransactions} totalItems={mockTransactions.length} timeRange="ALL" />)
     const dateFilterBtn = screen.getByText(/Filter Tanggal/i)
     fireEvent.click(dateFilterBtn)
     expect(mockControllerReturn.handleClearDateFilter).toHaveBeenCalled()
@@ -146,7 +146,7 @@ describe('CashFlowList Component', () => {
       ...mockControllerReturn,
       hasActiveFilters: true,
     } as any)
-    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    render(<CashFlowList transactions={mockTransactions} totalItems={mockTransactions.length} timeRange="ALL" />)
     const clearBtn = screen.getByText(/Bersihkan Filter/i)
     fireEvent.click(clearBtn)
     expect(mockControllerReturn.handleResetFilters).toHaveBeenCalled()
@@ -157,14 +157,14 @@ describe('CashFlowList Component', () => {
       ...mockControllerReturn,
       search: 'Kopi',
     } as any)
-    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    render(<CashFlowList transactions={mockTransactions} totalItems={mockTransactions.length} timeRange="ALL" />)
     const clearBtn = screen.getByRole('textbox').nextSibling! as HTMLElement
     fireEvent.click(clearBtn)
     expect(mockControllerReturn.handleSearchChange).toHaveBeenCalledWith('')
   })
 
   it('calls filter handlers on select change', () => {
-    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    render(<CashFlowList transactions={mockTransactions} totalItems={mockTransactions.length} timeRange="ALL" />)
     
     const selects = screen.getAllByRole('combobox')
     
@@ -192,7 +192,7 @@ describe('CashFlowList Component', () => {
       validPage: 2,
       totalPages: 5,
     } as any)
-    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    render(<CashFlowList transactions={mockTransactions} totalItems={mockTransactions.length} timeRange="ALL" />)
 
     // Page size change
     const pageSizeSelect = screen.getByDisplayValue('10')
@@ -222,7 +222,7 @@ describe('CashFlowList Component', () => {
       activeMobileTx,
     } as any)
     
-    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    render(<CashFlowList transactions={mockTransactions} totalItems={mockTransactions.length} timeRange="ALL" />)
 
     // Click Edit in mobile drawer
     const editBtn = screen.getByText(/Edit Transaksi/i)
@@ -248,7 +248,7 @@ describe('CashFlowList Component', () => {
   })
 
   it('handles desktop delete transaction click', () => {
-    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    render(<CashFlowList transactions={mockTransactions} totalItems={mockTransactions.length} timeRange="ALL" />)
     const deleteBtn = screen.getAllByRole('button').find(btn => btn.className.includes('text-rose-700'))!
     fireEvent.click(deleteBtn)
     expect(mockControllerReturn.handleDelete).toHaveBeenCalledWith('tx-1')
@@ -261,7 +261,7 @@ describe('CashFlowList Component', () => {
       validPage: 1,
       totalPages: 5,
     } as any)
-    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    render(<CashFlowList transactions={mockTransactions} totalItems={mockTransactions.length} timeRange="ALL" />)
     expect(screen.getByText('...')).toBeInTheDocument()
   })
 
@@ -291,7 +291,7 @@ describe('CashFlowList Component', () => {
       ...mockControllerReturn,
       activeMobileTx: incomeTx,
     } as any)
-    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    render(<CashFlowList transactions={mockTransactions} totalItems={mockTransactions.length} timeRange="ALL" />)
 
     // Should render + 10.000.000 in emerald text (with potential Rp symbol)
     const incomeEls = screen.getAllByText(/\+\s*(Rp\.?\s*)?10\.000\.000/)
@@ -305,7 +305,7 @@ describe('CashFlowList Component', () => {
       ...mockControllerReturn,
       activeMobileTx,
     } as any)
-    render(<CashFlowList transactions={mockTransactions} timeRange="ALL" />)
+    render(<CashFlowList transactions={mockTransactions} totalItems={mockTransactions.length} timeRange="ALL" />)
 
     vi.spyOn(window, 'confirm').mockReturnValue(false)
     const deleteBtn = screen.getByText(/Hapus Transaksi/i)

@@ -4,6 +4,7 @@
     "/*",
     "!/app",
     "!/components",
+    "!/features",
     "!/hooks",
     "!/lib",
     "**/*.test.ts",
