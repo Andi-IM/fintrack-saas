@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { 
   Sparkles, 
   TrendingUp, 
-  TrendingDown, 
+  
   AlertTriangle, 
   CheckCircle2, 
   HelpCircle,

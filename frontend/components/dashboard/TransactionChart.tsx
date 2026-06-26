@@ -11,7 +11,7 @@ import { Tables } from "@/lib/database.types"
 import { useMemo } from 'react'
 import { formatCurrency } from '@/lib/utils/transaction'
 
-export function TransactionChart({ transactions, timeRange: initialRange }: { transactions: Tables<'cash_flow'>[], timeRange: string }) {
+export function TransactionChart({ transactions, }: { transactions: Tables<'cash_flow'>[] }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isMounted, setIsMounted] = useState(false)

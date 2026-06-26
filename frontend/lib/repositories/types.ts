@@ -3,11 +3,22 @@ import { Tables } from '@/lib/database.types'
 export interface CashFlowFilterOptions {
   range?: string
   date?: string
+  search?: string
+  category?: string
+  payment_method?: string
+  source?: string
+  page?: number
+  limit?: number
+}
+
+export interface PaginatedResult<T> {
+  data: T[]
+  count: number
 }
 
 // Interface representing the cash flow database access layer
 export interface CashFlowRepository {
-  findAll(options?: CashFlowFilterOptions): Promise<Tables<'cash_flow'>[]>
+  findAll(options?: CashFlowFilterOptions): Promise<PaginatedResult<Tables<'cash_flow'>>>
   findById(id: string): Promise<Tables<'cash_flow'> | null>
   create(data: Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id' | 'source_item_id'> & { source_item_id?: string | null }): Promise<Tables<'cash_flow'>>
   update(id: string, data: Partial<Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id'>>): Promise<void>

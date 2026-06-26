@@ -5,7 +5,7 @@ import { useMemo } from 'react'
 import { formatCurrency } from "@/lib/utils/transaction"
 import { cn } from "@/lib/utils"
 
-export function OverviewCards({ transactions, timeRange }: { transactions: Tables<'cash_flow'>[], timeRange: string }) {
+export function OverviewCards({ transactions }: { transactions: Tables<'cash_flow'>[] }) {
   // Data is already filtered by timeRange on the server
   const timeFilteredTransactions = transactions
 

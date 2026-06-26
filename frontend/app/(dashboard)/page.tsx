@@ -5,7 +5,8 @@ import { TransactionChartLazy, FinancialInsightsLazy } from '@/components/dashbo
 import { DashboardSkeleton } from '@/components/ui/dashboard-skeleton'
 
 async function DashboardData({ range }: { range: string }) {
-  const transactions = await getCashFlow()
+  const result = await getCashFlow({ range })
+  const transactions = result.data
 
   return (
     <div className="space-y-8">

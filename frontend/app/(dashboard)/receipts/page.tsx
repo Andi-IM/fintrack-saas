@@ -1,5 +1,3 @@
-import { Suspense } from 'react'
-import { Skeleton } from '@/components/ui/skeleton'
 import { getReceipts } from '@/features/receipts/actions/receipts'
 import { ReceiptList } from '@/components/receipts/ReceiptList'
 import Link from 'next/link'

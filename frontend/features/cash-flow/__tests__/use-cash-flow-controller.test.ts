@@ -113,6 +113,7 @@ describe('useCashFlowController hook', () => {
   it('initializes default values correctly', () => {
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
       timeRange: 'ALL'
     }))
 
@@ -125,6 +126,7 @@ describe('useCashFlowController hook', () => {
   it('triggers search changes successfully', () => {
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
       timeRange: 'ALL'
     }))
 
@@ -139,6 +141,7 @@ describe('useCashFlowController hook', () => {
   it('handles reset filters', () => {
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
       timeRange: 'ALL'
     }))
 
@@ -157,6 +160,7 @@ describe('useCashFlowController hook', () => {
   it('triggers category and payment filter changes', () => {
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
       timeRange: 'ALL'
     }))
 
@@ -174,6 +178,7 @@ describe('useCashFlowController hook', () => {
   it('manages page pagination state', () => {
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
       timeRange: 'ALL'
     }))
 
@@ -191,6 +196,7 @@ describe('useCashFlowController hook', () => {
   it('triggers range and source changes successfully', () => {
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
       timeRange: 'ALL'
     }))
 
@@ -208,6 +214,7 @@ describe('useCashFlowController hook', () => {
   it('triggers clear date filter', () => {
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
       timeRange: 'ALL'
     }))
 
@@ -220,6 +227,7 @@ describe('useCashFlowController hook', () => {
   it('handles transaction deletion', async () => {
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
       timeRange: 'ALL'
     }))
 
@@ -235,6 +243,7 @@ describe('useCashFlowController hook', () => {
     vi.mocked(deleteCashFlow).mockResolvedValue({ success: false, error: 'Failed to delete' })
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
       timeRange: 'ALL'
     }))
 
@@ -246,39 +255,10 @@ describe('useCashFlowController hook', () => {
     expect(result.current.localTransactions.some(tx => tx.id === 'tx-1')).toBe(true)
   })
 
-  it('filters by source "receipt" correctly', () => {
-    mockQuerySource = 'receipt'
-    const { result } = renderHook(() => useCashFlowController({
-      initialTransactions: mockTransactions,
-      timeRange: 'ALL'
-    }))
-    expect(result.current.filteredTransactions.length).toBe(1)
-    expect(result.current.filteredTransactions[0].id).toBe('tx-3')
-  })
-
-  it('filters by source "statement" correctly', () => {
-    mockQuerySource = 'statement'
-    const { result } = renderHook(() => useCashFlowController({
-      initialTransactions: mockTransactions,
-      timeRange: 'ALL'
-    }))
-    expect(result.current.filteredTransactions.length).toBe(1)
-    expect(result.current.filteredTransactions[0].id).toBe('tx-2')
-  })
-
-  it('filters by source "manual" correctly', () => {
-    mockQuerySource = 'manual'
-    const { result } = renderHook(() => useCashFlowController({
-      initialTransactions: mockTransactions,
-      timeRange: 'ALL'
-    }))
-    expect(result.current.filteredTransactions.length).toBe(1)
-    expect(result.current.filteredTransactions[0].id).toBe('tx-1')
-  })
-
   it('calculates correct page numbers for totalPages <= 5', () => {
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
       timeRange: 'ALL'
     }))
     expect(result.current.pageNumbers).toEqual([1])
@@ -289,6 +269,7 @@ describe('useCashFlowController hook', () => {
     mockQueryPage = '2'
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: manyMockTransactions,
+      serverTotalItems: manyMockTransactions.length,
       timeRange: 'ALL'
     }))
     expect(result.current.pageNumbers).toEqual([1, 2, 3, 4, '...', 6])
@@ -299,6 +280,7 @@ describe('useCashFlowController hook', () => {
     mockQueryPage = '5'
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: manyMockTransactions,
+      serverTotalItems: manyMockTransactions.length,
       timeRange: 'ALL'
     }))
     expect(result.current.pageNumbers).toEqual([1, '...', 3, 4, 5, 6])
@@ -308,22 +290,11 @@ describe('useCashFlowController hook', () => {
     mockQueryPageSize = '5'
     mockQueryPage = '4'
     const { result } = renderHook(() => useCashFlowController({
-      initialTransactions: [...manyMockTransactions, { id: 'tx-31' } as any, { id: 'tx-32' } as any, { id: 'tx-33' } as any, { id: 'tx-34' } as any, { id: 'tx-35' } as any], // 35 items, 7 pages
+      initialTransactions: [...manyMockTransactions, { id: 'tx-31' } as any, { id: 'tx-32' } as any, { id: 'tx-33' } as any, { id: 'tx-34' } as any, { id: 'tx-35' } as any],
+      serverTotalItems: manyMockTransactions.length + 5, // 35 items, 7 pages
       timeRange: 'ALL'
     }))
     expect(result.current.pageNumbers).toEqual([1, '...', 3, 4, 5, '...', 7])
-  })
-
-  it('filters by date, sub_category, and source matching correctly', () => {
-    mockQuerySearch = 'Utama'
-    mockQuerySource = 'statement'
-
-    const { result } = renderHook(() => useCashFlowController({
-      initialTransactions: mockTransactions,
-      timeRange: 'ALL'
-    }))
-
-    expect(result.current.filteredTransactions.length).toBe(1)
   })
 
   it('covers filters for dateFilter, category, and payment', () => {
@@ -333,6 +304,7 @@ describe('useCashFlowController hook', () => {
 
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
       timeRange: 'ALL'
     }))
 
@@ -342,6 +314,7 @@ describe('useCashFlowController hook', () => {
   it('handles activeMobileTx state changes', () => {
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
       timeRange: 'ALL'
     }))
 
@@ -352,73 +325,11 @@ describe('useCashFlowController hook', () => {
     expect(result.current.activeMobileTx).toEqual(mockTransactions[0])
   })
 
-  it('handles filtering by date', () => {
-    mockQueryDate = '2026-06-19'
-    const { result } = renderHook(() => useCashFlowController({
-      initialTransactions: mockTransactions,
-      timeRange: 'ALL'
-    }))
-    expect(result.current.filteredTransactions.length).toBeGreaterThan(0)
-  })
-
-  it('handles filtering by category', () => {
-    mockQueryCategory = 'Gaji'
-    const { result } = renderHook(() => useCashFlowController({
-      initialTransactions: mockTransactions,
-      timeRange: 'ALL'
-    }))
-    expect(result.current.filteredTransactions.length).toBeGreaterThan(0)
-  })
-
-  it('handles filtering by payment method', () => {
-    mockQueryPayment = 'Gopay'
-    const { result } = renderHook(() => useCashFlowController({
-      initialTransactions: mockTransactions,
-      timeRange: 'ALL'
-    }))
-    expect(result.current.filteredTransactions.length).toBeGreaterThan(0)
-  })
-
-  it('handles filtering by search term', () => {
-    mockQuerySearch = 'Kopi'
-    const { result } = renderHook(() => useCashFlowController({
-      initialTransactions: mockTransactions,
-      timeRange: 'ALL'
-    }))
-    expect(result.current.filteredTransactions.length).toBeGreaterThan(0)
-  })
-
-  it('handles filtering by source: receipt', () => {
-    mockQuerySource = 'receipt'
-    const { result } = renderHook(() => useCashFlowController({
-      initialTransactions: mockTransactions,
-      timeRange: 'ALL'
-    }))
-    expect(result.current.filteredTransactions.some(tx => tx.receipt_id)).toBeTruthy()
-  })
-
-  it('handles filtering by source: statement', () => {
-    mockQuerySource = 'statement'
-    const { result } = renderHook(() => useCashFlowController({
-      initialTransactions: mockTransactions,
-      timeRange: 'ALL'
-    }))
-    expect(result.current.filteredTransactions.some(tx => tx.source_item_id)).toBeTruthy()
-  })
-
-  it('handles filtering by source: manual', () => {
-    mockQuerySource = 'manual'
-    const { result } = renderHook(() => useCashFlowController({
-      initialTransactions: mockTransactions,
-      timeRange: 'ALL'
-    }))
-    expect(result.current.filteredTransactions.every(tx => tx.receipt_id === null && tx.source_item_id === null)).toBeTruthy()
-  })
-
   it('calls handleClearDateFilter to clear date filter', () => {
     mockQueryDate = '2026-06-19'
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
       timeRange: 'ALL'
     }))
     act(() => {
@@ -435,6 +346,7 @@ describe('useCashFlowController hook', () => {
     mockQueryRange = 'THIS_WEEK'
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
       timeRange: 'ALL'
     }))
     act(() => {
@@ -452,6 +364,7 @@ describe('useCashFlowController hook', () => {
     vi.mocked(deleteCashFlow).mockResolvedValue({ success: false, error: 'Failed to delete' })
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
       timeRange: 'ALL'
     }))
     await act(async () => {
@@ -464,6 +377,7 @@ describe('useCashFlowController hook', () => {
     mockQueryPageSize = '2'
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
       timeRange: 'ALL'
     }))
     expect(result.current.pageNumbers).toEqual([1,2]) // 4 items, 2/page → 2 pages
@@ -479,6 +393,7 @@ describe('useCashFlowController hook', () => {
     mockQueryPageSize = '10'
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: manyMockTransactions,
+      serverTotalItems: manyMockTransactions.length,
       timeRange: 'ALL'
     }))
     expect(result.current.pageNumbers).toEqual([1,2,3,4,'...', 10])
@@ -494,19 +409,10 @@ describe('useCashFlowController hook', () => {
     mockQueryPageSize = '10'
     const { result } = renderHook(() => useCashFlowController({
       initialTransactions: manyMockTransactions,
+      serverTotalItems: manyMockTransactions.length,
       timeRange: 'ALL'
     }))
     expect(result.current.pageNumbers).toEqual([1,'...',7,8,9,10])
   })
 
-  it('handles pagination with multiple pages', () => {
-    mockQueryPage = '2'
-    mockQueryPageSize = '1'
-    const { result } = renderHook(() => useCashFlowController({
-      initialTransactions: mockTransactions,
-      timeRange: 'ALL'
-    }))
-    expect(result.current.validPage).toBe(2)
-    expect(result.current.paginatedTransactions.length).toBe(1)
-  })
 })

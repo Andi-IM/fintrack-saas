@@ -27,7 +27,7 @@ describe('cash_flow server actions', () => {
     it('returns empty array on database error', async () => {
       mockRepo.findAll = vi.fn().mockRejectedValue(new Error('DB connection lost'))
       const result = await getCashFlow()
-      expect(result).toEqual([])
+      expect(result).toEqual({ data: [], count: 0 })
     })
 
     it('returns data on success', async () => {

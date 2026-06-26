@@ -1,10 +1,10 @@
 import { Tables } from '@/lib/database.types'
-import { CashFlowRepository, CashFlowFilterOptions } from './types'
+import { CashFlowRepository, CashFlowFilterOptions, PaginatedResult } from './types'
 
 import { readDB, writeDB } from './fs-mock-db'
 
 export class FakeCashFlowRepository implements CashFlowRepository {
-  async findAll(options?: CashFlowFilterOptions): Promise<Tables<'cash_flow'>[]> {
+  async findAll(options?: CashFlowFilterOptions): Promise<PaginatedResult<Tables<'cash_flow'>>> {
     const db = readDB()
     let results = [...db.cashFlows]
 
@@ -37,8 +37,44 @@ export class FakeCashFlowRepository implements CashFlowRepository {
       }
     }
 
+    if (options?.search) {
+      const q = options.search.toLowerCase()
+      results = results.filter(cf => 
+        (cf.description?.toLowerCase().includes(q)) || 
+        (cf.main_category?.toLowerCase().includes(q)) || 
+        (cf.sub_category?.toLowerCase().includes(q))
+      )
+    }
+
+    if (options?.category && options.category !== 'all') {
+      results = results.filter(cf => cf.main_category === options.category)
+    }
+
+    if (options?.payment_method && options.payment_method !== 'all') {
+      results = results.filter(cf => cf.payment_method === options.payment_method)
+    }
+
+    if (options?.source && options.source !== 'all') {
+      if (options.source === 'receipt') {
+        results = results.filter(tx => tx.receipt_id !== null)
+      } else if (options.source === 'statement') {
+        results = results.filter(tx => tx.source_item_id !== null)
+      } else if (options.source === 'manual') {
+        results = results.filter(tx => tx.receipt_id === null && tx.source_item_id === null)
+      }
+    }
+
+    const count = results.length
+
     // Mengembalikan data diurutkan berdasarkan tanggal menurun (descending)
-    return results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    results = results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+    if (options?.page && options?.limit) {
+      const startIndex = (options.page - 1) * options.limit
+      results = results.slice(startIndex, startIndex + options.limit)
+    }
+
+    return { data: results, count }
   }
 
   async findById(id: string): Promise<Tables<'cash_flow'> | null> {

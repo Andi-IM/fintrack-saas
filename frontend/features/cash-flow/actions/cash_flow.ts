@@ -17,16 +17,16 @@ const cashFlowSchema = z.object({
   receipt_id: z.string().uuid().optional().nullable(),
 })
 
-import { CashFlowFilterOptions } from '@/lib/repositories/types'
+import { CashFlowFilterOptions, PaginatedResult } from '@/lib/repositories/types'
 
 // Data-fetching action - called from Server Components, returns raw data.
-export async function getCashFlow(options?: CashFlowFilterOptions): Promise<Tables<'cash_flow'>[]> {
+export async function getCashFlow(options?: CashFlowFilterOptions): Promise<PaginatedResult<Tables<'cash_flow'>>> {
   try {
     const repo = getCashFlowRepository()
     return await repo.findAll(options)
   } catch (error: any) {
     console.error("Error fetching cash flow:", error)
-    return []
+    return { data: [], count: 0 }
   }
 }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from "react"
-import { Check, ChevronsUpDown, Search, Banknote, Calendar as CalendarIcon, Hash } from "lucide-react"
+import { Check, ChevronsUpDown, Calendar as CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -47,7 +47,7 @@ export function StatementItemSelect({ value, onChange, onSelect, disabled, filte
         
         if (statementsRes.success && statementsRes.data) {
           const linkedItemIds = new Set(
-            cashFlows
+            cashFlows.data
               .filter((cf: Tables<'cash_flow'>) => cf.source_item_id)
               .map((cf: Tables<'cash_flow'>) => cf.source_item_id)
           )

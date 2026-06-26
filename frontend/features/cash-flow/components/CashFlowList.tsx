@@ -19,7 +19,7 @@ import { Edit2, Trash2, FileText, Plus, Minus, Receipt, Link as LinkIcon, Search
 import { cn } from "@/lib/utils"
 import { useCashFlowController } from "@/features/cash-flow/hooks/use-cash-flow-controller"
 
-export function CashFlowList({ transactions, timeRange }: { transactions: Tables<'cash_flow'>[], dateFilter?: string, timeRange: string }) {
+export function CashFlowList({ transactions, totalItems, timeRange }: { transactions: Tables<'cash_flow'>[], totalItems: number, timeRange: string }) {
   const router = useRouter()
   
   // Delegate state management to custom hook controller abstraction
@@ -50,9 +50,12 @@ export function CashFlowList({ transactions, timeRange }: { transactions: Tables
     validPage,
     limit,
     startIndex,
-    totalItems,
     totalPages,
-  } = useCashFlowController({ initialTransactions: transactions, timeRange })
+  } = useCashFlowController({ 
+    initialTransactions: transactions, 
+    serverTotalItems: totalItems,
+    timeRange 
+  })
 
   const handleEdit = (id: string) => {
     router.push(`/add?edit=${id}`)
