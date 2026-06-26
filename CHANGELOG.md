@@ -1,3 +1,10 @@
+# [1.7.0-rc.5](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.4...v1.7.0-rc.5) (2026-06-26)
+
+
+### Features
+
+* implement OpenAI-based receipt and bank statement parsers using Groq API ([75f3707](https://github.com/Andi-IM/fintrack-saas/commit/75f37073a129ecc41a2611257c27e5e8ed16f93b))
+
 # [1.7.0-rc.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.3...v1.7.0-rc.4) (2026-06-26)
 
 
