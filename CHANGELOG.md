@@ -1,3 +1,10 @@
+# [1.7.0-rc.9](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.8...v1.7.0-rc.9) (2026-06-26)
+
+
+### Features
+
+* implement server-side dashboard filtering with new architecture documentation and update README ([cf28047](https://github.com/Andi-IM/fintrack-saas/commit/cf28047d16ad312c3443137394a23fc20d43e033))
+
 # [1.7.0-rc.8](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.7...v1.7.0-rc.8) (2026-06-26)
 
 
