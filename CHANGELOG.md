@@ -1,3 +1,13 @@
+# [1.7.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.1...v1.7.0-rc.1) (2026-06-26)
+
+
+### Features
+
+* add Gemini-powered OCR parsing for receipts and bank statements and initialize frontend project structure ([cddf754](https://github.com/Andi-IM/fintrack-saas/commit/cddf754a2bf3582c4516cc4ed31749381ad41e23))
+* **auth:** remove personal email and implement dynamic self-healing local auth ([25ea403](https://github.com/Andi-IM/fintrack-saas/commit/25ea403d15671127708ac30e4a833c9c92c63992))
+* configure Next.js environment, establish test-specific TypeScript configurations, and initialize authentication login form ([345d322](https://github.com/Andi-IM/fintrack-saas/commit/345d3226fb8e0f91c7e1a620c75ba929b691c8a2))
+* implement credential-based authentication and OCR receipt parsing infrastructure ([f27fe2e](https://github.com/Andi-IM/fintrack-saas/commit/f27fe2e99ebf28f376c93816d054f2bdc32d6349))
+
 ## [1.6.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.0...v1.6.1) (2026-06-22)
 
 
