@@ -7,7 +7,7 @@ Accepted
 The application previously used a passwordless email OTP (Magic Link) and password-based login mechanism. However, email-based authentication flows presented several issues:
 1. Free-tier Supabase projects impose a strict rate limit on email sending (3 emails per hour), leading to `over_email_send_rate_limit` (429) errors during active development.
 2. Email scanners and anti-virus proxies pre-fetch links, consuming the single-use token and invalidating the link before the developer can click it.
-3. Access control was hardcoded, making it difficult to restrict the application to only a single authorized user (`authorized@example.com`) securely without redeploying code.
+3. Access control was hardcoded, making it difficult to restrict the application to only a single authorized user securely without redeploying code.
 
 ## Decision
 1. **GitHub OAuth**: Migrate the authentication provider to GitHub OAuth utilizing Supabase's `signInWithOAuth` method.

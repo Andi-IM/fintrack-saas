@@ -85,13 +85,30 @@ describe('Auth Actions', () => {
       expect(redirect).toHaveBeenCalledWith('/')
     })
 
-    it('should return error when loginWithPassword fails', async () => {
+    it('should return error when login fails and silent signup also fails', async () => {
       process.env.AUTHORIZED_EMAIL = 'authorized@example.com'
-      vi.spyOn(fakeAuthService, 'loginWithPassword').mockResolvedValueOnce({ error: { message: 'Invalid credentials' } })
+      vi.spyOn(fakeAuthService, 'loginWithPassword').mockResolvedValue({ error: { message: 'Invalid credentials' } })
+      vi.spyOn(fakeAuthService, 'signUpWithPassword').mockResolvedValueOnce({ error: { message: 'Signup error' } })
       
       const result = await loginWithCredentials({ email: 'authorized@example.com', password: 'password123' })
       expect(result.success).toBe(false)
       expect((result as any).error).toBe('Invalid credentials')
+    })
+
+    it('should attempt silent signup and retry login on initial login failure', async () => {
+      process.env.AUTHORIZED_EMAIL = 'authorized@example.com'
+      // First login fails, second succeeds
+      vi.spyOn(fakeAuthService, 'loginWithPassword')
+        .mockResolvedValueOnce({ error: { message: 'User not found' } })
+        .mockResolvedValueOnce({ error: null })
+      
+      vi.spyOn(fakeAuthService, 'signUpWithPassword').mockResolvedValueOnce({ error: null })
+      
+      await loginWithCredentials({ email: 'authorized@example.com', password: 'password123' })
+      
+      expect(fakeAuthService.loginWithPassword).toHaveBeenCalledTimes(2)
+      expect(fakeAuthService.signUpWithPassword).toHaveBeenCalledWith('authorized@example.com', 'password123')
+      expect(redirect).toHaveBeenCalledWith('/')
     })
   })
 

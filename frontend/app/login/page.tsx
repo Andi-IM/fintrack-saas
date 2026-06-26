@@ -31,7 +31,7 @@ export default async function LoginPage({
         <CardContent className="pb-10 px-8">
           {isLocalSupabase ? (
             <>
-              <LoginForm />
+              <LoginForm defaultEmail={process.env.AUTHORIZED_EMAIL} />
               {message && (
                 <div className="mt-4 p-4 bg-rose-950/40 text-rose-300 rounded-xl text-sm font-medium border border-rose-900/60 text-center break-words">
                   {message}
