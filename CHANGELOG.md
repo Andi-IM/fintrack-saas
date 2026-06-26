@@ -1,3 +1,10 @@
+# [1.7.0-rc.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.3...v1.7.0-rc.4) (2026-06-26)
+
+
+### Bug Fixes
+
+* Update frontend/features/receipts/components/ReceiptReviewForm.tsx ([40bbf69](https://github.com/Andi-IM/fintrack-saas/commit/40bbf698dc0229856c80e68716d3d5887f686da5))
+
 # [1.7.0-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.2...v1.7.0-rc.3) (2026-06-26)
 
 
