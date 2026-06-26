@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { useSubmitScannedData } from '../hooks/use-submit-scanned-data'
-import { useScanStore } from '../hooks/use-scan-store'
+import { useSubmitScannedData } from '@/features/receipts/hooks/use-submit-scanned-data'
+import { useScanStore } from '@/features/receipts/hooks/use-scan-store'
 import { saveReceipt } from '@/features/receipts/actions/receipts'
 import { saveBankStatement } from '@/features/bank-statements/actions/statements'
 

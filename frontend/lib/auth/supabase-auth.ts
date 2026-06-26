@@ -21,8 +21,30 @@ export class SupabaseAuthService implements AuthService {
     }
 
     if (data.url) {
+      console.log('Redirect to:', data.url)
       redirect(data.url)
     }
+  }
+
+  async loginWithPassword(email: string, password: string): Promise<{ error: any }> {
+    const supabase = await createClient()
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+    return { error }
+  }
+
+  async signUpWithPassword(email: string, password: string): Promise<{ error: any }> {
+    const supabase = await createClient()
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${process.env.APP_URL || 'http://localhost:3000'}/auth/callback`,
+      },
+    })
+    return { error }
   }
 
   async logout(): Promise<void> {

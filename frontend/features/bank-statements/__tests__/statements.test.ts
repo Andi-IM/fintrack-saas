@@ -8,8 +8,9 @@ import {
   deleteStatementItem,
   addStatementItem,
   getStatementAnalytics,
-} from '../actions/statements'
-import { setStatementRepository, StatementRepository } from '@/lib/repositories/statements'
+} from '@/features/bank-statements/actions/statements'
+import { setStatementRepository } from '@/lib/repositories/statements'
+import { StatementRepository } from '@/lib/repositories/types'
 import { Tables } from '@/lib/database.types'
 
 describe('statements server actions', () => {
@@ -50,10 +51,8 @@ describe('statements server actions', () => {
 
       const result = await getGroupedBankStatements()
       expect(result.success).toBe(true)
-      if (result.success) {
-        expect(Object.keys(result.data)).toEqual(['BCA', 'Mandiri'])
-        expect(result.data['BCA']).toHaveLength(2)
-      }
+      expect(Object.keys((result as any).data)).toEqual(['BCA', 'Mandiri'])
+      expect((result as any).data['BCA']).toHaveLength(2)
     })
 
     it('returns error on failure', async () => {
@@ -61,7 +60,7 @@ describe('statements server actions', () => {
 
       const result = await getGroupedBankStatements()
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Failed to fetch bank statements')
+      expect((result as any).error).toBe('Failed to fetch bank statements')
     })
   })
 
@@ -71,7 +70,7 @@ describe('statements server actions', () => {
 
       const result = await getFileUrl('statements/1.pdf')
       expect(result.success).toBe(true)
-      expect(result.data).toBe('https://signed')
+      expect((result as any).data).toBe('https://signed')
     })
 
     it('returns error on failure', async () => {
@@ -79,7 +78,7 @@ describe('statements server actions', () => {
 
       const result = await getFileUrl('statements/1.pdf')
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Failed to get file access')
+      expect((result as any).error).toBe('Failed to get file access')
     })
   })
 
@@ -117,8 +116,8 @@ describe('statements server actions', () => {
         file: null as any,
       })
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Validation failed')
-      expect(result.fieldErrors).toBeDefined()
+      expect((result as any).error).toBe('Validation failed')
+      expect((result as any).fieldErrors).toBeDefined()
     })
 
     it('saves statement successfully when no existing statements exist', async () => {
@@ -127,7 +126,7 @@ describe('statements server actions', () => {
 
       const result = await saveBankStatement(validSave)
       expect(result.success).toBe(true)
-      expect(result.data?.statementId).toBe('stmt-new')
+      expect((result as any).data?.statementId).toBe('stmt-new')
       expect(mockRepo.save).toHaveBeenCalled()
     })
 
@@ -138,7 +137,7 @@ describe('statements server actions', () => {
 
       const result = await saveBankStatement(validSave)
       expect(result.success).toBe(false)
-      expect(result.error).toContain('sudah tercakup oleh laporan periode')
+      expect((result as any).error).toContain('sudah tercakup oleh laporan periode')
     })
 
     it('replaces existing statement when new one is superset', async () => {
@@ -172,7 +171,7 @@ describe('statements server actions', () => {
 
       const result = await saveBankStatement(overlapSave)
       expect(result.success).toBe(false)
-      expect(result.error).toContain('tumpang tindih dengan laporan periode')
+      expect((result as any).error).toContain('tumpang tindih dengan laporan periode')
     })
 
     it('handles exact match fallback when parsing range returns null', async () => {
@@ -187,7 +186,7 @@ describe('statements server actions', () => {
 
       const result = await saveBankStatement(invalidPeriodSave)
       expect(result.success).toBe(false)
-      expect(result.error).toContain('sudah pernah diunggah sebelumnya')
+      expect((result as any).error).toContain('sudah pernah diunggah sebelumnya')
     })
 
     it('returns error on save failure', async () => {
@@ -196,7 +195,7 @@ describe('statements server actions', () => {
 
       const result = await saveBankStatement(validSave)
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Upload failed')
+      expect((result as any).error).toBe('Upload failed')
     })
 
     it('returns fallback error message when error.message is falsy', async () => {
@@ -205,7 +204,7 @@ describe('statements server actions', () => {
 
       const result = await saveBankStatement(validSave)
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Failed to save bank statement')
+      expect((result as any).error).toBe('Failed to save bank statement')
     })
   })
 
@@ -218,7 +217,7 @@ describe('statements server actions', () => {
         type: 'invalid-type' as any,
       })
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Validation failed')
+      expect((result as any).error).toBe('Validation failed')
     })
 
     it('updates item and recalculates', async () => {
@@ -300,7 +299,7 @@ describe('statements server actions', () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Failed to update statement item')
+      expect((result as any).error).toBe('Failed to update statement item')
     })
   })
 
@@ -321,7 +320,7 @@ describe('statements server actions', () => {
 
       const result = await deleteStatementItem('item-999')
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Item not found')
+      expect((result as any).error).toBe('Item not found')
     })
 
     it('returns error when statement_id is missing from delete result', async () => {
@@ -329,7 +328,7 @@ describe('statements server actions', () => {
 
       const result = await deleteStatementItem('item-1')
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Statement ID is missing from the item')
+      expect((result as any).error).toBe('Statement ID is missing from the item')
     })
 
     it('returns error on delete database failure', async () => {
@@ -337,7 +336,7 @@ describe('statements server actions', () => {
 
       const result = await deleteStatementItem('item-1')
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Failed to delete statement item')
+      expect((result as any).error).toBe('Failed to delete statement item')
     })
   })
 
@@ -350,7 +349,7 @@ describe('statements server actions', () => {
         type: 'expense',
       })
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Validation failed')
+      expect((result as any).error).toBe('Validation failed')
     })
 
     it('adds item and recalculates (expense)', async () => {
@@ -406,7 +405,7 @@ describe('statements server actions', () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Failed to add statement item')
+      expect((result as any).error).toBe('Failed to add statement item')
     })
   })
 
@@ -416,11 +415,10 @@ describe('statements server actions', () => {
 
       const result = await getStatementAnalytics()
       expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.netWorth).toBe(0)
-        expect(result.data.bankSummaries).toHaveLength(0)
-        expect(result.data.balanceHistory).toHaveLength(0)
-      }
+      const data = (result as any).data
+      expect(data.netWorth).toBe(0)
+      expect(data.bankSummaries).toHaveLength(0)
+      expect(data.balanceHistory).toHaveLength(0)
     })
 
     it('calculates analytics correctly for multiple statements', async () => {
@@ -451,22 +449,21 @@ describe('statements server actions', () => {
 
       const result = await getStatementAnalytics()
       expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.netWorth).toBe(3300000) // 1500000 + 1800000
-        expect(result.data.totalIncome).toBe(500000)
-        expect(result.data.totalExpense).toBe(200000)
-        expect(result.data.bankSummaries).toHaveLength(2)
-        expect(result.data.balanceHistory).toHaveLength(2)
-        
-        const bcaSummary = result.data.bankSummaries.find(b => b.bankName === 'BCA')
-        expect(bcaSummary?.latestBalance).toBe(1500000)
-        expect(bcaSummary?.totalIncome).toBe(500000)
-        expect(bcaSummary?.openingBalance).toBe(1000000)
+      const data = (result as any).data
+      expect(data.netWorth).toBe(3300000) // 1500000 + 1800000
+      expect(data.totalIncome).toBe(500000)
+      expect(data.totalExpense).toBe(200000)
+      expect(data.bankSummaries).toHaveLength(2)
+      expect(data.balanceHistory).toHaveLength(2)
+      
+      const bcaSummary = data.bankSummaries.find((b: any) => b.bankName === 'BCA')
+      expect(bcaSummary?.latestBalance).toBe(1500000)
+      expect(bcaSummary?.totalIncome).toBe(500000)
+      expect(bcaSummary?.openingBalance).toBe(1000000)
 
-        const mandiriSummary = result.data.bankSummaries.find(b => b.bankName === 'Mandiri')
-        expect(mandiriSummary?.latestBalance).toBe(1800000)
-        expect(mandiriSummary?.totalExpense).toBe(200000)
-      }
+      const mandiriSummary = data.bankSummaries.find((b: any) => b.bankName === 'Mandiri')
+      expect(mandiriSummary?.latestBalance).toBe(1800000)
+      expect(mandiriSummary?.totalExpense).toBe(200000)
     })
 
     it('calculates balance from type when item.balance is missing', async () => {
@@ -488,11 +485,10 @@ describe('statements server actions', () => {
 
       const result = await getStatementAnalytics()
       expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.balanceHistory).toHaveLength(2)
-        expect(result.data.balanceHistory[0].balance).toBe(1500)
-        expect(result.data.balanceHistory[1].balance).toBe(1300)
-      }
+      const data = (result as any).data
+      expect(data.balanceHistory).toHaveLength(2)
+      expect(data.balanceHistory[0].balance).toBe(1500)
+      expect(data.balanceHistory[1].balance).toBe(1300)
     })
 
     it('sorts items with same date by id', async () => {
@@ -514,11 +510,10 @@ describe('statements server actions', () => {
 
       const result = await getStatementAnalytics()
       expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.balanceHistory[0].transactions.length).toBe(2)
-        expect(result.data.balanceHistory[0].transactions[0].description).toBe('First')
-        expect(result.data.balanceHistory[0].transactions[1].description).toBe('Second')
-      }
+      const data = (result as any).data
+      expect(data.balanceHistory[0].transactions.length).toBe(2)
+      expect(data.balanceHistory[0].transactions[0].description).toBe('First')
+      expect(data.balanceHistory[0].transactions[1].description).toBe('Second')
     })
 
     it('handles statements with unparsable statement_period (range is null)', async () => {

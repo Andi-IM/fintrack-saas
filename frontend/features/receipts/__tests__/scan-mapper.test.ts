@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mapReceiptResultToPayload, mapBankStatementResultToPayload, isReceiptItem, isBankTransaction } from '../utils/scan-mapper'
+import { mapReceiptResultToPayload, mapBankStatementResultToPayload, isReceiptItem, isBankTransaction } from '@/features/receipts/utils/scan-mapper'
 import { OCRResult, ReceiptItem, BankTransaction } from '@/lib/ocr/types'
 
 describe('scan-mapper utilities', () => {

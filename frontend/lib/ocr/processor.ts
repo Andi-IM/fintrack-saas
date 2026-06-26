@@ -1,20 +1,13 @@
 import { IExtractor, IParser } from './interfaces'
 import { OCRResult } from './types'
 import { VisionExtractor } from './vision'
-import { OcrSpaceExtractor } from './ocr-space'
 import { ReceiptParser } from './receipt-parser'
 import { BankStatementParser } from './bank-statement-parser'
 import { SeabankParser } from './banks/seabank-parser'
 import { JagoParser } from './banks/jago-parser'
 import { BniParser } from './banks/bni-parser'
 import { BsiParser } from './banks/bsi-parser'
-import { DoctrOcrExtractor } from './doctr'
-import { AtmReceiptParser } from './receipts/atm-parser'
-import { RaudhahSwalayanReceiptParser } from './receipts/raudhah-parser'
-import { ShoppingReceiptParser } from './receipts/shopping-parser'
-import { AciakMartReceiptParser } from './receipts/aciak-parser'
-import { CitraSwalayanReceiptParser } from './receipts/citra-parser'
-import { MinaSwalayanReceiptParser } from './receipts/mina-parser'
+import { GeminiReceiptParser } from './gemini-parser'
 
 export class DocumentProcessor {
   private static readonly instance: DocumentProcessor = new DocumentProcessor()
@@ -23,17 +16,10 @@ export class DocumentProcessor {
 
   private constructor() {
     // Register default strategies
-    this.registerExtractor(new DoctrOcrExtractor())
     this.registerExtractor(new VisionExtractor())
-    this.registerExtractor(new OcrSpaceExtractor())
     
     this.registerParser(new ReceiptParser([
-      new AtmReceiptParser(),
-      new RaudhahSwalayanReceiptParser(),
-      new AciakMartReceiptParser(),
-      new CitraSwalayanReceiptParser(),
-      new MinaSwalayanReceiptParser(),
-      new ShoppingReceiptParser(),
+      new GeminiReceiptParser(),
     ]))
     this.registerParser(new BankStatementParser([
       new BniParser(),

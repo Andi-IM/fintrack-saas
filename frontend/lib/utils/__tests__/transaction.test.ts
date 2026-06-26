@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatCurrency, filterTransactionsByRange } from '../transaction'
+import { formatCurrency, filterTransactionsByRange } from '@/lib/utils/transaction'
 import { Tables } from '@/lib/database.types'
 
 describe('transaction utils', () => {

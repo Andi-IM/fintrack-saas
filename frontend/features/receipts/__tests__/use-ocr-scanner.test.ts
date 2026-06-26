@@ -1,8 +1,8 @@
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { useOcrScanner } from '../hooks/use-ocr-scanner'
-import { useScanStore } from '../hooks/use-scan-store'
-import { scanDocumentWithAI } from '../actions/ocr'
+import { useOcrScanner } from '@/features/receipts/hooks/use-ocr-scanner'
+import { useScanStore } from '@/features/receipts/hooks/use-scan-store'
+import { scanDocumentWithAI } from '@/features/receipts/actions/ocr'
 
 vi.mock('../hooks/use-scan-store', () => ({
   useScanStore: vi.fn()
@@ -49,7 +49,7 @@ describe('useOcrScanner', () => {
   it('runs handleProcessScan successfully and animates progress', async () => {
     // Mock scanDocumentWithAI to take time
     let resolveScan: (value: any) => void
-    const scanPromise = new Promise(resolve => {
+    const scanPromise = new Promise<any>(resolve => {
       resolveScan = resolve
     })
     vi.mocked(scanDocumentWithAI).mockReturnValue(scanPromise)

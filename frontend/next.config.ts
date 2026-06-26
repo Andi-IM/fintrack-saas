@@ -1,8 +1,25 @@
 import type {NextConfig} from 'next';
 import { codecovNextJSWebpackPlugin } from "@codecov/nextjs-webpack-plugin";
+import os from 'os';
+
+// Dynamically retrieve all IPv4 addresses of this machine to allow HMR from mobile devices on any network.
+const getLocalDevOrigins = (): string[] => {
+  const origins = ['localhost:3000', 'localhost', '127.0.0.1:3000', '127.0.0.1'];
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const net of interfaces[name] || []) {
+      if (net.family === 'IPv4') {
+        origins.push(net.address);
+        origins.push(`${net.address}:3000`);
+      }
+    }
+  }
+  return origins;
+};
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  allowedDevOrigins: getLocalDevOrigins(),
   // Use webpack-based build (Turbopack default in Next.js 16 is incompatible
   // with the custom webpack config needed for Codecov bundle analysis).
   turbopack: {},

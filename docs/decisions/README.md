@@ -50,3 +50,8 @@ Setiap keputusan desain yang signifikan dan berpengaruh besar terhadap struktur 
 - [ADR-043](043-server-action-redirect-preservation.md) - Server Action Error Handling and Redirect Preservation Pattern
 - [ADR-044](044-build-time-e2e-fakes-and-dynamic-wait.md) - Build-Time Environment Injection for E2E Fakes and Dynamic Wait Strategies
 - [ADR-045](045-instant-navigation-with-suspense-and-loading-states.md) - Instant Navigation with Suspense and Streaming (loading.tsx)
+- [ADR-046](046-lazy-load-heavy-charts-for-tbt-optimization.md) - Lazy Load Heavy Charts for TBT Optimization
+- [ADR-047](047-standardize-frontend-testing-repository-pattern.md) - Standardize Frontend Testing Repository Pattern
+- [ADR-048](048-fully-gemini-based-receipt-parsing-and-vision-only.md) - Fully Gemini-Based Receipt Parsing and Google AI Vision Only
+- [ADR-049](049-local-email-password-authentication.md) - Local Email & Password Authentication Support
+

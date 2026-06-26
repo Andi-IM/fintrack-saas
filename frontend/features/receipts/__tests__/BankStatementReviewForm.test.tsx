@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { BankStatementReviewForm } from '../components/BankStatementReviewForm'
-import { useScanStore } from '../hooks/use-scan-store'
-import { useSubmitScannedData } from '../hooks/use-submit-scanned-data'
+import { BankStatementReviewForm } from '@/features/receipts/components/BankStatementReviewForm'
+import { useScanStore } from '@/features/receipts/hooks/use-scan-store'
+import { useSubmitScannedData } from '@/features/receipts/hooks/use-submit-scanned-data'
 import React from 'react'
 
 vi.mock('../hooks/use-scan-store', () => ({

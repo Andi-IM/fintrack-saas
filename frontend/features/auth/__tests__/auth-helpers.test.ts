@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { DefaultOriginResolver, resolveAuthOrigin } from '../actions/auth-helpers'
+import { DefaultOriginResolver, resolveAuthOrigin } from '@/features/auth/actions/auth-helpers'
 import { headers } from 'next/headers'
 
 // Mock next/headers

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { formatDateForInput, getBrowserTimezoneOffset } from '../date'
+import { formatDateForInput, getBrowserTimezoneOffset } from '@/lib/utils/date'
 
 describe('formatDateForInput', () => {
   it('formats a valid ISO string to datetime-local format', () => {

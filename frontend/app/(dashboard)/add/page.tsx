@@ -9,7 +9,7 @@ export default async function AddTransactionPage({
 }) {
   const { edit, scan } = await searchParams
 
-  let initialData = null
+  let initialData: any = null
   if (edit) {
     const cashFlows = await getCashFlow()
     initialData = cashFlows.find((t) => t.id === edit) || null

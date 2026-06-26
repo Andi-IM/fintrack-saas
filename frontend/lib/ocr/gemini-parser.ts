@@ -13,11 +13,16 @@ const getAiClient = () => {
 const receiptSchema: Schema = {
   type: Type.OBJECT,
   properties: {
-    merchant: { type: Type.STRING, description: 'Store or merchant name' },
+    merchant: { type: Type.STRING, description: 'Store, merchant, or bank name' },
     date: { type: Type.STRING, description: 'Date of the receipt in YYYY-MM-DD or DD/MM/YYYY format' },
     total: { type: Type.NUMBER, description: 'Total amount of the receipt' },
     paymentMethod: { type: Type.STRING, description: 'Payment method used e.g. Cash, Debit, Qris' },
     type: { type: Type.STRING, description: 'Must be exactly "shopping" or "atm"' },
+    address: { type: Type.STRING, description: 'Address of the store or merchant if available' },
+    atmId: { type: Type.STRING, description: 'ATM Terminal ID or ATM ID if it is an ATM receipt' },
+    transactionType: { type: Type.STRING, description: 'For ATM receipts: must be "withdrawal", "deposit", or "transfer". Null or omit otherwise.' },
+    fee: { type: Type.NUMBER, description: 'Admin fee for ATM transactions' },
+    referenceNumber: { type: Type.STRING, description: 'Reference number, resi number, or transaction number' },
     items: {
       type: Type.ARRAY,
       items: {
@@ -72,8 +77,9 @@ export class GeminiReceiptParser implements IReceiptParser {
 
     const prompt = `
       Extract structured receipt data from the following raw OCR text.
-      If the text appears to be an ATM receipt, classify the 'type' as 'atm'. 
-      Otherwise, classify it as 'shopping'.
+      Determine if this is a shopping/retail receipt (type: "shopping") or an ATM transaction receipt (type: "atm").
+      - For ATM receipts, identify transaction type (withdrawal, deposit, or transfer), ATM/terminal ID, reference number, and admin fee.
+      - For shopping receipts, extract the store merchant name, address, payment method, and line items.
       
       Raw OCR Text:
       ${text}
@@ -95,6 +101,24 @@ export class GeminiReceiptParser implements IReceiptParser {
 
     try {
       const parsedData = JSON.parse(response.text) as OCRResult
+
+      // Post-processing for ATM receipts to guarantee at least one item exists
+      if (parsedData.type === 'atm') {
+        const merchant = parsedData.merchant || 'ATM'
+        const txType = parsedData.transactionType || ''
+        const label = txType
+          ? `${txType.charAt(0).toUpperCase() + txType.slice(1)} - ${merchant}`
+          : merchant
+        if (!parsedData.items || parsedData.items.length === 0) {
+          parsedData.items = [{
+            name: label,
+            amount: parsedData.total || 0,
+            quantity: 1,
+            price: parsedData.total || 0
+          }]
+        }
+      }
+
       return parsedData
     } catch (e) {
       throw new Error('Failed to parse Gemini JSON response.')
