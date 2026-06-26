@@ -1,3 +1,10 @@
+# [1.7.0-rc.7](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.6...v1.7.0-rc.7) (2026-06-26)
+
+
+### Features
+
+* implement multi-tenant row-level security across all tables and private storage buckets with optimized query performance ([829a585](https://github.com/Andi-IM/fintrack-saas/commit/829a585a28f4083ff657fe7125d833689483081f))
+
 # [1.7.0-rc.6](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.5...v1.7.0-rc.6) (2026-06-26)
 
 
