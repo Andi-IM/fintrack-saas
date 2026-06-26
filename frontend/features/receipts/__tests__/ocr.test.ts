@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { scanDocumentWithAI } from '../actions/ocr'
+import { scanDocumentWithAI } from '@/features/receipts/actions/ocr'
 import { documentProcessor } from '@/lib/ocr/processor'
 
 vi.mock('@/lib/ocr/processor', () => ({
@@ -18,7 +18,7 @@ describe('ocr server actions', () => {
     const result = await scanDocumentWithAI(formData)
 
     expect(result.success).toBe(false)
-    expect(result.error).toBe('No valid file provided')
+    expect((result as any).error).toBe('No valid file provided')
   })
 
   it('returns error when file is a string instead of File/Blob', async () => {
@@ -27,7 +27,7 @@ describe('ocr server actions', () => {
     const result = await scanDocumentWithAI(formData)
 
     expect(result.success).toBe(false)
-    expect(result.error).toBe('No valid file provided')
+    expect((result as any).error).toBe('No valid file provided')
   })
 
   it('returns field errors when validation fails', async () => {
@@ -39,9 +39,9 @@ describe('ocr server actions', () => {
     const result = await scanDocumentWithAI(formData)
 
     expect(result.success).toBe(false)
-    expect(result.error).toBe('Invalid input')
-    expect(result.fieldErrors).toBeDefined()
-    expect(result.fieldErrors?.context).toBeDefined()
+    expect((result as any).error).toBe('Invalid input')
+    expect((result as any).fieldErrors).toBeDefined()
+    expect((result as any).fieldErrors?.context).toBeDefined()
   })
 
   it('returns success when processing returns valid result', async () => {
@@ -57,7 +57,7 @@ describe('ocr server actions', () => {
     const result = await scanDocumentWithAI(formData)
 
     expect(result.success).toBe(true)
-    expect(result.data).toEqual(mockResult)
+    expect((result as any).data).toEqual(mockResult)
     expect(documentProcessor.process).toHaveBeenCalledWith(expect.any(Blob), 'Receipt', '420')
   })
 
@@ -72,7 +72,7 @@ describe('ocr server actions', () => {
     const result = await scanDocumentWithAI(formData)
 
     expect(result.success).toBe(false)
-    expect(result.error).toBe('AI returned an empty result.')
+    expect((result as any).error).toBe('AI returned an empty result.')
   })
 
   it('returns error message when processor throws an error', async () => {
@@ -86,6 +86,6 @@ describe('ocr server actions', () => {
     const result = await scanDocumentWithAI(formData)
 
     expect(result.success).toBe(false)
-    expect(result.error).toBe('OCR engine offline')
+    expect((result as any).error).toBe('OCR engine offline')
   })
 })

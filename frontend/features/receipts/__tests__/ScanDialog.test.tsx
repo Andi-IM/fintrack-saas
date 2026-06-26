@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { ScanDialog } from '../components/ScanDialog'
-import { useScanStore } from '../hooks/use-scan-store'
-import { ScanProgressIndicator } from '../components/ScanProgressIndicator'
+import { ScanDialog } from '@/features/receipts/components/ScanDialog'
+import { useScanStore } from '@/features/receipts/hooks/use-scan-store'
+import { ScanProgressIndicator } from '@/features/receipts/components/ScanProgressIndicator'
 import React from 'react'
 
 // Mock next router
@@ -135,7 +135,7 @@ describe('ScanDialog Component', () => {
     
     expect(screen.getByText('Extraction Successful - Review & Edit')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Indomaret')).toBeInTheDocument()
-    expect(screen.getAllByDisplayValue('50000').length).toBeGreaterThan(0)
+    expect(screen.getAllByDisplayValue('50.000').length).toBeGreaterThan(0)
     expect(screen.getByDisplayValue('Roti')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Susu')).toBeInTheDocument()
   })

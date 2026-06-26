@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import React from 'react'
-import { BankStatementListView } from '../components/BankStatementListView'
+import { BankStatementListView } from '@/features/bank-statements/components/BankStatementListView'
 
 vi.mock('@/components/statements/ItemEditDialog', () => ({
   default: ({ open, title, onSave, onOpenChange, initialData }: any) => {

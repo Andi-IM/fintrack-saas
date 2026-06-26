@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useCashFlowController } from '../hooks/use-cash-flow-controller'
+import { useCashFlowController } from '@/features/cash-flow/hooks/use-cash-flow-controller'
 import { deleteCashFlow } from '@/features/cash-flow/actions/cash_flow'
 
 // Global mock state variables

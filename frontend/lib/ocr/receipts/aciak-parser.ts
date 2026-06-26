@@ -33,7 +33,7 @@ export class AciakMartReceiptParser implements IReceiptParser {
     let address = ''
     const startIdx = lines.findIndex(l => /jl\b|jalan\b/i.test(l))
     if (startIdx !== -1) {
-      const addressParts = []
+      const addressParts: string[] = []
       for (let i = startIdx; i < lines.length; i++) {
         const line = lines[i]
         if (/telp|fax|email|no\.|ksr:|kasir:/i.test(line)) break

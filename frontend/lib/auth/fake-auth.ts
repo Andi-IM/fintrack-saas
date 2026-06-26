@@ -18,6 +18,30 @@ export class FakeAuthService implements AuthService {
     redirect('/')
   }
 
+  async loginWithPassword(email: string, password: string): Promise<{ error: any }> {
+    const { cookies } = await import('next/headers')
+    const cookieStore = await cookies()
+    cookieStore.set('fintrack_fake_session', 'valid_test_session', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24, // 1 day
+      path: '/',
+    })
+    return { error: null }
+  }
+
+  async signUpWithPassword(email: string, password: string): Promise<{ error: any }> {
+    const { cookies } = await import('next/headers')
+    const cookieStore = await cookies()
+    cookieStore.set('fintrack_fake_session', 'valid_test_session', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24, // 1 day
+      path: '/',
+    })
+    return { error: null }
+  }
+
   async logout(): Promise<void> {
     const { cookies } = await import('next/headers')
     const cookieStore = await cookies()

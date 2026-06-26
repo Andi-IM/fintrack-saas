@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getCashFlow, insertCashFlow, updateCashFlow, deleteCashFlow } from '../actions/cash_flow'
-import { setCashFlowRepository, CashFlowRepository } from '@/lib/repositories/cash_flow'
+import { getCashFlow, insertCashFlow, updateCashFlow, deleteCashFlow } from '@/features/cash-flow/actions/cash_flow'
+import { setCashFlowRepository } from '@/lib/repositories/cash_flow'
+import { CashFlowRepository } from '@/lib/repositories/types'
 import { Tables } from '@/lib/database.types'
 
 // Mock next/cache
@@ -52,7 +53,7 @@ describe('cash_flow server actions', () => {
     it('fails validation when mandatory parameters are missing', async () => {
       const result = await insertCashFlow({} as any)
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Validation failed')
+      expect((result as any).error).toBe('Validation failed')
     })
 
     it('returns success and data on successful insertion', async () => {
@@ -72,14 +73,14 @@ describe('cash_flow server actions', () => {
       mockRepo.create = vi.fn().mockRejectedValue(new Error('Foreign key violation'))
       const result = await insertCashFlow(validArgs)
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Foreign key violation')
+      expect((result as any).error).toBe('Foreign key violation')
     })
 
     it('uses fallback error message when error.message is falsy', async () => {
       mockRepo.create = vi.fn().mockRejectedValue({})
       const result = await insertCashFlow(validArgs)
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Database error occurred')
+      expect((result as any).error).toBe('Database error occurred')
     })
   })
 
@@ -110,14 +111,14 @@ describe('cash_flow server actions', () => {
       mockRepo.update = vi.fn().mockRejectedValue(new Error('Not Found'))
       const result = await updateCashFlow('tx-1', validArgs)
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Not Found')
+      expect((result as any).error).toBe('Not Found')
     })
 
     it('uses fallback error message when error.message is falsy', async () => {
       mockRepo.update = vi.fn().mockRejectedValue({})
       const result = await updateCashFlow('tx-1', validArgs)
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Database error occurred')
+      expect((result as any).error).toBe('Database error occurred')
     })
   })
 
@@ -132,14 +133,14 @@ describe('cash_flow server actions', () => {
       mockRepo.delete = vi.fn().mockRejectedValue(new Error('Permission Denied'))
       const result = await deleteCashFlow('tx-1')
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Permission Denied')
+      expect((result as any).error).toBe('Permission Denied')
     })
 
     it('uses fallback error message when error.message is falsy', async () => {
       mockRepo.delete = vi.fn().mockRejectedValue({})
       const result = await deleteCashFlow('tx-1')
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Database error occurred')
+      expect((result as any).error).toBe('Database error occurred')
     })
   })
 })

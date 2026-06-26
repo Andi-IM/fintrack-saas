@@ -40,7 +40,7 @@ export class MinaSwalayanReceiptParser implements IReceiptParser {
     let address = ''
     const startIdx = lines.findIndex(l => /jl\b|jalan\b|besi-jangkang/i.test(l))
     if (startIdx !== -1) {
-      const addressParts = []
+      const addressParts: string[] = []
       for (let i = startIdx; i < lines.length; i++) {
         const line = lines[i]
         if (line.match(/^\d{2,4}[-#]\d+/)) break // Stop if looks like sequence number or date

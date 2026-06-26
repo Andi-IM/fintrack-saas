@@ -1,3 +1,48 @@
+# [1.7.0-rc.6](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.5...v1.7.0-rc.6) (2026-06-26)
+
+
+### Features
+
+* implement OpenAI-based receipt and bank statement parsers using Groq API ([57f266d](https://github.com/Andi-IM/fintrack-saas/commit/57f266d1e07cc2237121e8c168310ba7ff3c3fe6))
+
+# [1.7.0-rc.5](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.4...v1.7.0-rc.5) (2026-06-26)
+
+
+### Features
+
+* implement OpenAI-based receipt and bank statement parsers using Groq API ([75f3707](https://github.com/Andi-IM/fintrack-saas/commit/75f37073a129ecc41a2611257c27e5e8ed16f93b))
+
+# [1.7.0-rc.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.3...v1.7.0-rc.4) (2026-06-26)
+
+
+### Bug Fixes
+
+* Update frontend/features/receipts/components/ReceiptReviewForm.tsx ([40bbf69](https://github.com/Andi-IM/fintrack-saas/commit/40bbf698dc0229856c80e68716d3d5887f686da5))
+
+# [1.7.0-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.2...v1.7.0-rc.3) (2026-06-26)
+
+
+### Features
+
+* implement receipt review form component and supporting infrastructure layouts ([ae17d99](https://github.com/Andi-IM/fintrack-saas/commit/ae17d9931cee6d196cb25bf45a6e4dc3aef3f903))
+
+# [1.7.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.1...v1.7.0-rc.2) (2026-06-26)
+
+
+### Features
+
+* implement OCR document parsing with Groq-backed OpenAI integration ([cad17dd](https://github.com/Andi-IM/fintrack-saas/commit/cad17dd26cf9bd502eac3161b02516c6a2d19411))
+
+# [1.7.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.1...v1.7.0-rc.1) (2026-06-26)
+
+
+### Features
+
+* add Gemini-powered OCR parsing for receipts and bank statements and initialize frontend project structure ([cddf754](https://github.com/Andi-IM/fintrack-saas/commit/cddf754a2bf3582c4516cc4ed31749381ad41e23))
+* **auth:** remove personal email and implement dynamic self-healing local auth ([25ea403](https://github.com/Andi-IM/fintrack-saas/commit/25ea403d15671127708ac30e4a833c9c92c63992))
+* configure Next.js environment, establish test-specific TypeScript configurations, and initialize authentication login form ([345d322](https://github.com/Andi-IM/fintrack-saas/commit/345d3226fb8e0f91c7e1a620c75ba929b691c8a2))
+* implement credential-based authentication and OCR receipt parsing infrastructure ([f27fe2e](https://github.com/Andi-IM/fintrack-saas/commit/f27fe2e99ebf28f376c93816d054f2bdc32d6349))
+
 ## [1.6.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.0...v1.6.1) (2026-06-22)
 
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useScanStore } from '../hooks/use-scan-store'
+import { useScanStore } from '@/features/receipts/hooks/use-scan-store'
 import { OCRResult } from '@/lib/ocr/types'
 
 describe('useScanStore', () => {
@@ -36,12 +36,12 @@ describe('useScanStore', () => {
   })
 
   it('sets scanResult with value and updater function', () => {
-    const mockResult: OCRResult = { date: '2026-06-19', storeName: 'Test' }
+    const mockResult: OCRResult = { date: '2026-06-19', merchant: 'Test' }
     useScanStore.getState().setScanResult(mockResult)
     expect(useScanStore.getState().scanResult).toEqual(mockResult)
 
-    useScanStore.getState().setScanResult((prev) => prev ? { ...prev, storeName: 'Updated' } : null)
-    expect(useScanStore.getState().scanResult?.storeName).toBe('Updated')
+    useScanStore.getState().setScanResult((prev) => prev ? { ...prev, merchant: 'Updated' } : null)
+    expect(useScanStore.getState().scanResult?.merchant).toBe('Updated')
   })
 
   it('sets errorMessage', () => {
@@ -69,7 +69,7 @@ describe('useScanStore', () => {
     beforeEach(() => {
       const initialResult: OCRResult = {
         date: '2026-06-19',
-        storeName: 'Test Store',
+        merchant: 'Test Store',
         items: [
           { name: 'Apples', amount: 30000, quantity: 2, price: 15000 },
           { name: 'Bananas', amount: 20000, quantity: 1, price: 20000 },
@@ -115,13 +115,13 @@ describe('useScanStore', () => {
     })
 
     it('updates general scan result field', () => {
-      useScanStore.getState().updateScanResultField('storeName', 'Supermarket')
-      expect(useScanStore.getState().scanResult?.storeName).toBe('Supermarket')
+      useScanStore.getState().updateScanResultField('merchant', 'Supermarket')
+      expect(useScanStore.getState().scanResult?.merchant).toBe('Supermarket')
     })
 
     it('returns empty object if no scanResult exists when updating general fields', () => {
       useScanStore.getState().resetScan()
-      useScanStore.getState().updateScanResultField('storeName', 'Supermarket')
+      useScanStore.getState().updateScanResultField('merchant', 'Supermarket')
       expect(useScanStore.getState().scanResult).toBeNull()
     })
   })

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
-import BankStatementList from '../components/BankStatementList'
+import BankStatementList from '@/features/bank-statements/components/BankStatementList'
 import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { getGroupedBankStatements, getFileUrl, deleteBankStatement, updateStatementItem, deleteStatementItem, addStatementItem } from '@/features/bank-statements/actions/statements'

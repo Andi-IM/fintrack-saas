@@ -12,7 +12,7 @@ import {
   getReceiptFileUrl,
   updateReceipt,
   SaveReceiptInput,
-} from '../actions/receipts'
+} from '@/features/receipts/actions/receipts'
 import { setReceiptRepository, ReceiptRepository } from '@/lib/repositories/receipts'
 import { Tables } from '@/lib/database.types'
 
@@ -58,11 +58,11 @@ describe('receipts server actions', () => {
     it('returns validation error for missing required fields', async () => {
       const result = await saveReceipt({} as SaveReceiptInput)
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Validation failed')
+      expect((result as any).error).toBe('Validation failed')
     })
 
     it('saves receipt successfully with items', async () => {
-      const receipt = { id: 'rec-1', ...validInput, type: 'shopping' } as Tables<'receipts'>
+      const receipt = { id: 'rec-1', ...validInput, type: 'shopping' } as unknown as Tables<'receipts'>
       mockRepo.save = vi.fn().mockResolvedValue(receipt)
 
       const result = await saveReceipt({
@@ -71,7 +71,7 @@ describe('receipts server actions', () => {
       })
 
       expect(result.success).toBe(true)
-      expect(result.data?.receiptId).toBe('rec-1')
+      expect((result as any).data?.receiptId).toBe('rec-1')
       expect(mockRepo.save).toHaveBeenCalledTimes(1)
     })
 
@@ -80,14 +80,14 @@ describe('receipts server actions', () => {
 
       const result = await saveReceipt(validInput)
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Storage full')
+      expect((result as any).error).toBe('Storage full')
     })
 
     it('uses fallback error message when error.message is falsy', async () => {
       mockRepo.save = vi.fn().mockRejectedValue({})
       const result = await saveReceipt(validInput)
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Database error occurred')
+      expect((result as any).error).toBe('Database error occurred')
     })
   })
 
@@ -98,7 +98,7 @@ describe('receipts server actions', () => {
 
       const result = await getReceipts()
       expect(result.success).toBe(true)
-      expect(result.data).toEqual(receipts)
+      expect((result as any).data).toEqual(receipts)
     })
 
     it('returns error on failure', async () => {
@@ -106,14 +106,14 @@ describe('receipts server actions', () => {
 
       const result = await getReceipts()
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Failed to fetch receipts: DB error')
+      expect((result as any).error).toBe('Failed to fetch receipts: DB error')
     })
 
     it('returns error when user is not authenticated', async () => {
       vi.mocked(getCachedUser).mockResolvedValueOnce(null)
       const result = await getReceipts()
       expect(result.success).toBe(false)
-      expect(result.error).toBe('User not authenticated')
+      expect((result as any).error).toBe('User not authenticated')
     })
   })
 
@@ -146,7 +146,7 @@ describe('receipts server actions', () => {
 
       const result = await deleteReceipt('rec-1')
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Failed to delete receipt: Delete failed')
+      expect((result as any).error).toBe('Failed to delete receipt: Delete failed')
     })
   })
 
@@ -156,7 +156,7 @@ describe('receipts server actions', () => {
 
       const result = await getReceiptFileUrl('path/to/file.jpg')
       expect(result.success).toBe(true)
-      expect(result.data).toBe('https://signed-url')
+      expect((result as any).data).toBe('https://signed-url')
     })
 
     it('returns error on failure', async () => {
@@ -164,7 +164,7 @@ describe('receipts server actions', () => {
 
       const result = await getReceiptFileUrl('path/to/file.jpg')
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Failed to get file access')
+      expect((result as any).error).toBe('Failed to get file access')
     })
   })
 
@@ -172,7 +172,7 @@ describe('receipts server actions', () => {
     it('returns validation error for missing required fields', async () => {
       const result = await updateReceipt('rec-1', {} as SaveReceiptInput)
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Validation failed')
+      expect((result as any).error).toBe('Validation failed')
     })
 
     it('updates receipt successfully', async () => {
@@ -191,7 +191,7 @@ describe('receipts server actions', () => {
 
       const result = await updateReceipt('rec-1', input)
       expect(result.success).toBe(true)
-      expect(result.data?.receiptId).toBe('rec-1')
+      expect((result as any).data?.receiptId).toBe('rec-1')
     })
 
     it('updates receipt and inserts items when type is shopping and items exist', async () => {
@@ -234,7 +234,7 @@ describe('receipts server actions', () => {
 
       const result = await updateReceipt('rec-1', input)
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Update failed')
+      expect((result as any).error).toBe('Update failed')
     })
 
     it('uses fallback error message when update throws an empty error object', async () => {
@@ -251,7 +251,7 @@ describe('receipts server actions', () => {
 
       const result = await updateReceipt('rec-1', input)
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Database error occurred')
+      expect((result as any).error).toBe('Database error occurred')
     })
   })
 })
