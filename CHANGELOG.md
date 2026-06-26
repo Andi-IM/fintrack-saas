@@ -1,3 +1,10 @@
+# [1.7.0-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.2...v1.7.0-rc.3) (2026-06-26)
+
+
+### Features
+
+* implement receipt review form component and supporting infrastructure layouts ([ae17d99](https://github.com/Andi-IM/fintrack-saas/commit/ae17d9931cee6d196cb25bf45a6e4dc3aef3f903))
+
 # [1.7.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.1...v1.7.0-rc.2) (2026-06-26)
 
 
