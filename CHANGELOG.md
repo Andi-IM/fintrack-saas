@@ -1,3 +1,11 @@
+# [1.7.0-rc.8](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.7...v1.7.0-rc.8) (2026-06-26)
+
+
+### Features
+
+* implement cash flow dashboard features including data controllers, list components, and related test suites ([bdf9a23](https://github.com/Andi-IM/fintrack-saas/commit/bdf9a23b9ed652ef4f6c940dec5b01948a037719))
+* implement server-side filtered cash flow module with repository layer, controller hooks, and associated UI components. ([c222ccd](https://github.com/Andi-IM/fintrack-saas/commit/c222ccd8e343670684a0e4f068af8285ecaef8e5))
+
 # [1.7.0-rc.7](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.6...v1.7.0-rc.7) (2026-06-26)
 
 
