@@ -244,7 +244,8 @@ export function ReceiptReviewForm() {
                          value={item.quantity ?? 1}
                          onChange={(e) => {
                            const qty = parseFloat(e.target.value) || 0
-                           const price = item.price ?? item.amount ?? 0
+                           const oldQty = item.quantity ?? 1
+                           const price = item.price ?? (oldQty > 0 ? (item.amount ?? 0) / oldQty : (item.amount ?? 0))
                            updateScanResultItem(i, 'quantity', qty)
                            updateScanResultItem(i, 'price', price)
                            updateScanResultItem(i, 'amount', qty * price)
