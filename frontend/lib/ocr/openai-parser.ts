@@ -212,6 +212,7 @@ export class OpenAIReceiptParser implements IReceiptParser {
 
       return parsedData
     } catch (e) {
+      console.error('Failed to parse OpenAI JSON response. Content:', content, e)
       throw new Error('Failed to parse OpenAI JSON response.')
     }
   }
