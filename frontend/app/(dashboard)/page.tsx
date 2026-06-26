@@ -10,10 +10,10 @@ async function DashboardData({ range }: { range: string }) {
 
   return (
     <div className="space-y-8">
-      <OverviewCards transactions={transactions} timeRange={range} />
+      <OverviewCards transactions={transactions} />
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <section aria-label="Grafik Transaksi" className="min-w-0">
-          <TransactionChartLazy transactions={transactions} timeRange={range} />
+          <TransactionChartLazy transactions={transactions} />
         </section>
         <section aria-label="Wawasan Keuangan" className="min-w-0">
           <FinancialInsightsLazy transactions={transactions} />
