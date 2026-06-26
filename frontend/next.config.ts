@@ -1,6 +1,7 @@
 import type {NextConfig} from 'next';
 import { codecovNextJSWebpackPlugin } from "@codecov/nextjs-webpack-plugin";
 import os from 'os';
+import path from 'path';
 
 // Dynamically retrieve all IPv4 addresses of this machine to allow HMR from mobile devices on any network.
 const getLocalDevOrigins = (): string[] => {
@@ -22,7 +23,9 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: getLocalDevOrigins(),
   // Use webpack-based build (Turbopack default in Next.js 16 is incompatible
   // with the custom webpack config needed for Codecov bundle analysis).
-  turbopack: {},
+  turbopack: {
+    root: __dirname,
+  },
   typescript: {
     ignoreBuildErrors: false,
   },

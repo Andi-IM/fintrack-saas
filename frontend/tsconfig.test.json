@@ -3,10 +3,6 @@
   "compilerOptions": {
     "strict": false,
     "strictNullChecks": true,
-    "composite": true,
-    "noEmit": false,
-    "emitDeclarationOnly": true,
-    "outDir": "./.next/tsc-test",
     "types": [
       "@testing-library/jest-dom",
       "node"
@@ -14,17 +10,6 @@
   },
   "include": [
     "next-env.d.ts",
-    ".next/types/**/*.ts",
-    "app/**/*.ts",
-    "app/**/*.tsx",
-    "components/**/*.ts",
-    "components/**/*.tsx",
-    "hooks/**/*.ts",
-    "hooks/**/*.tsx",
-    "lib/**/*.ts",
-    "lib/**/*.tsx",
-    "features/**/*.ts",
-    "features/**/*.tsx",
     "proxy.ts",
     "vitest.setup.ts",
     "**/*.test.ts",

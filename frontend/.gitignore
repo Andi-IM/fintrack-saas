@@ -1,7 +1,7 @@
 # Front-end project level ignores
 /node_modules/
 /.next/
-/tsconfig.tsbuildinfo
+*.tsbuildinfo
 /coverage/
 
 # Environment files

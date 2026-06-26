@@ -20,10 +20,8 @@ type AuthFormValues = z.infer<typeof authSchema>
 
 export function LoginForm() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login')
   const [loading, setLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
 
   const {
@@ -34,36 +32,21 @@ export function LoginForm() {
   } = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: 'authorized@example.com',
+      password: 'password123',
     },
   })
 
   const onSubmit = async (data: AuthFormValues) => {
     setLoading(true)
     setServerError(null)
-    setSuccessMsg(null)
     try {
-      if (activeTab === 'login') {
-        const result = await loginWithCredentials(data)
-        if (!result.success) {
-          setServerError(result.error)
-          return
-        }
-        // Success will trigger NextJS redirect, which is handled
-      } else {
-        const result = await signUpWithCredentials(data)
-        if (!result.success) {
-          setServerError(result.error)
-          return
-        }
-        setSuccessMsg('Pendaftaran berhasil! Akun Anda telah siap.')
-        reset({ email: '', password: '' })
-        setTimeout(() => {
-          setActiveTab('login')
-          setSuccessMsg(null)
-        }, 3000)
+      const result = await loginWithCredentials(data)
+      if (!result.success) {
+        setServerError(result.error)
+        return
       }
+      // Success will trigger NextJS redirect, which is handled
     } catch (err) {
       console.error(err)
       setServerError('Terjadi kesalahan yang tidak terduga.')
@@ -72,41 +55,8 @@ export function LoginForm() {
     }
   }
 
-  const handleTabChange = (tab: 'login' | 'register') => {
-    setActiveTab(tab)
-    setServerError(null)
-    setSuccessMsg(null)
-    reset({ email: '', password: '' })
-  }
-
   return (
     <div className="space-y-6 w-full">
-      {/* Custom Tabs */}
-      <div className="flex p-1 bg-slate-900/60 backdrop-blur-md rounded-xl border border-slate-800/80 shadow-inner">
-        <button
-          type="button"
-          onClick={() => handleTabChange('login')}
-          className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ${
-            activeTab === 'login'
-              ? 'bg-slate-850 text-white shadow-md border border-slate-700/50'
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          Masuk
-        </button>
-        <button
-          type="button"
-          onClick={() => handleTabChange('register')}
-          className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ${
-            activeTab === 'register'
-              ? 'bg-slate-850 text-white shadow-md border border-slate-700/50'
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          Daftar
-        </button>
-      </div>
-
       {serverError && (
         <div
           role="alert"
@@ -114,17 +64,6 @@ export function LoginForm() {
           className="p-4 bg-rose-950/40 text-rose-300 rounded-xl text-sm font-medium border border-rose-900/60 text-center break-words shadow-lg"
         >
           {serverError}
-        </div>
-      )}
-
-      {successMsg && (
-        <div
-          role="alert"
-          aria-live="polite"
-          className="p-4 bg-emerald-950/40 text-emerald-300 rounded-xl text-sm font-medium border border-emerald-900/60 text-center break-words flex items-center justify-center gap-2 shadow-lg"
-        >
-          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-          {successMsg}
         </div>
       )}
 
@@ -189,7 +128,7 @@ export function LoginForm() {
           className="w-full h-12 text-sm font-bold bg-white hover:bg-slate-100 text-slate-950 rounded-xl transition-all shadow-lg hover:shadow-white/10 flex items-center justify-center gap-2 border border-slate-200 mt-2"
         >
           {loading && <Loader2 className="w-4 h-4 animate-spin text-slate-950" />}
-          {activeTab === 'login' ? 'Masuk ke Vault' : 'Daftar Akun'}
+          Masuk ke Vault
         </Button>
       </form>
     </div>
