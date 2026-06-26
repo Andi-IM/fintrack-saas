@@ -1,3 +1,10 @@
+# [1.7.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0-rc.1...v1.7.0-rc.2) (2026-06-26)
+
+
+### Features
+
+* implement OCR document parsing with Groq-backed OpenAI integration ([cad17dd](https://github.com/Andi-IM/fintrack-saas/commit/cad17dd26cf9bd502eac3161b02516c6a2d19411))
+
 # [1.7.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.6.1...v1.7.0-rc.1) (2026-06-26)
 
 
