@@ -21,7 +21,7 @@ export function ReceiptReviewForm() {
   if (!scanResult) return null
 
   const receiptItems = scanResult.items
-    ? (scanResult.items || []).filter(isReceiptItem)
+    ? scanResult.items.filter(isReceiptItem)
     : []
 
   return (

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { LayoutDashboard, FileText, Camera, Building2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -15,7 +16,7 @@ export function Sidebar() {
         <Link 
           href="/" 
           title="Dashboard"
-          className={["flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname === "/" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
+          className={cn("flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname === "/" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700")}
         >
           <LayoutDashboard className="w-6 h-6 lg:w-5 lg:h-5" />
           <span className="hidden lg:block">Dashboard</span>
@@ -23,7 +24,7 @@ export function Sidebar() {
         <Link 
           href="/transactions" 
           title="Transactions"
-          className={["flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname?.startsWith("/transactions") || (pathname === "/add" && !isScanReceipt) ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
+          className={cn("flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname?.startsWith("/transactions") || (pathname === "/add" && !isScanReceipt) ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700")}
         >
           <FileText className="w-6 h-6 lg:w-5 lg:h-5" />
           <span className="hidden lg:block">Transactions</span>
@@ -31,7 +32,7 @@ export function Sidebar() {
         <Link 
           href="/statements" 
           title="Bank Statements"
-          className={["flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname?.startsWith("/statements") ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
+          className={cn("flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname?.startsWith("/statements") ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700")}
         >
           <Building2 className="w-6 h-6 lg:w-5 lg:h-5" />
           <span className="hidden lg:block">Bank Statements</span>
@@ -39,7 +40,7 @@ export function Sidebar() {
         <Link 
           href="/receipts" 
           title="Receipts"
-          className={["flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname?.startsWith("/receipts") || isScanReceipt ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"].join(" ")}
+          className={cn("flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", pathname?.startsWith("/receipts") || isScanReceipt ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700")}
         >
           <Camera className="w-6 h-6 lg:w-5 lg:h-5" />
           <span className="hidden lg:block">Receipts</span>

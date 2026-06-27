@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { ReceiptReviewForm } from '@/features/receipts/components/ReceiptReviewForm'
 import { useScanStore } from '@/features/receipts/hooks/use-scan-store'
 import { useSubmitScannedData } from '@/features/receipts/hooks/use-submit-scanned-data'
-import React from 'react'
+
 
 vi.mock('../hooks/use-scan-store', () => ({
   useScanStore: vi.fn()
@@ -308,5 +308,68 @@ describe('ReceiptReviewForm Component', () => {
     expect(screen.getByLabelText(/Transaction Type/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Admin Fee/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Nomor Referensi/i)).toBeInTheDocument()
+  })
+
+  it('covers fallback logic for missing fields and empty items', () => {
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      scanResult: {
+        // Omitting type, merchant, date, total, amountPaid to trigger || fallbacks
+        items: [
+          // Item missing quantity and price, having only amount to trigger calculation fallback
+          { name: 'Unknown Item', amount: 50000, quantity: undefined, price: undefined },
+          // Item with 0 quantity and undefined amount to trigger oldQty <= 0 fallback and item.amount ?? 0
+          { name: 'Zero Qty Item', quantity: 0, amount: undefined, price: undefined },
+          // Item with undefined amount to trigger item.amount ?? 0
+          { name: 'No Amount Item', quantity: 1, price: 100, amount: undefined }
+        ]
+      }
+    } as any)
+
+    render(<ReceiptReviewForm />)
+
+    // Should default to shopping type
+    expect(screen.getByDisplayValue('Belanja (Shopping)')).toBeInTheDocument()
+
+    // Test item quantity and price calculation fallbacks
+    const quantityInput = screen.getByLabelText(/Jumlah item 1/i)
+    
+    // Change quantity to empty string (evaluates to 0 via parseFloat)
+    fireEvent.change(quantityInput, { target: { value: '' } })
+    expect(mockStore.updateScanResultItem).toHaveBeenCalledWith(0, 'quantity', 0)
+    expect(mockStore.updateScanResultItem).toHaveBeenCalledWith(0, 'price', 50000) // Fallback price calculation
+    expect(mockStore.updateScanResultItem).toHaveBeenCalledWith(0, 'amount', 0) // 0 * 50000
+
+    // Test item price fallback
+    const priceInput = screen.getByLabelText(/Harga satuan item 1/i)
+    fireEvent.change(priceInput, { target: { value: '' } })
+    expect(mockStore.updateScanResultItem).toHaveBeenCalledWith(0, 'price', 0)
+    // qty fallback to 1 since we didn't update the local DOM state, we are testing the onChange logic which reads from item.quantity ?? 1
+    expect(mockStore.updateScanResultItem).toHaveBeenCalledWith(0, 'amount', 0) 
+
+    // Test zero quantity item
+    const quantityInput2 = screen.getByLabelText(/Jumlah item 2/i)
+    fireEvent.change(quantityInput2, { target: { value: '2' } })
+    expect(mockStore.updateScanResultItem).toHaveBeenCalledWith(1, 'quantity', 2)
+    // price evaluates to (item.amount ?? 0) since oldQty was 0
+    expect(mockStore.updateScanResultItem).toHaveBeenCalledWith(1, 'price', 0) 
+    
+    // Test price input for zero quantity item
+    const priceInput2 = screen.getByLabelText(/Harga satuan item 2/i)
+    fireEvent.change(priceInput2, { target: { value: '150' } })
+    expect(mockStore.updateScanResultItem).toHaveBeenCalledWith(1, 'price', 150)
+  })
+
+  it('renders correctly when scanResult.items is null or undefined', () => {
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      scanResult: {
+        type: 'shopping',
+        total: 10000,
+        items: null // triggers scanResult.items ? ... : [] false branch
+      }
+    } as any)
+    render(<ReceiptReviewForm />)
+    expect(screen.getByText(/Belum ada item terdeteksi/i)).toBeInTheDocument()
   })
 })

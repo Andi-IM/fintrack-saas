@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { CashFlowForm } from '@/features/cash-flow/components/CashFlowForm'
-import React from 'react'
+
 import { insertCashFlow, updateCashFlow } from '@/features/cash-flow/actions/cash_flow'
 
 // Mock sub-components to trigger onSelect and onChange callbacks

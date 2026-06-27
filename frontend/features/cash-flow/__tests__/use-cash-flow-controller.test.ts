@@ -415,4 +415,52 @@ describe('useCashFlowController hook', () => {
     expect(result.current.pageNumbers).toEqual([1,'...',7,8,9,10])
   })
 
+  it('covers fallback logic for empty search and "all" filter values', () => {
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: mockTransactions,
+      serverTotalItems: mockTransactions.length,
+      timeRange: '' // Covers timeRange || 'ALL'
+    }))
+
+    act(() => {
+      result.current.handleSearchChange('') // Covers val || null
+    })
+    expect(mockSetSearch).toHaveBeenCalledWith(null)
+
+    act(() => {
+      result.current.handleCategoryChange('all') // Covers val === 'all' ? null : val
+    })
+    expect(mockSetCategory).toHaveBeenCalledWith(null)
+
+    act(() => {
+      result.current.handlePaymentChange('Cash')
+    })
+    expect(mockSetPayment).toHaveBeenCalledWith('Cash')
+
+    act(() => {
+      result.current.handleSourceChange('all')
+    })
+    expect(mockSetSource).toHaveBeenCalledWith(null)
+
+    act(() => {
+      result.current.handleRangeChange('ALL')
+    })
+    expect(mockSetRange).toHaveBeenCalledWith(null)
+  })
+
+  it('covers fallback logic for invalid page, pageSize, and zero totalItems', () => {
+    mockQueryPage = ''
+    mockQueryPageSize = '0'
+    const { result } = renderHook(() => useCashFlowController({
+      initialTransactions: [],
+      serverTotalItems: 0, // Covers Math.ceil(0 / 15) || 1
+      timeRange: 'ALL'
+    }))
+
+    // Should default to page 1, pageSize 15, and totalPages 1
+    expect(result.current.validPage).toBe(1)
+    expect(result.current.limit).toBe(15) // Fallback when parseInt returns 0 or NaN
+    expect(result.current.totalPages).toBe(1)
+  })
+
 })

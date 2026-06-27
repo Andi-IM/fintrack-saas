@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import { useScanStore } from '@/features/receipts/hooks/use-scan-store'
 import { useSubmitScannedData } from '@/features/receipts/hooks/use-submit-scanned-data'
 import { isBankTransaction } from '../utils/scan-mapper'
+import { cn } from '@/lib/utils'
+import { formatDateForInput } from '@/lib/utils/date'
 
 export function BankStatementReviewForm() {
   const {
@@ -17,10 +19,6 @@ export function BankStatementReviewForm() {
   const { handleSaveScannedItems } = useSubmitScannedData('BankStatement')
 
   if (!scanResult) return null
-
-  const bankTransactions = scanResult.items
-    ? (scanResult.items || []).filter(isBankTransaction)
-    : []
 
   return (
     <div className="bg-white border border-emerald-100 rounded-xl p-0 overflow-hidden shadow-sm">
@@ -77,7 +75,7 @@ export function BankStatementReviewForm() {
         </div>
 
         <div className="bg-slate-50 rounded-lg p-2 space-y-2 border border-slate-100 max-h-[220px] overflow-y-auto shadow-inner">
-          {bankTransactions.map((item, i) => (
+          {(scanResult.items || []).map((item, i) => isBankTransaction(item) && (
             <div key={i} className="bg-white p-2 rounded border border-slate-200 shadow-sm space-y-2 transition-all hover:border-indigo-200">
               <div className="flex gap-2 items-center">
                 <Input
@@ -90,7 +88,7 @@ export function BankStatementReviewForm() {
                   aria-label="Transaction Type"
                   value={item.type}
                   onChange={(e) => updateScanResultItem(i, 'type', e.target.value)}
-                  className={`h-7 w-20 text-[10px] font-bold rounded-md border border-slate-200 bg-white px-1 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${item.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}
+                  className={cn("h-7 w-20 text-[10px] font-bold rounded-md border border-slate-200 bg-white px-1 focus:outline-none focus:ring-1 focus:ring-indigo-500", item.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}
                 >
                   <option value="income">INCOME</option>
                   <option value="expense">EXPENSE</option>
@@ -100,7 +98,7 @@ export function BankStatementReviewForm() {
                 <Input
                   aria-label={`Tanggal transaksi bank ${i + 1}`}
                   type="datetime-local"
-                  value={item.date ? item.date.slice(0, 16) : ''}
+                  value={item.date ? formatDateForInput(item.date) : ''}
                   onChange={(e) => updateScanResultItem(i, 'date', e.target.value ? new Date(e.target.value).toISOString() : '')}
                   className="h-7 text-[10px] flex-1"
                 />

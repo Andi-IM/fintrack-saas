@@ -7,6 +7,8 @@ import { TrendingUp } from "lucide-react"
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useQueryState } from 'nuqs'
 import { Tables } from "@/lib/database.types"
+import { cn } from '@/lib/utils'
+import Link from 'next/link'
 
 import { useMemo } from 'react'
 import { formatCurrency } from '@/lib/utils/transaction'
@@ -63,7 +65,7 @@ export function TransactionChart({ transactions, }: { transactions: Tables<'cash
             <button 
               key={r} 
               onClick={() => handleRangeChange(r)}
-              className={["px-2 py-1 rounded-md text-[10px] font-bold transition-all", range === r ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-600 hover:text-slate-800'].join(" ")}
+              className={cn("px-2 py-1 rounded-md text-[10px] font-bold transition-all", range === r ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-600 hover:text-slate-800')}
             >  {r}
             </button>
           ))}
@@ -103,9 +105,9 @@ export function TransactionChart({ transactions, }: { transactions: Tables<'cash
               <p className="font-bold text-slate-600">No financial data yet</p>
               <p className="text-sm max-w-[240px] mt-1">Start by adding a manual transaction or scanning a receipt.</p>
             </div>
-            <a href="/add" className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold h-9 px-4">
+            <Link href="/add" className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold h-9 px-4">
               Add Transaction
-            </a>
+            </Link>
           </div>
         )}
       </CardContent>

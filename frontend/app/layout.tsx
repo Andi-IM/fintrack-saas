@@ -18,6 +18,12 @@ export const metadata: Metadata = {
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" className={cn(poppins.variable, "font-sans", inter.variable)} suppressHydrationWarning>
+      <head>
+        {/* Preconnect to Supabase to speed up client-side network requests (DNS + SSL Handshake) */}
+        {process.env.NEXT_PUBLIC_SUPABASE_URL && (
+          <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} crossOrigin="anonymous" />
+        )}
+      </head>
       <body className="font-sans antialiased" suppressHydrationWarning>
         <NuqsAdapter>
           <QueryProvider>{children}</QueryProvider>

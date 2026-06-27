@@ -2,8 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { BankStatementReviewForm } from '@/features/receipts/components/BankStatementReviewForm'
 import { useScanStore } from '@/features/receipts/hooks/use-scan-store'
-import { useSubmitScannedData } from '@/features/receipts/hooks/use-submit-scanned-data'
-import React from 'react'
+import { formatDateForInput } from '@/lib/utils/date'
 
 vi.mock('../hooks/use-scan-store', () => ({
   useScanStore: vi.fn()
@@ -105,7 +104,8 @@ describe('BankStatementReviewForm Component', () => {
     expect(mockStore.updateScanResultItem).toHaveBeenCalledWith(0, 'type', 'expense')
 
     // Edit transaction date (line 93)
-    const dateInput = screen.getByDisplayValue('2026-05-01T10:00')
+    const expectedDateDisplay = formatDateForInput('2026-05-01T10:00:00.000Z')
+    const dateInput = screen.getByDisplayValue(expectedDateDisplay)
     fireEvent.change(dateInput, { target: { value: '2026-05-02T11:00' } })
     expect(mockStore.updateScanResultItem).toHaveBeenCalledWith(0, 'date', new Date('2026-05-02T11:00').toISOString())
 
