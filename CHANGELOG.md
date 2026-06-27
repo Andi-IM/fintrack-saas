@@ -1,3 +1,10 @@
+# [1.8.0-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.8.0-rc.2...v1.8.0-rc.3) (2026-06-27)
+
+
+### Features
+
+* implement dashboard page with interactive transaction trend chart ([d67dd6b](https://github.com/Andi-IM/fintrack-saas/commit/d67dd6bef6711591c78cc0f68856bae8a887bad2))
+
 # [1.8.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.8.0-rc.1...v1.8.0-rc.2) (2026-06-27)
 
 
