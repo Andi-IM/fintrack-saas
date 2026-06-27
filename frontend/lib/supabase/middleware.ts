@@ -2,6 +2,12 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
+  // Clone headers to allow modification
+  const requestHeaders = new Headers(request.headers)
+  // Delete the headers to prevent client-side spoofing
+  requestHeaders.delete('x-user-email')
+  requestHeaders.delete('x-user-id')
+
   // Safeguard: bypass middleware for static files and api routes
   const { pathname } = request.nextUrl
   if (
@@ -10,14 +16,12 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith('/favicon.ico') ||
     pathname.includes('.')
   ) {
-    return NextResponse.next({ request })
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    })
   }
-
-  // Clone headers to allow modification
-  const requestHeaders = new Headers(request.headers)
-  // Delete the headers to prevent client-side spoofing
-  requestHeaders.delete('x-user-email')
-  requestHeaders.delete('x-user-id')
 
   let supabaseResponse = NextResponse.next({
     request: {
