@@ -5,7 +5,7 @@
 <br />
 <br />
 
-[![version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://semver.org)
+[![version](https://img.shields.io/github/v/release/Andi-IM/fintrack-saas?label=version&color=blue)](https://github.com/Andi-IM/fintrack-saas/releases)
 [![codecov](https://codecov.io/gh/Andi-IM/fintrack-saas/graph/badge.svg?token=KyUSihKYsJ)](https://codecov.io/gh/Andi-IM/fintrack-saas)
 ![Next.js](https://img.shields.io/badge/Next.js-16.2.9-black?logo=next.js)
 ![Vercel](https://img.shields.io/badge/Vercel-Deployed-black?logo=vercel)
