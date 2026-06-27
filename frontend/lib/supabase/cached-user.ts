@@ -10,7 +10,7 @@ import type { User } from '@supabase/supabase-js'
  * Auth redirection is handled by middleware.ts — this function returns null
  * if the user is not authenticated instead of redirecting.
  */
-export const getCachedUser = cache(async (): Promise<User | null> => {
+export const getCachedUser = cache(async (): Promise<Pick<User, 'id' | 'email'> | null> => {
   const headersList = await headers()
   const email = headersList.get('x-user-email')
   const id = headersList.get('x-user-id')
@@ -18,7 +18,7 @@ export const getCachedUser = cache(async (): Promise<User | null> => {
   if (email && id) {
     // Return partial user object using data validated and forwarded by middleware
     // This avoids redundant Supabase network calls during RSC prefetching
-    return { id, email } as User
+    return { id, email }
   }
 
   // Fallback: make actual network call if headers are not available 
