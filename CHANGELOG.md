@@ -1,3 +1,10 @@
+# [1.8.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.8.0-rc.1...v1.8.0-rc.2) (2026-06-27)
+
+
+### Features
+
+* implement core frontend infrastructure, layout components, and bank statement processing features ([3e2ad9d](https://github.com/Andi-IM/fintrack-saas/commit/3e2ad9d6122e0c0155bb3fb66c50842f314be134))
+
 # [1.8.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0...v1.8.0-rc.1) (2026-06-26)
 
 
