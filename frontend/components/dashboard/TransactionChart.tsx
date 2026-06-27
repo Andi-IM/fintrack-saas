@@ -7,6 +7,7 @@ import { TrendingUp } from "lucide-react"
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useQueryState } from 'nuqs'
 import { Tables } from "@/lib/database.types"
+import { cn } from '@/lib/utils'
 
 import { useMemo } from 'react'
 import { formatCurrency } from '@/lib/utils/transaction'
@@ -63,7 +64,7 @@ export function TransactionChart({ transactions, }: { transactions: Tables<'cash
             <button 
               key={r} 
               onClick={() => handleRangeChange(r)}
-              className={["px-2 py-1 rounded-md text-[10px] font-bold transition-all", range === r ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-600 hover:text-slate-800'].join(" ")}
+              className={cn("px-2 py-1 rounded-md text-[10px] font-bold transition-all", range === r ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-600 hover:text-slate-800')}
             >  {r}
             </button>
           ))}

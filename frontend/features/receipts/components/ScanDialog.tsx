@@ -11,6 +11,7 @@ import { useOcrScanner } from '@/features/receipts/hooks/use-ocr-scanner'
 import { ScanProgressIndicator } from './ScanProgressIndicator'
 import { ReceiptReviewForm } from './ReceiptReviewForm'
 import { BankStatementReviewForm } from './BankStatementReviewForm'
+import { cn } from '@/lib/utils'
 
 export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStatement' }) {
   const {
@@ -80,8 +81,8 @@ export function ScanDialog({ scanContext }: { scanContext: 'Receipt' | 'BankStat
         {!fileToScan && (
           <div 
             {...getRootProps()} 
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ease-in-out
-              ${isDragActive ? 'border-indigo-500 bg-indigo-100 shadow-inner' : 'border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 bg-white/50'}`}
+            className={cn("border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ease-in-out",
+              isDragActive ? 'border-indigo-500 bg-indigo-100 shadow-inner' : 'border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 bg-white/50')}
             role="button"
             aria-label={`Upload ${scanContext === 'Receipt' ? 'receipt image' : 'PDF statement'}`}
             tabIndex={0}

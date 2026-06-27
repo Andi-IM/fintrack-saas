@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { useScanStore } from '@/features/receipts/hooks/use-scan-store'
 import { useSubmitScannedData } from '@/features/receipts/hooks/use-submit-scanned-data'
 import { isBankTransaction } from '../utils/scan-mapper'
+import { cn } from '@/lib/utils'
 
 export function BankStatementReviewForm() {
   const {
@@ -90,7 +91,7 @@ export function BankStatementReviewForm() {
                   aria-label="Transaction Type"
                   value={item.type}
                   onChange={(e) => updateScanResultItem(i, 'type', e.target.value)}
-                  className={`h-7 w-20 text-[10px] font-bold rounded-md border border-slate-200 bg-white px-1 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${item.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}
+                  className={cn("h-7 w-20 text-[10px] font-bold rounded-md border border-slate-200 bg-white px-1 focus:outline-none focus:ring-1 focus:ring-indigo-500", item.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}
                 >
                   <option value="income">INCOME</option>
                   <option value="expense">EXPENSE</option>

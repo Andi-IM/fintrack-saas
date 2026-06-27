@@ -28,6 +28,7 @@ import ItemEditDialog from '@/components/statements/ItemEditDialog'
 import type { ItemFormData } from '@/components/statements/ItemEditDialog'
 import { BankStatementListSkeleton } from '@/components/ui/statements-skeleton'
 import { formatDateForInput } from '@/lib/utils/date'
+import { cn } from '@/lib/utils'
 
 export function BankStatementListView({
   groupedData,
@@ -190,7 +191,7 @@ export function BankStatementListView({
                                     <p className="text-[10px] text-slate-400">{item.category}</p>
                                   </td>
                                   <td className="px-4 py-2.5 text-right whitespace-nowrap">
-                                    <div className={`flex items-center justify-end gap-1 font-mono font-bold ${item.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    <div className={cn("flex items-center justify-end gap-1 font-mono font-bold", item.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
                                       {item.type === 'income' ? <ArrowDownLeft className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
                                       Rp {item.amount.toLocaleString('id-ID')}
                                     </div>
@@ -277,7 +278,7 @@ export function BankStatementListView({
                                   )}
                                 </div>
                                 <div className="text-right">
-                                  <div className={`flex items-center justify-end gap-0.5 font-mono font-bold text-xs ${item.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                  <div className={cn("flex items-center justify-end gap-0.5 font-mono font-bold text-xs", item.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
                                     {item.type === 'income' ? <ArrowDownLeft className="w-2.5 h-2.5" /> : <ArrowUpRight className="w-2.5 h-2.5" />}
                                     Rp {item.amount.toLocaleString('id-ID')}
                                   </div>
@@ -367,7 +368,7 @@ export function BankStatementListView({
             <div className="space-y-4 my-2">
               <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
                 <span className="text-xs text-slate-500 font-medium">Nominal Mutasi</span>
-                <span className={`font-bold font-mono text-base ${activeMobileItem.item.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                <span className={cn("font-bold font-mono text-base", activeMobileItem.item.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
                   {activeMobileItem.item.type === 'income' ? '+' : '-'} Rp {activeMobileItem.item.amount.toLocaleString('id-ID')}
                 </span>
               </div>

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { LayoutDashboard, FileText, Camera, Building2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export function BottomNav() {
   const pathname = usePathname()
@@ -44,14 +45,14 @@ export function BottomNav() {
           <Link
             key={item.href}
             href={item.href}
-            className={[
+            className={cn(
               "flex flex-col items-center justify-center gap-1 w-16 h-12 rounded-xl transition-all",
               item.active 
                 ? "text-indigo-700 font-bold" 
                 : "text-slate-500 font-medium hover:text-slate-700"
-            ].join(" ")}
+            )}
           >
-            <Icon className={["w-5 h-5", item.active ? "text-indigo-600" : "text-slate-400"].join(" ")} />
+            <Icon className={cn("w-5 h-5", item.active ? "text-indigo-600" : "text-slate-400")} />
             <span className="text-[10px] tracking-tight">{item.label}</span>
           </Link>
         )

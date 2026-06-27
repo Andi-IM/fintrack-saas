@@ -13,8 +13,16 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request })
   }
 
+  // Clone headers to allow modification
+  const requestHeaders = new Headers(request.headers)
+  // Delete the headers to prevent client-side spoofing
+  requestHeaders.delete('x-user-email')
+  requestHeaders.delete('x-user-id')
+
   let supabaseResponse = NextResponse.next({
-    request,
+    request: {
+      headers: requestHeaders,
+    },
   })
 
   const supabase = createServerClient(
@@ -28,7 +36,9 @@ export async function updateSession(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
-            request,
+            request: {
+              headers: requestHeaders,
+            },
           })
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
@@ -61,6 +71,27 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
+  }
+
+  // If user is successfully authenticated and authorized, set the email and id in request headers
+  if (user && user.email) {
+    requestHeaders.set('x-user-email', user.email)
+    requestHeaders.set('x-user-id', user.id)
+    
+    // We must recreate the response to enforce the updated request headers, 
+    // while preserving any cookies set by Supabase
+    const finalResponse = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    })
+    
+    // Copy cookies from the intermediate supabaseResponse
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      finalResponse.cookies.set(cookie.name, cookie.value, cookie)
+    })
+    
+    supabaseResponse = finalResponse
   }
 
   return supabaseResponse

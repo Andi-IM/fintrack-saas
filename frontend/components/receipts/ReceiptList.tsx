@@ -221,11 +221,11 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                         {format(new Date(receipt.date), 'dd MMM yyyy, HH:mm')}
                       </p>
                     </div>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
                       receipt.type === 'atm' 
                         ? 'bg-blue-50 text-blue-700 border border-blue-100' 
                         : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                    }`}>
+                    )}>
                       {receipt.type === 'atm' ? 'ATM' : 'Shopping'}
                     </span>
                   </div>
@@ -313,11 +313,11 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                       {receipt.store_name}
                     </TableCell>
                     <TableCell>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                      <span className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
                         receipt.type === 'atm' 
                           ? 'bg-blue-50 text-blue-700 border border-blue-100' 
                           : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                      }`}>
+                      )}>
                         {receipt.type === 'atm' ? 'ATM' : 'Shopping'}
                       </span>
                     </TableCell>
@@ -472,7 +472,7 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
               {/* Header card with receipt metadata */}
               <div className="bg-indigo-900 text-white p-6 relative">
                 <div className="flex justify-between items-start mb-4">
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white border border-white/10`}>
+                  <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white border border-white/10")}>
                     {selectedReceipt.type === 'atm' ? 'Struk ATM' : 'Struk Belanja'}
                   </span>
                   <p className="text-xs text-indigo-200">ID: {selectedReceipt.id.slice(0, 8)}...</p>
@@ -607,11 +607,11 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                         </div>
                         <div>
                           <span className="text-slate-400">Jenis Mutasi:</span>
-                          <span className={`inline-block px-1.5 py-0.2 rounded text-[9px] font-bold uppercase ${
+                          <span className={cn("inline-block px-1.5 py-0.2 rounded text-[9px] font-bold uppercase",
                             selectedReceipt.bank_statement_items.type === 'income'
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                               : 'bg-rose-50 text-rose-700 border border-rose-100'
-                          }`}>
+                          )}>
                             {selectedReceipt.bank_statement_items.type === 'income' ? 'Masuk (Cr)' : 'Keluar (Db)'}
                           </span>
                         </div>
@@ -682,13 +682,13 @@ export function ReceiptList({ receipts }: ReceiptListProps) {
                       <div className="grid grid-cols-2 gap-4 text-xs border-b border-slate-100 pb-4">
                         <div>
                           <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Tipe Transaksi ATM</p>
-                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mt-1 ${
+                          <span className={cn("inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mt-1",
                             selectedReceipt.transaction_type === 'withdrawal'
                               ? 'bg-amber-50 text-amber-700 border border-amber-100'
                               : selectedReceipt.transaction_type === 'deposit'
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                               : 'bg-purple-50 text-purple-700 border border-purple-100'
-                          }`}>
+                          )}>
                             {selectedReceipt.transaction_type === 'withdrawal' ? 'Tarik Tunai' :
                              selectedReceipt.transaction_type === 'deposit' ? 'Setor Tunai' : 'Transfer'}
                           </span>
