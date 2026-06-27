@@ -1,16 +1,12 @@
-# [1.8.0-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.8.0-rc.2...v1.8.0-rc.3) (2026-06-27)
+# [1.8.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0...v1.8.0) (2026-06-26)
 
 
 ### Features
 
-* implement dashboard page with interactive transaction trend chart ([d67dd6b](https://github.com/Andi-IM/fintrack-saas/commit/d67dd6bef6711591c78cc0f68856bae8a887bad2))
-
-# [1.8.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.8.0-rc.1...v1.8.0-rc.2) (2026-06-27)
-
-
-### Features
-
-* implement core frontend infrastructure, layout components, and bank statement processing features ([3e2ad9d](https://github.com/Andi-IM/fintrack-saas/commit/3e2ad9d6122e0c0155bb3fb66c50842f314be134))
+* implement cash flow dashboard features including data controllers, list components, and related test suites ([bdf9a23](https://github.com/Andi-IM/fintrack-saas/commit/bdf9a23b9ed652ef4f6c940dec5b01948a037719))
+* implement multi-tenant row-level security across all tables and private storage buckets with optimized query performance ([829a585](https://github.com/Andi-IM/fintrack-saas/commit/829a585a28f4083ff657fe7125d833689483081f))
+* implement server-side dashboard filtering with new architecture documentation and update README ([cf28047](https://github.com/Andi-IM/fintrack-saas/commit/cf28047d16ad312c3443137394a23fc20d43e033))
+* implement server-side filtered cash flow module with repository layer, controller hooks, and associated UI components. ([c222ccd](https://github.com/Andi-IM/fintrack-saas/commit/c222ccd8e343670684a0e4f068af8285ecaef8e5))
 
 # [1.8.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.7.0...v1.8.0-rc.1) (2026-06-26)
 
