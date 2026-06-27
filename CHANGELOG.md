@@ -1,3 +1,18 @@
+# [1.9.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.8.0...v1.9.0) (2026-06-27)
+
+
+### Bug Fixes
+
+* **auth:** enforce strict type safety for getCachedUser return type ([5465760](https://github.com/Andi-IM/fintrack-saas/commit/54657600997720c83f9e4f9ac9f82173d68ed18e))
+* **auth:** prevent header spoofing bypass in supabase middleware ([53451de](https://github.com/Andi-IM/fintrack-saas/commit/53451dea7ee693850bb1dae17d7d120573626e62))
+* implement Supabase session middleware with authentication and authorization guards ([fc9ac2a](https://github.com/Andi-IM/fintrack-saas/commit/fc9ac2a3d9826a81b2563f8e61984e30809a0855))
+
+
+### Features
+
+* implement core frontend infrastructure, layout components, and bank statement processing features ([3e2ad9d](https://github.com/Andi-IM/fintrack-saas/commit/3e2ad9d6122e0c0155bb3fb66c50842f314be134))
+* implement dashboard page with interactive transaction trend chart ([d67dd6b](https://github.com/Andi-IM/fintrack-saas/commit/d67dd6bef6711591c78cc0f68856bae8a887bad2))
+
 # [1.9.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.0-rc.1...v1.9.0-rc.2) (2026-06-27)
 
 
