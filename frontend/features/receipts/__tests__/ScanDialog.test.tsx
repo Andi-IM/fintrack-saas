@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { ScanDialog } from '@/features/receipts/components/ScanDialog'
 import { useScanStore } from '@/features/receipts/hooks/use-scan-store'
 import { ScanProgressIndicator } from '@/features/receipts/components/ScanProgressIndicator'
-import React from 'react'
+
 
 // Mock next router
 const mockPush = vi.fn()

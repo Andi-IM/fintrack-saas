@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { CashFlowList } from '@/features/cash-flow/components/CashFlowList'
 import { useCashFlowController } from '@/features/cash-flow/hooks/use-cash-flow-controller'
-import React from 'react'
+
 
 // Mock next/navigation
 const mockPush = vi.fn()

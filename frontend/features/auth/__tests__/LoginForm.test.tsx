@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { LoginForm } from '@/features/auth/components/LoginForm'
 import { loginWithCredentials } from '@/features/auth/actions/auth'
-import React from 'react'
+
 
 // Mock next router
 const mockPush = vi.fn()
