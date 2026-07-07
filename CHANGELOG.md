@@ -1,3 +1,12 @@
+## [1.9.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.3...v1.9.4) (2026-07-07)
+
+
+### Bug Fixes
+
+* **db:** make secure statements bucket migration idempotent ([a4ca4ed](https://github.com/Andi-IM/fintrack-saas/commit/a4ca4ed8e5737e7188ed2bcdd28ab4583f8e5d6d))
+* **db:** make transactions_source_item_id_fkey deferrable to resolve circular dependency ([75b0e11](https://github.com/Andi-IM/fintrack-saas/commit/75b0e114c4d9c29f4c96f950e797900497a7b7dc))
+* **db:** rename fkey to cash_flow_source_item_id_fkey and make it deferrable ([e776810](https://github.com/Andi-IM/fintrack-saas/commit/e776810ff1f1cb14f33c7377d5ad0c668597d16b))
+
 ## [1.9.4-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.3...v1.9.4-rc.1) (2026-07-07)
 
 
