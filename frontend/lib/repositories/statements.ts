@@ -67,8 +67,9 @@ export class SupabaseStatementsRepository implements StatementRepository {
     file: File
   }): Promise<{ id: string }> {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Unauthorized')
+    const { data, error: authError } = await supabase.auth.getUser()
+    if (authError || !data?.user) throw new Error('Unauthorized')
+    const user = data.user
 
     const { bankName: actualBankName, statementPeriod: actualPeriod, openingBalance, closingBalance, items, file } = data
 
