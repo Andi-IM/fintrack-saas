@@ -1,3 +1,10 @@
+## [1.9.3-rc.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.3-rc.3...v1.9.3-rc.4) (2026-07-07)
+
+
+### Bug Fixes
+
+* **db:** make secure statements bucket migration idempotent ([a4ca4ed](https://github.com/Andi-IM/fintrack-saas/commit/a4ca4ed8e5737e7188ed2bcdd28ab4583f8e5d6d))
+
 ## [1.9.3-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.3-rc.2...v1.9.3-rc.3) (2026-07-07)
 
 
