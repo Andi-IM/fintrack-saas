@@ -1,3 +1,10 @@
+## [1.9.2-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.2-rc.2...v1.9.2-rc.3) (2026-07-07)
+
+
+### Bug Fixes
+
+* **ocr:** upgrade bank statement parser model to 70b to fix parsing failure ([f656824](https://github.com/Andi-IM/fintrack-saas/commit/f6568244d14ec2e2ef99585d7dbeeba01b2d79ed))
+
 ## [1.9.2-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.2-rc.1...v1.9.2-rc.2) (2026-07-07)
 
 
