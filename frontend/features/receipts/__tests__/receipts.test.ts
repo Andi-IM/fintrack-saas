@@ -13,7 +13,7 @@ import {
   updateReceipt,
   SaveReceiptInput,
 } from '@/features/receipts/actions/receipts'
-import { setReceiptRepository, ReceiptRepository } from '@/lib/repositories/receipts'
+import { buildReceiptStoragePath, setReceiptRepository, ReceiptRepository } from '@/lib/repositories/receipts'
 import { Tables } from '@/lib/database.types'
 
 describe('receipts server actions', () => {
@@ -73,6 +73,19 @@ describe('receipts server actions', () => {
       expect(result.success).toBe(true)
       expect((result as any).data?.receiptId).toBe('rec-1')
       expect(mockRepo.save).toHaveBeenCalledTimes(1)
+      expect(mockRepo.save).toHaveBeenCalledWith(expect.objectContaining({
+        userId: 'user-1',
+      }))
+    })
+
+    it('returns error when user is not authenticated', async () => {
+      vi.mocked(getCachedUser).mockResolvedValueOnce(null)
+
+      const result = await saveReceipt(validInput)
+
+      expect(result.success).toBe(false)
+      expect((result as any).error).toBe('User not authenticated')
+      expect(mockRepo.save).not.toHaveBeenCalled()
     })
 
     it('returns error when save throws', async () => {
@@ -253,5 +266,43 @@ describe('receipts server actions', () => {
       expect(result.success).toBe(false)
       expect((result as any).error).toBe('Database error occurred')
     })
+  })
+})
+
+describe('buildReceiptStoragePath', () => {
+  it('prefixes receipt files with the authenticated user id for storage RLS', () => {
+    const path = buildReceiptStoragePath({
+      userId: 'user-1',
+      storeName: 'Warung Makan',
+      originalName: 'receipt.JPG',
+      timestamp: 123,
+      randomSuffix: 'abc1234',
+    })
+
+    expect(path).toBe('user-1/warung-makan/123-abc1234.jpg')
+  })
+
+  it('uses a fallback folder when store name has no path-safe characters', () => {
+    const path = buildReceiptStoragePath({
+      userId: 'user-1',
+      storeName: '!!!',
+      originalName: 'receipt',
+      timestamp: 123,
+      randomSuffix: 'abc1234',
+    })
+
+    expect(path).toBe('user-1/receipt/123-abc1234.jpg')
+  })
+
+  it('falls back to jpg when the original file name ends with a dot', () => {
+    const path = buildReceiptStoragePath({
+      userId: 'user-1',
+      storeName: 'Warung Makan',
+      originalName: 'receipt.',
+      timestamp: 123,
+      randomSuffix: 'abc1234',
+    })
+
+    expect(path).toBe('user-1/warung-makan/123-abc1234.jpg')
   })
 })

@@ -1,8 +1,24 @@
 import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/server'
 
+export function buildReceiptStoragePath(input: {
+  userId: string
+  storeName: string
+  originalName: string
+  timestamp?: number
+  randomSuffix?: string
+}): string {
+  const parts = input.originalName.split('.')
+  const lastPart = parts.length > 1 ? parts.pop()! : ''
+  const fileExt = lastPart.trim().toLowerCase() || 'jpg'
+  const uniqueName = `${input.timestamp ?? Date.now()}-${input.randomSuffix ?? Math.random().toString(36).substring(2, 9)}.${fileExt}`
+  const folder = input.storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'receipt'
+  return `${input.userId}/${folder}/${uniqueName}`
+}
+
 export interface ReceiptRepository {
   save(data: {
+    userId: string
     type: string
     storeName: string
     storeAddress: string | null
@@ -50,16 +66,17 @@ export interface ReceiptRepository {
 export class SupabaseReceiptsRepository implements ReceiptRepository {
   async save(data: Parameters<ReceiptRepository['save']>[0]): Promise<Tables<'receipts'>> {
     const supabase = await createClient()
-    const { type, storeName, storeAddress, date, totalPrice, paymentMethod, amountPaid, change, atmId, transactionType, fee, bankStatementItemId, file, items } = data
+    const { userId, type, storeName, storeAddress, date, totalPrice, paymentMethod, amountPaid, change, atmId, transactionType, fee, bankStatementItemId, file, items } = data
 
     let filePath: string | null = null
     if (file) {
       const bytes = await file.arrayBuffer()
       const buffer = Buffer.from(bytes)
-      const fileExt = file.name.split('.').pop() || 'jpg'
-      const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`
-      const folder = storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-      const fullPath = `${folder}/${uniqueName}`
+      const fullPath = buildReceiptStoragePath({
+        userId,
+        storeName,
+        originalName: file.name,
+      })
 
       const { error: uploadError } = await supabase.storage
         .from('receipts')
