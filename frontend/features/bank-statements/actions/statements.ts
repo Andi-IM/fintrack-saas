@@ -36,7 +36,18 @@ export async function getGroupedBankStatements(): Promise<ActionResponse<Record<
     }
 
     for (const statements of Object.values(grouped)) {
-      statements.sort((a, b) => getCachedEndVal(b.statement_period) - getCachedEndVal(a.statement_period))
+      statements.sort((a, b) => {
+        const diff = getCachedEndVal(b.statement_period) - getCachedEndVal(a.statement_period)
+        if (diff !== 0) return diff
+        
+        // Tie-breaker for deterministic sorting when periods are equal or null/invalid
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
+        if (dateB !== dateA) return dateB - dateA
+        
+        // Final fallback if created_at is identical or missing
+        return b.id.localeCompare(a.id)
+      })
     }
 
     return { success: true, data: grouped }

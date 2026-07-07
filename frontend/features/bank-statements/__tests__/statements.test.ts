@@ -55,6 +55,31 @@ describe('statements server actions', () => {
       expect((result as any).data['BCA']).toHaveLength(2)
     })
 
+    it('sorts statements by statement_period descending and uses caching', async () => {
+      const statements: Tables<'bank_statements'>[] = [
+        { id: '1', bank_name: 'BCA', statement_period: 'Jan 2026' } as any,
+        { id: '2', bank_name: 'BCA', statement_period: 'Mar 2026' } as any,
+        { id: '3', bank_name: 'BCA', statement_period: 'Feb 2026' } as any,
+        { id: '4', bank_name: 'BCA', statement_period: 'Mar 2026' } as any, // duplicate to test cache
+        { id: '5', bank_name: 'BCA', statement_period: null } as any, // test missing period
+        { id: '6', bank_name: 'BCA', statement_period: 'InvalidPeriod' } as any, // test parse failure
+      ]
+      mockRepo.findAllWithItems = vi.fn().mockResolvedValue(statements as any)
+
+      const result = await getGroupedBankStatements()
+      expect(result.success).toBe(true)
+      
+      const bcaStatements = (result as any).data['BCA']
+      expect(bcaStatements.map((s: any) => s.id)).toEqual([
+        '4', // Mar 2026 (id fallback: 4 > 2)
+        '2', // Mar 2026
+        '3', // Feb 2026
+        '1', // Jan 2026
+        '6', // Invalid (0) (id fallback: 6 > 5)
+        '5', // null (0)
+      ])
+    })
+
     it('returns error on failure', async () => {
       mockRepo.findAllWithItems = vi.fn().mockRejectedValue(new Error('DB error'))
 
