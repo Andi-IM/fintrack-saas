@@ -67,6 +67,10 @@ export class SupabaseStatementsRepository implements StatementRepository {
     file: File
   }): Promise<{ id: string }> {
     const supabase = await createClient()
+    const { data, error: authError } = await supabase.auth.getUser()
+    if (authError || !data?.user) throw new Error('Unauthorized')
+    const user = data.user
+
     const { bankName: actualBankName, statementPeriod: actualPeriod, openingBalance, closingBalance, items, file } = data
 
     const bytes = await file.arrayBuffer()
@@ -75,7 +79,7 @@ export class SupabaseStatementsRepository implements StatementRepository {
     const fileExt = file.name.split('.').pop() || 'pdf'
     const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`
     const folder = actualBankName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-    const uploadedPath = `${folder}/${uniqueName}`
+    const uploadedPath = `${user.id}/${folder}/${uniqueName}`
 
     const { error: uploadError } = await supabase.storage
       .from('statements')
