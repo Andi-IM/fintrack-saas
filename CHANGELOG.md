@@ -1,3 +1,10 @@
+## [1.9.6-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.6-rc.1...v1.9.6-rc.2) (2026-07-07)
+
+
+### Performance Improvements
+
+* optimize statement period parsing in sorting using caching ([dd8037a](https://github.com/Andi-IM/fintrack-saas/commit/dd8037a606e33b5c2ae3de695a8c5ab60740d000))
+
 ## [1.9.6-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.5...v1.9.6-rc.1) (2026-07-07)
 
 
