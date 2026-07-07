@@ -1,3 +1,10 @@
+## [1.9.2-rc.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.2-rc.3...v1.9.2-rc.4) (2026-07-07)
+
+
+### Bug Fixes
+
+* **ocr:** add robust fallback mechanism to bank statement parser orchestrator ([644f54d](https://github.com/Andi-IM/fintrack-saas/commit/644f54d667a59d83b554eaf0203f09979785ba96))
+
 ## [1.9.2-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.2-rc.2...v1.9.2-rc.3) (2026-07-07)
 
 
