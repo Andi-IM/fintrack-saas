@@ -1,3 +1,11 @@
+## [1.9.5-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.4...v1.9.5-rc.1) (2026-07-07)
+
+
+### Bug Fixes
+
+* backend and frontend updates ([7e11477](https://github.com/Andi-IM/fintrack-saas/commit/7e114775192acc7585c94e21ebcd4381b8bd2c7b))
+* resolve OCR parser hijacking and storage policy 404 ([5468ced](https://github.com/Andi-IM/fintrack-saas/commit/5468ced1a223d2a2df0f70e27dd8b192073115c5))
+
 ## [1.9.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.3...v1.9.4) (2026-07-07)
 
 
