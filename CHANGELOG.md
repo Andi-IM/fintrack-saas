@@ -1,3 +1,10 @@
+## [1.9.3-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.3-rc.1...v1.9.3-rc.2) (2026-07-07)
+
+
+### Bug Fixes
+
+* **db:** make transactions_source_item_id_fkey deferrable to resolve circular dependency ([75b0e11](https://github.com/Andi-IM/fintrack-saas/commit/75b0e114c4d9c29f4c96f950e797900497a7b7dc))
+
 ## [1.9.3-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.2...v1.9.3-rc.1) (2026-07-07)
 
 
