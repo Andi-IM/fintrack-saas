@@ -1,3 +1,10 @@
+## [1.9.2-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.2-rc.1...v1.9.2-rc.2) (2026-07-07)
+
+
+### Bug Fixes
+
+* **statements:** resolve variable name conflict for data ([74fa80a](https://github.com/Andi-IM/fintrack-saas/commit/74fa80adfd1172e059f71ac95164163d61513496))
+
 ## [1.9.2-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.1...v1.9.2-rc.1) (2026-07-07)
 
 
