@@ -1,3 +1,10 @@
+## [1.9.7-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.6...v1.9.7-rc.1) (2026-07-07)
+
+
+### Bug Fixes
+
+* make statement sorting deterministic using created_at and id fallback ([cef617a](https://github.com/Andi-IM/fintrack-saas/commit/cef617afbd3103066e6c0e916c2f91da765aba01))
+
 ## [1.9.6](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.5...v1.9.6) (2026-07-07)
 
 
