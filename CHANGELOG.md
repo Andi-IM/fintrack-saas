@@ -1,9 +1,14 @@
-## [1.9.6-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.6-rc.2...v1.9.6-rc.3) (2026-07-07)
+## [1.9.6](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.5...v1.9.6) (2026-07-07)
 
 
 ### Bug Fixes
 
-* make statement sorting deterministic using created_at and id fallback ([cef617a](https://github.com/Andi-IM/fintrack-saas/commit/cef617afbd3103066e6c0e916c2f91da765aba01))
+* sort bank statements chronologically in UI by statement period ([590421e](https://github.com/Andi-IM/fintrack-saas/commit/590421e8359f8218193b19a9a9276f25e538a228))
+
+
+### Performance Improvements
+
+* optimize statement period parsing in sorting using caching ([dd8037a](https://github.com/Andi-IM/fintrack-saas/commit/dd8037a606e33b5c2ae3de695a8c5ab60740d000))
 
 ## [1.9.6-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.6-rc.1...v1.9.6-rc.2) (2026-07-07)
 
