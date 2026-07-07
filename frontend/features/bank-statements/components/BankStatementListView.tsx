@@ -202,14 +202,14 @@ export function BankStatementListView({
                                     </div>
                                   </td>
                                   <td className="px-4 py-2.5 text-right whitespace-nowrap tabular-nums font-medium text-slate-600">
-                                    <div className="flex items-center justify-between w-full">
-                                      <span className="text-xs opacity-70">Rp</span>
-                                      <span>
-                                        {item.balance !== null && item.balance !== undefined
-                                          ? Number(item.balance).toLocaleString('id-ID')
-                                          : '-'}
-                                      </span>
-                                    </div>
+                                    {item.balance !== null && item.balance !== undefined ? (
+                                      <div className="flex items-center justify-between w-full">
+                                        <span className="text-xs opacity-70">Rp</span>
+                                        <span>{Number(item.balance).toLocaleString('id-ID')}</span>
+                                      </div>
+                                    ) : (
+                                      '-'
+                                    )}
                                   </td>
                                   <td className="px-4 py-2.5 text-right whitespace-nowrap">
                                     <div className="flex items-center justify-end gap-1">
