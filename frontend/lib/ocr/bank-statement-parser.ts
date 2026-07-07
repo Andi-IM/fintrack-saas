@@ -23,7 +23,16 @@ export class BankStatementParser implements IParser {
   async parse(text: string, timezoneOffset?: string, filename?: string): Promise<OCRResult> {
     for (const bankParser of this.bankParsers) {
       if (bankParser.identify(text)) {
-        return await bankParser.parse(text, timezoneOffset, filename)
+        try {
+          const result = await bankParser.parse(text, timezoneOffset, filename)
+          if (result && result.items && result.items.length > 0) {
+            return result
+          } else {
+            console.warn(`[OCR] Parser ${bankParser.bankName} returned 0 items, falling back to next parser...`)
+          }
+        } catch (e) {
+          console.warn(`[OCR] Parser ${bankParser.bankName} threw an error, falling back to next parser...`, e)
+        }
       }
     }
 
