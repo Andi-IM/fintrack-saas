@@ -17,7 +17,7 @@ export class SupabaseAuthService implements AuthService {
 
     if (error) {
       console.error('Github auth error:', error)
-      redirect(`/login?message=${encodeURIComponent(error.message)}`)
+      redirect('/login?message=Autentikasi%20gagal.%20Silakan%20coba%20lagi.')
     }
 
     if (data.url) {
