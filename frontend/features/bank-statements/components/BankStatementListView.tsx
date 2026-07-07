@@ -153,14 +153,16 @@ export function BankStatementListView({
                         <div className="grid grid-cols-2 gap-3 mb-3">
                           <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Saldo Awal</p>
-                            <p className="text-sm font-bold text-slate-700 font-mono">
-                              Rp {(statement.opening_balance || 0).toLocaleString('id-ID')}
+                            <p className="text-sm font-bold text-slate-700 tabular-nums flex items-baseline gap-1">
+                              <span className="text-xs opacity-70 font-medium">Rp</span>
+                              <span>{(statement.opening_balance || 0).toLocaleString('id-ID')}</span>
                             </p>
                           </div>
                           <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Saldo Akhir</p>
-                            <p className="text-sm font-bold text-indigo-600 font-mono">
-                              Rp {(statement.closing_balance || 0).toLocaleString('id-ID')}
+                            <p className="text-sm font-bold text-indigo-600 tabular-nums flex items-baseline gap-1">
+                              <span className="text-xs opacity-70 font-medium">Rp</span>
+                              <span>{(statement.closing_balance || 0).toLocaleString('id-ID')}</span>
                             </p>
                           </div>
                         </div>
@@ -191,15 +193,23 @@ export function BankStatementListView({
                                     <p className="text-[10px] text-slate-400">{item.category}</p>
                                   </td>
                                   <td className="px-4 py-2.5 text-right whitespace-nowrap">
-                                    <div className={cn("flex items-center justify-end gap-1 font-mono font-bold", item.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
-                                      {item.type === 'income' ? <ArrowDownLeft className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
-                                      Rp {item.amount.toLocaleString('id-ID')}
+                                    <div className={cn("flex items-center justify-between w-full tabular-nums font-bold", item.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
+                                      <div className="flex items-center gap-1 opacity-80">
+                                        {item.type === 'income' ? <ArrowDownLeft className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
+                                        <span className="text-xs">Rp</span>
+                                      </div>
+                                      <span>{item.amount.toLocaleString('id-ID')}</span>
                                     </div>
                                   </td>
-                                  <td className="px-4 py-2.5 text-right whitespace-nowrap font-mono font-medium text-slate-600">
-                                    {item.balance !== null && item.balance !== undefined
-                                      ? `Rp ${Number(item.balance).toLocaleString('id-ID')}`
-                                      : '-'}
+                                  <td className="px-4 py-2.5 text-right whitespace-nowrap tabular-nums font-medium text-slate-600">
+                                    <div className="flex items-center justify-between w-full">
+                                      <span className="text-xs opacity-70">Rp</span>
+                                      <span>
+                                        {item.balance !== null && item.balance !== undefined
+                                          ? Number(item.balance).toLocaleString('id-ID')
+                                          : '-'}
+                                      </span>
+                                    </div>
                                   </td>
                                   <td className="px-4 py-2.5 text-right whitespace-nowrap">
                                     <div className="flex items-center justify-end gap-1">
@@ -278,14 +288,18 @@ export function BankStatementListView({
                                   )}
                                 </div>
                                 <div className="text-right">
-                                  <div className={cn("flex items-center justify-end gap-0.5 font-mono font-bold text-xs", item.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
-                                    {item.type === 'income' ? <ArrowDownLeft className="w-2.5 h-2.5" /> : <ArrowUpRight className="w-2.5 h-2.5" />}
-                                    Rp {item.amount.toLocaleString('id-ID')}
-                                  </div>
+                                    <div className={cn("flex items-center justify-between w-full tabular-nums font-bold text-xs", item.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
+                                      <div className="flex items-center gap-0.5 opacity-80">
+                                        {item.type === 'income' ? <ArrowDownLeft className="w-2.5 h-2.5" /> : <ArrowUpRight className="w-2.5 h-2.5" />}
+                                        <span className="text-[10px]">Rp</span>
+                                      </div>
+                                      <span>{item.amount.toLocaleString('id-ID')}</span>
+                                    </div>
                                   {item.balance !== null && item.balance !== undefined && (
-                                    <p className="text-[9px] text-slate-400 font-mono mt-0.5">
-                                      Saldo: Rp {Number(item.balance).toLocaleString('id-ID')}
-                                    </p>
+                                      <div className="flex items-center justify-between w-full text-[9px] text-slate-400 tabular-nums mt-0.5">
+                                        <span className="opacity-70">Saldo: Rp</span>
+                                        <span>{Number(item.balance).toLocaleString('id-ID')}</span>
+                                      </div>
                                   )}
                                 </div>
                               </div>
@@ -368,9 +382,10 @@ export function BankStatementListView({
             <div className="space-y-4 my-2">
               <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
                 <span className="text-xs text-slate-500 font-medium">Nominal Mutasi</span>
-                <span className={cn("font-bold font-mono text-base", activeMobileItem.item.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
-                  {activeMobileItem.item.type === 'income' ? '+' : '-'} Rp {activeMobileItem.item.amount.toLocaleString('id-ID')}
-                </span>
+                <div className={cn("flex items-baseline gap-1 font-bold tabular-nums text-base", activeMobileItem.item.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}>
+                  <span className="text-xs opacity-70 font-medium">{activeMobileItem.item.type === 'income' ? '+' : '-'} Rp</span>
+                  <span>{activeMobileItem.item.amount.toLocaleString('id-ID')}</span>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs text-slate-500">
                 <div>
