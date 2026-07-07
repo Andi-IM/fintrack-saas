@@ -29,10 +29,9 @@ export class BsiParser implements IBankParser {
   identify(text: string): boolean {
     const textLower = text.toLowerCase()
     return (
-      textLower.includes('bsi') ||
-      textLower.includes('laporan rekening') ||
-      textLower.includes('wadiah') ||
-      textLower.includes('mudharabah')
+      textLower.includes('bank syariah indonesia') ||
+      (textLower.includes('bsi') && textLower.includes('laporan rekening')) ||
+      textLower.includes('byond')
     )
   }
 
