@@ -1,9 +1,10 @@
-## [1.9.1-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.1-rc.2...v1.9.1-rc.3) (2026-07-07)
+## [1.9.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.0...v1.9.1) (2026-07-07)
 
 
 ### Bug Fixes
 
-* **security:** implement supabase audit findings for storage RLS and auth ([4b17e6a](https://github.com/Andi-IM/fintrack-saas/commit/4b17e6ad6b75de3f03fb6f8c6d0280253c0776c7))
+* align receipt uploads with storage rls ([86dd0cc](https://github.com/Andi-IM/fintrack-saas/commit/86dd0cc8f0d549a7f695b87a7124cdf7d620b860))
+* **receipts:** handle edge cases for receipt file extensions ([b91ab10](https://github.com/Andi-IM/fintrack-saas/commit/b91ab1098b04e7b98bc56d4636e71c7db93e8440))
 
 ## [1.9.1-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.1-rc.1...v1.9.1-rc.2) (2026-07-07)
 
