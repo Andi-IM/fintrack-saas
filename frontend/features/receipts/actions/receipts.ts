@@ -45,9 +45,15 @@ export async function saveReceipt(input: SaveReceiptInput): Promise<ActionRespon
   }
 
   try {
+    const user = await getCachedUser()
+    if (!user) {
+      return { success: false, error: 'User not authenticated' }
+    }
+
     const repo = getReceiptRepository()
 
     const receipt = await repo.save({
+      userId: user.id,
       type: parsed.data.type,
       storeName: parsed.data.storeName,
       storeAddress: parsed.data.storeAddress ?? null,

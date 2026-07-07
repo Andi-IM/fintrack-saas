@@ -24,7 +24,7 @@ export class FakeReceiptRepository implements ReceiptRepository {
       atm_id: data.atmId || null,
       transaction_type: data.transactionType || null,
       fee: data.fee ?? 0,
-      file_path: data.file ? `mock-path/${data.file.name}` : null,
+      file_path: data.file ? `${data.userId}/mock-path/${data.file.name}` : null,
       bank_statement_item_id: data.bankStatementItemId || null,
     }
 
