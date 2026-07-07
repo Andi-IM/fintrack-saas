@@ -14,6 +14,7 @@ DROP POLICY IF EXISTS "Allow reads from statements bucket" ON storage.objects;
 DROP POLICY IF EXISTS "Allow deletes from statements bucket" ON storage.objects;
 
 -- 2. INSERT: authenticated users may upload only under their own user_id folder
+DROP POLICY IF EXISTS "Users can upload own statements" ON storage.objects;
 CREATE POLICY "Users can upload own statements"
   ON storage.objects
   FOR INSERT
@@ -24,6 +25,7 @@ CREATE POLICY "Users can upload own statements"
   );
 
 -- 3. SELECT: authenticated users may read only their own files
+DROP POLICY IF EXISTS "Users can view own statements" ON storage.objects;
 CREATE POLICY "Users can view own statements"
   ON storage.objects
   FOR SELECT
@@ -34,6 +36,7 @@ CREATE POLICY "Users can view own statements"
   );
 
 -- 4. UPDATE: authenticated users may replace only their own files
+DROP POLICY IF EXISTS "Users can update own statements" ON storage.objects;
 CREATE POLICY "Users can update own statements"
   ON storage.objects
   FOR UPDATE
@@ -48,6 +51,7 @@ CREATE POLICY "Users can update own statements"
   );
 
 -- 5. DELETE: authenticated users may delete only their own files
+DROP POLICY IF EXISTS "Users can delete own statements" ON storage.objects;
 CREATE POLICY "Users can delete own statements"
   ON storage.objects
   FOR DELETE
