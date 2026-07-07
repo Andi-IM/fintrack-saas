@@ -1,23 +1,11 @@
-## [1.9.3-rc.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.3-rc.3...v1.9.3-rc.4) (2026-07-07)
+## [1.9.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.2...v1.9.3) (2026-07-07)
 
 
 ### Bug Fixes
 
-* **db:** make secure statements bucket migration idempotent ([a4ca4ed](https://github.com/Andi-IM/fintrack-saas/commit/a4ca4ed8e5737e7188ed2bcdd28ab4583f8e5d6d))
-
-## [1.9.3-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.3-rc.2...v1.9.3-rc.3) (2026-07-07)
-
-
-### Bug Fixes
-
-* **db:** rename fkey to cash_flow_source_item_id_fkey and make it deferrable ([e776810](https://github.com/Andi-IM/fintrack-saas/commit/e776810ff1f1cb14f33c7377d5ad0c668597d16b))
-
-## [1.9.3-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.3-rc.1...v1.9.3-rc.2) (2026-07-07)
-
-
-### Bug Fixes
-
-* **db:** make transactions_source_item_id_fkey deferrable to resolve circular dependency ([75b0e11](https://github.com/Andi-IM/fintrack-saas/commit/75b0e114c4d9c29f4c96f950e797900497a7b7dc))
+* **ocr:** add robust fallback mechanism to bank statement parser orchestrator ([644f54d](https://github.com/Andi-IM/fintrack-saas/commit/644f54d667a59d83b554eaf0203f09979785ba96))
+* **ocr:** upgrade bank statement parser model to 70b to fix parsing failure ([f656824](https://github.com/Andi-IM/fintrack-saas/commit/f6568244d14ec2e2ef99585d7dbeeba01b2d79ed))
+* **statements:** resolve variable name conflict for data ([74fa80a](https://github.com/Andi-IM/fintrack-saas/commit/74fa80adfd1172e059f71ac95164163d61513496))
 
 ## [1.9.3-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.2...v1.9.3-rc.1) (2026-07-07)
 
