@@ -1,3 +1,10 @@
+## [1.9.2-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.1...v1.9.2-rc.1) (2026-07-07)
+
+
+### Bug Fixes
+
+* **security:** implement supabase audit findings for storage RLS and auth ([4b17e6a](https://github.com/Andi-IM/fintrack-saas/commit/4b17e6ad6b75de3f03fb6f8c6d0280253c0776c7))
+
 ## [1.9.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.0...v1.9.1) (2026-07-07)
 
 
