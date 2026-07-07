@@ -1,23 +1,9 @@
-## [1.9.2-rc.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.2-rc.3...v1.9.2-rc.4) (2026-07-07)
+## [1.9.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.1...v1.9.2) (2026-07-07)
 
 
 ### Bug Fixes
 
-* **ocr:** add robust fallback mechanism to bank statement parser orchestrator ([644f54d](https://github.com/Andi-IM/fintrack-saas/commit/644f54d667a59d83b554eaf0203f09979785ba96))
-
-## [1.9.2-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.2-rc.2...v1.9.2-rc.3) (2026-07-07)
-
-
-### Bug Fixes
-
-* **ocr:** upgrade bank statement parser model to 70b to fix parsing failure ([f656824](https://github.com/Andi-IM/fintrack-saas/commit/f6568244d14ec2e2ef99585d7dbeeba01b2d79ed))
-
-## [1.9.2-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.2-rc.1...v1.9.2-rc.2) (2026-07-07)
-
-
-### Bug Fixes
-
-* **statements:** resolve variable name conflict for data ([74fa80a](https://github.com/Andi-IM/fintrack-saas/commit/74fa80adfd1172e059f71ac95164163d61513496))
+* **security:** implement supabase audit findings for storage RLS and auth ([4b17e6a](https://github.com/Andi-IM/fintrack-saas/commit/4b17e6ad6b75de3f03fb6f8c6d0280253c0776c7))
 
 ## [1.9.2-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.1...v1.9.2-rc.1) (2026-07-07)
 
