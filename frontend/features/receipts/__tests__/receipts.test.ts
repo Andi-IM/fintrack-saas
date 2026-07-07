@@ -279,7 +279,7 @@ describe('buildReceiptStoragePath', () => {
       randomSuffix: 'abc1234',
     })
 
-    expect(path).toBe('user-1/warung-makan/123-abc1234.JPG')
+    expect(path).toBe('user-1/warung-makan/123-abc1234.jpg')
   })
 
   it('uses a fallback folder when store name has no path-safe characters', () => {
@@ -291,6 +291,18 @@ describe('buildReceiptStoragePath', () => {
       randomSuffix: 'abc1234',
     })
 
-    expect(path).toBe('user-1/receipt/123-abc1234.receipt')
+    expect(path).toBe('user-1/receipt/123-abc1234.jpg')
+  })
+
+  it('falls back to jpg when the original file name ends with a dot', () => {
+    const path = buildReceiptStoragePath({
+      userId: 'user-1',
+      storeName: 'Warung Makan',
+      originalName: 'receipt.',
+      timestamp: 123,
+      randomSuffix: 'abc1234',
+    })
+
+    expect(path).toBe('user-1/warung-makan/123-abc1234.jpg')
   })
 })

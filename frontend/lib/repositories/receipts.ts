@@ -9,7 +9,8 @@ export function buildReceiptStoragePath(input: {
   randomSuffix?: string
 }): string {
   const parts = input.originalName.split('.')
-  const fileExt = parts.length > 1 ? parts.pop()!.toLowerCase() : 'jpg'
+  const lastPart = parts.length > 1 ? parts.pop()! : ''
+  const fileExt = lastPart.trim().toLowerCase() || 'jpg'
   const uniqueName = `${input.timestamp ?? Date.now()}-${input.randomSuffix ?? Math.random().toString(36).substring(2, 9)}.${fileExt}`
   const folder = input.storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'receipt'
   return `${input.userId}/${folder}/${uniqueName}`
