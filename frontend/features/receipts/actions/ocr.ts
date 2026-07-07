@@ -40,6 +40,12 @@ export async function scanDocumentWithAI(formData: FormData): Promise<ActionResp
     if (!result) {
       return { success: false, error: 'AI returned an empty result.' }
     }
+    
+    // Log the parsed result to the terminal for debugging
+    console.log('--- AI PARSING RESULT ---')
+    console.log(JSON.stringify(result, null, 2))
+    console.log('-------------------------')
+
     return { success: true, data: result }
   } catch (error) {
     console.error('Error during OCR processing:', error)
