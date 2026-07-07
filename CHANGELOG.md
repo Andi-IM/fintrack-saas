@@ -1,3 +1,10 @@
+## [1.9.5-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.5-rc.1...v1.9.5-rc.2) (2026-07-07)
+
+
+### Bug Fixes
+
+* sort bank statements chronologically in UI by statement period ([590421e](https://github.com/Andi-IM/fintrack-saas/commit/590421e8359f8218193b19a9a9276f25e538a228))
+
 ## [1.9.5-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.4...v1.9.5-rc.1) (2026-07-07)
 
 
