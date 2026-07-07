@@ -71,12 +71,12 @@ describe('statements server actions', () => {
       
       const bcaStatements = (result as any).data['BCA']
       expect(bcaStatements.map((s: any) => s.id)).toEqual([
+        '4', // Mar 2026 (id fallback: 4 > 2)
         '2', // Mar 2026
-        '4', // Mar 2026
         '3', // Feb 2026
         '1', // Jan 2026
+        '6', // Invalid (0) (id fallback: 6 > 5)
         '5', // null (0)
-        '6', // Invalid (0)
       ])
     })
 
