@@ -1,3 +1,10 @@
+## [1.9.3-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.3-rc.2...v1.9.3-rc.3) (2026-07-07)
+
+
+### Bug Fixes
+
+* **db:** rename fkey to cash_flow_source_item_id_fkey and make it deferrable ([e776810](https://github.com/Andi-IM/fintrack-saas/commit/e776810ff1f1cb14f33c7377d5ad0c668597d16b))
+
 ## [1.9.3-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.3-rc.1...v1.9.3-rc.2) (2026-07-07)
 
 
