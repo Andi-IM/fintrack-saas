@@ -23,6 +23,22 @@ export async function getGroupedBankStatements(): Promise<ActionResponse<Record<
       return acc
     }, {})
 
+    const periodRangeCache = new Map<string, number>()
+    const getCachedEndVal = (period: string | null) => {
+      if (!period) return 0
+      let val = periodRangeCache.get(period)
+      if (val === undefined) {
+        const range = getPeriodRange(period)
+        val = range ? range.endVal : 0
+        periodRangeCache.set(period, val)
+      }
+      return val
+    }
+
+    for (const statements of Object.values(grouped)) {
+      statements.sort((a, b) => getCachedEndVal(b.statement_period) - getCachedEndVal(a.statement_period))
+    }
+
     return { success: true, data: grouped }
   } catch (error: any) {
     console.error('Error fetching bank statements:', error)
