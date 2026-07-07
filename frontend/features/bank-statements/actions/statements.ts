@@ -23,6 +23,16 @@ export async function getGroupedBankStatements(): Promise<ActionResponse<Record<
       return acc
     }, {})
 
+    for (const bank in grouped) {
+      grouped[bank].sort((a, b) => {
+        const rangeA = getPeriodRange(a.statement_period)
+        const rangeB = getPeriodRange(b.statement_period)
+        const valA = rangeA ? rangeA.endVal : 0
+        const valB = rangeB ? rangeB.endVal : 0
+        return valB - valA
+      })
+    }
+
     return { success: true, data: grouped }
   } catch (error: any) {
     console.error('Error fetching bank statements:', error)
