@@ -25,8 +25,8 @@ export async function getGroupedBankStatements(): Promise<ActionResponse<Record<
 
     for (const statements of Object.values(grouped)) {
       statements.sort((a, b) => {
-        const rangeA = getPeriodRange(a.statement_period)
-        const rangeB = getPeriodRange(b.statement_period)
+        const rangeA = a.statement_period ? getPeriodRange(a.statement_period) : null
+        const rangeB = b.statement_period ? getPeriodRange(b.statement_period) : null
         const valA = rangeA ? rangeA.endVal : 0
         const valB = rangeB ? rangeB.endVal : 0
         return valB - valA
