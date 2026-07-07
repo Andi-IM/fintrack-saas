@@ -12,7 +12,12 @@ export class JagoParser implements IBankParser {
   bankName = 'Bank JAGO'
 
   identify(text: string): boolean {
-    return text.toLowerCase().includes('jago')
+    const lower = text.toLowerCase()
+    return (
+      lower.includes('pockets transactions history') ||
+      lower.includes('pt bank jago') ||
+      lower.includes('kantor pusat bank jago')
+    )
   }
 
   parse(text: string, timezoneOffset?: string, filename?: string): OCRResult {

@@ -109,27 +109,36 @@ CRITICAL FORMATTING INSTRUCTIONS FOR LLM:
 const bankStatementSchemaPrompt = `
 You must return a JSON object conforming exactly to this structure:
 {
-  "bank": string (Name of the bank),
+  "bank": string (Name of the bank, e.g., "BSI", "Bank Mandiri". Do not confuse with recipient banks in transactions),
   "statementPeriod": string (Period of the statement),
-  "openingBalance": number (Opening balance),
-  "closingBalance": number (Closing balance),
+  "openingBalance": number (Opening balance / Saldo Awal / Saldo Bulan Lalu. Must be a valid amount, never an account number),
+  "closingBalance": number (Closing balance / Saldo Akhir. Must be a valid amount),
   "items": Array of objects:
     {
-      "date": string (Date of transaction - required),
-      "name": string (Transaction description or name - required),
-      "amount": number (Transaction amount - required),
-      "type": string (Must be exactly "income" or "expense" - required),
+      "date": string (Date and time of transaction if available - required),
+      "name": string (Full transaction description. Combine multi-line descriptions if they belong to the same transaction - required),
+      "amount": number (Transaction amount. Extracted from Debit or Kredit columns - required),
+      "type": string (Must be exactly "income" for Kredit/Dana Masuk, or "expense" for Debit/Dana Keluar - required),
       "category": string (Category of transaction, e.g. Transfer, Payment, Admin Fee),
-      "bank": string (Bank related to the transaction if applicable)
+      "bank": string (Bank related to the transaction if applicable, e.g., destination bank for transfers)
     }
 }
 
 CRITICAL FORMATTING INSTRUCTIONS FOR LLM:
-1. NUMBERS & AMOUNTS:
-   - Raw statement text may use "." as a thousands separator and "," for decimals.
-   - You MUST normalize all numeric values into standard JSON numbers without thousands separators (e.g. 11000, 5500).
-2. DATE:
-   - Extract transaction dates. Convert them to YYYY-MM-DD format.
+1. FLATTENED TABULAR DATA:
+   - PDF bank statements often have tabular structures (Date, Description, Ref, Debit, Kredit, Saldo) that get flattened into raw text.
+   - You must carefully reconstruct the rows. A transaction usually starts with a Date/Time, followed by a Description (which may span multiple lines), then Reference No, Debit amount, Kredit amount, and Balance amount.
+   - Combine description fragments (e.g., "- Bank Jago UUS - ANDI" on one line and "IRHAM MARHAMUDIN" on another) into a single "name".
+2. NUMBERS & AMOUNTS VS ACCOUNT NUMBERS:
+   - Account numbers are typically long continuous digits (e.g., 7270476079). DO NOT use account numbers as openingBalance or closingBalance.
+   - Valid amounts usually have thousands separators and decimals (e.g., "264.996,00").
+   - You MUST normalize all numeric values into standard JSON numbers without thousands separators (e.g., "264.996,00" becomes 264996).
+3. TRANSACTION TYPE (INCOME/EXPENSE):
+   - If an amount appears in the "Debit" column or has text like "Dana Keluar", type MUST be "expense".
+   - If an amount appears in the "Kredit" column or has text like "Dana Masuk", type MUST be "income".
+   - An amount of "0,00" in Debit/Kredit means the transaction belongs to the other type. Disregard the 0 amount.
+4. DATE & TIME:
+   - Extract both date and time if available. Convert them to YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss format.
 `
 
 export class OpenAIReceiptParser implements IReceiptParser {
