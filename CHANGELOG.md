@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.7...v1.10.0) (2026-07-20)
+
+
+### Features
+
+* use Modal docTR as primary OCR extractor ([db1658c](https://github.com/Andi-IM/fintrack-saas/commit/db1658c12a7db6324cbb487cf05e7d30695b69c7))
+
 ## [1.9.7](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.6...v1.9.7) (2026-07-07)
 
 
