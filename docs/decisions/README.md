@@ -59,3 +59,5 @@ Setiap keputusan desain yang signifikan dan berpengaruh besar terhadap struktur 
 - [ADR-051](051-decouple-login-page-from-supabase-client.md) - Decouple Login Page from Supabase Client
 - [ADR-052](052-production-rls-implementation.md) - Production Row Level Security Implementation
 - [ADR-053](053-server-side-filtering.md) - Server-Side Data Filtering and Pagination
+- [ADR-054](054-ocr-fallback-mechanism.md) - Orchestrator Fallback Mechanism for Bank Statement OCR
+- [ADR-055](055-modal-doctr-as-primary-ocr-extractor.md) - Use Modal docTR as the Primary OCR Extractor
