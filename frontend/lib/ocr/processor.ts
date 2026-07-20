@@ -1,6 +1,6 @@
 import { IExtractor, IParser } from './interfaces'
 import { OCRResult } from './types'
-import { VisionExtractor } from './vision'
+import { DoctrOcrExtractor } from './doctr'
 import { ReceiptParser } from './receipt-parser'
 import { BankStatementParser } from './bank-statement-parser'
 import { SeabankParser } from './banks/seabank-parser'
@@ -16,7 +16,7 @@ export class DocumentProcessor {
 
   private constructor() {
     // Register default strategies
-    this.registerExtractor(new VisionExtractor())
+    this.registerExtractor(new DoctrOcrExtractor())
     
     this.registerParser(new ReceiptParser([
       new OpenAIReceiptParser(),

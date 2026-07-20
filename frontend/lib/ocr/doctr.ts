@@ -3,11 +3,8 @@ import { IExtractor } from './interfaces'
 export class DoctrOcrExtractor implements IExtractor {
   supportedMimeTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
 
-  canHandle(mimeType: string, context: { filename?: string; routeToDoctr?: boolean }): boolean {
-    if (!this.supportedMimeTypes.includes(mimeType)) return false
-    // Self-select: route Jago bank statements to docTR if the service is available
-    const isJago = context.filename?.toLowerCase().includes('jago') ?? false
-    return isJago && !!process.env.OCR_SERVICE_URL
+  canHandle(mimeType: string, _context: { filename?: string; routeToDoctr?: boolean }): boolean {
+    return this.supportedMimeTypes.includes(mimeType)
   }
 
   async extractText(base64Data: string): Promise<string> {
@@ -29,7 +26,7 @@ export class DoctrOcrExtractor implements IExtractor {
       // We check the first few bytes (magic numbers) of the base64 string to detect PDF vs Image.
       // - 'JVBERi': %PDF- (PDF)
       // - 'iVBORw': .PNG
-      // - '/9j/4A': .JPG/.JPEG
+      // - '/9j/': .JPG/.JPEG
       const isPdf = base64Data.startsWith('JVBERi')
       let filename = 'document.png'
       let mimeType = 'image/png'
@@ -37,7 +34,7 @@ export class DoctrOcrExtractor implements IExtractor {
       if (isPdf) {
         filename = 'document.pdf'
         mimeType = 'application/pdf'
-      } else if (base64Data.startsWith('/9j/4A')) {
+      } else if (base64Data.startsWith('/9j/')) {
         filename = 'document.jpg'
         mimeType = 'image/jpeg'
       } else if (base64Data.startsWith('UklGR')) {

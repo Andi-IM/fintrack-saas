@@ -19,7 +19,7 @@ FinTrack SaaS is a comprehensive financial tracking application designed to help
 - **Dashboard & Analytics**: Real-time overview of your financial health with interactive charts, calculating income and expenses across different time ranges (1M, 3M, 1Y, YTD).
 - **Cash Flow Management**: Manually add, edit, or delete income and expense transactions.
 - **Bank Statement Parsing**: Upload bank statements (e.g., Bank Jago, BNI) and automatically parse mutations into structured data for review and syncing with cash flow.
-- **Receipt OCR & Parsing**: Upload images of physical receipts. The application uses state-of-the-art OCR (Google Cloud Vision/docTR) and LLM-based parsing (Groq/OpenAI compatible) to extract line items, merchant details, and total amounts.
+- **Receipt OCR & Parsing**: Upload images of physical receipts. The application uses Modal-hosted docTR OCR and LLM-based parsing (Groq/OpenAI compatible) to extract line items, merchant details, and total amounts.
 - **Server-Side Architecture**: Built heavily around Next.js Server Components, Server Actions, and Supabase database optimization for lightning-fast data fetching, filtering, and pagination.
 - **Secure Authentication**: Email and Password authentication using Supabase Auth, combined with robust Row Level Security (RLS) ensuring strict data privacy between users.
 
