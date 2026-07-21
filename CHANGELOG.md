@@ -1,3 +1,10 @@
+# [1.11.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.0-rc.1...v1.11.0-rc.2) (2026-07-21)
+
+
+### Bug Fixes
+
+* harden statement period migration ([06e6679](https://github.com/Andi-IM/fintrack-saas/commit/06e6679f9ba9eb24caf62ee23c0133f8265ff1c7))
+
 # [1.11.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.10.0...v1.11.0-rc.1) (2026-07-21)
 
 
