@@ -152,7 +152,9 @@ describe('statements server actions', () => {
       const result = await saveBankStatement(validSave)
       expect(result.success).toBe(true)
       expect((result as any).data?.statementId).toBe('stmt-new')
-      expect(mockRepo.save).toHaveBeenCalled()
+      expect(mockRepo.save).toHaveBeenCalledWith(expect.objectContaining({
+        statementPeriod: '2026-06-01',
+      }))
     })
 
     it('detects duplicate statement period (subset_or_duplicate)', async () => {
@@ -199,11 +201,7 @@ describe('statements server actions', () => {
       expect((result as any).error).toContain('tumpang tindih dengan laporan periode')
     })
 
-    it('handles exact match fallback when parsing range returns null', async () => {
-      mockRepo.checkExistingForBank = vi.fn().mockResolvedValue([
-        { id: 'existing', statement_period: 'InvalidPeriodFormat', file_path: 'file.pdf' } as any,
-      ])
-
+    it('rejects unparseable statement periods before saving', async () => {
       const invalidPeriodSave = {
         ...validSave,
         statementPeriod: 'InvalidPeriodFormat',
@@ -211,7 +209,9 @@ describe('statements server actions', () => {
 
       const result = await saveBankStatement(invalidPeriodSave)
       expect(result.success).toBe(false)
-      expect((result as any).error).toContain('sudah pernah diunggah sebelumnya')
+      expect((result as any).error).toBe('Validation failed')
+      expect(mockRepo.checkExistingForBank).not.toHaveBeenCalled()
+      expect(mockRepo.save).not.toHaveBeenCalled()
     })
 
     it('returns error on save failure', async () => {

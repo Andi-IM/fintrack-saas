@@ -28,6 +28,7 @@ import ItemEditDialog from '@/components/statements/ItemEditDialog'
 import type { ItemFormData } from '@/components/statements/ItemEditDialog'
 import { BankStatementListSkeleton } from '@/components/ui/statements-skeleton'
 import { formatDateForInput } from '@/lib/utils/date'
+import { formatStatementPeriodLabel } from '@/lib/utils/statement-period'
 import { cn } from '@/lib/utils'
 
 export function BankStatementListView({
@@ -95,8 +96,11 @@ export function BankStatementListView({
             {/* Periods List */}
             {expandedBanks.includes(bank) && (
               <div className="divide-y divide-slate-100">
-                {statements.map((statement) => (
-                  <article key={statement.id} className="bg-white">
+                {statements.map((statement) => {
+                  const statementPeriodLabel = formatStatementPeriodLabel(statement.statement_period)
+
+                  return (
+                    <article key={statement.id} className="bg-white">
                     <div className="w-full flex items-center justify-between px-6 py-3 hover:bg-slate-50/50 transition-colors">
                       <button
                         type="button"
@@ -105,14 +109,14 @@ export function BankStatementListView({
                         className="flex-1 flex items-center gap-3 text-left focus-visible:outline-indigo-500 cursor-pointer outline-none"
                       >
                         <Calendar className="w-4 h-4 text-slate-400" aria-hidden="true" />
-                        <span className="text-sm font-semibold text-slate-700 hover:text-indigo-600 transition-colors">{statement.statement_period}</span>
+                        <span className="text-sm font-semibold text-slate-700 hover:text-indigo-600 transition-colors">{statementPeriodLabel}</span>
                       </button>
                       <div className="flex items-center gap-2">
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-rose-500 hover:text-rose-700 hover:bg-rose-50"
-                          aria-label={`Hapus laporan mutasi ${statement.statement_period}`}
+                          aria-label={`Hapus laporan mutasi ${statementPeriodLabel}`}
                           onClick={(e) => handleDeleteStatement(e, statement.id, statement.file_path)}
                           disabled={deleteMutation.isPending && deleteMutation.variables?.id === statement.id}
                         >
@@ -321,7 +325,8 @@ export function BankStatementListView({
                       </div>
                     )}
                   </article>
-                ))}
+                  )
+                })}
               </div>
             )}
           </section>
