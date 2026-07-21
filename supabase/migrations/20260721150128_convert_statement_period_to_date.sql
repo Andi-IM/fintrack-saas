@@ -1,28 +1,61 @@
+CREATE OR REPLACE FUNCTION pg_temp.convert_statement_period_to_date(
+  period_text text,
+  created_at_value timestamp with time zone
+)
+RETURNS date
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  clean_period text;
+  month_text text;
+  year_text text;
+  month_num integer;
+BEGIN
+  clean_period := trim(
+    CASE
+      WHEN period_text LIKE '%-%' THEN split_part(period_text, '-', 2)
+      ELSE period_text
+    END
+  );
+
+  IF clean_period IS NOT NULL AND clean_period ~* '^[[:alpha:]]{3,9}\s+\d{4}$' THEN
+    month_text := upper(split_part(clean_period, ' ', 1));
+    year_text := split_part(clean_period, ' ', 2);
+    month_num := CASE month_text
+      WHEN 'JAN' THEN 1
+      WHEN 'FEB' THEN 2
+      WHEN 'MAR' THEN 3
+      WHEN 'APR' THEN 4
+      WHEN 'MAY' THEN 5
+      WHEN 'MEI' THEN 5
+      WHEN 'JUN' THEN 6
+      WHEN 'JUL' THEN 7
+      WHEN 'AUG' THEN 8
+      WHEN 'AGU' THEN 8
+      WHEN 'AGT' THEN 8
+      WHEN 'AGS' THEN 8
+      WHEN 'SEP' THEN 9
+      WHEN 'OCT' THEN 10
+      WHEN 'OKT' THEN 10
+      WHEN 'NOV' THEN 11
+      WHEN 'NOP' THEN 11
+      WHEN 'DEC' THEN 12
+      WHEN 'DES' THEN 12
+      ELSE NULL
+    END;
+
+    IF month_num IS NOT NULL AND year_text ~ '^\d{4}$' THEN
+      RETURN make_date(year_text::integer, month_num, 1);
+    END IF;
+  END IF;
+
+  RETURN COALESCE(created_at_value::date, CURRENT_DATE);
+END;
+$$;
+
 ALTER TABLE public.bank_statements
 ALTER COLUMN statement_period TYPE date
-USING (
-  CASE upper(split_part(statement_period, ' ', 1))
-    WHEN 'JAN' THEN make_date(split_part(statement_period, ' ', 2)::integer, 1, 1)
-    WHEN 'FEB' THEN make_date(split_part(statement_period, ' ', 2)::integer, 2, 1)
-    WHEN 'MAR' THEN make_date(split_part(statement_period, ' ', 2)::integer, 3, 1)
-    WHEN 'APR' THEN make_date(split_part(statement_period, ' ', 2)::integer, 4, 1)
-    WHEN 'MAY' THEN make_date(split_part(statement_period, ' ', 2)::integer, 5, 1)
-    WHEN 'MEI' THEN make_date(split_part(statement_period, ' ', 2)::integer, 5, 1)
-    WHEN 'JUN' THEN make_date(split_part(statement_period, ' ', 2)::integer, 6, 1)
-    WHEN 'JUL' THEN make_date(split_part(statement_period, ' ', 2)::integer, 7, 1)
-    WHEN 'AUG' THEN make_date(split_part(statement_period, ' ', 2)::integer, 8, 1)
-    WHEN 'AGU' THEN make_date(split_part(statement_period, ' ', 2)::integer, 8, 1)
-    WHEN 'AGT' THEN make_date(split_part(statement_period, ' ', 2)::integer, 8, 1)
-    WHEN 'AGS' THEN make_date(split_part(statement_period, ' ', 2)::integer, 8, 1)
-    WHEN 'SEP' THEN make_date(split_part(statement_period, ' ', 2)::integer, 9, 1)
-    WHEN 'OCT' THEN make_date(split_part(statement_period, ' ', 2)::integer, 10, 1)
-    WHEN 'OKT' THEN make_date(split_part(statement_period, ' ', 2)::integer, 10, 1)
-    WHEN 'NOV' THEN make_date(split_part(statement_period, ' ', 2)::integer, 11, 1)
-    WHEN 'NOP' THEN make_date(split_part(statement_period, ' ', 2)::integer, 11, 1)
-    WHEN 'DEC' THEN make_date(split_part(statement_period, ' ', 2)::integer, 12, 1)
-    WHEN 'DES' THEN make_date(split_part(statement_period, ' ', 2)::integer, 12, 1)
-  END
-);
+USING pg_temp.convert_statement_period_to_date(statement_period, created_at);
 
 ALTER TABLE public.bank_statements
 ALTER COLUMN statement_period SET NOT NULL;

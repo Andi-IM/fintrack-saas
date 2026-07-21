@@ -22,7 +22,8 @@ Application code normalizes OCR or manually edited month-year values before savi
 - Positive: Statement periods are sortable and filterable with native date semantics.
 - Positive: Existing UI can continue showing concise month-year labels.
 - Positive: Inserts reject unparseable period labels before reaching Supabase.
-- Trade-off: Multi-month OCR labels are collapsed to their ending month when persisted as a single date.
+- Trade-off: Multi-month OCR labels are collapsed to their ending month when persisted as a single date; the migration follows the same rule for historical data.
+- Trade-off: Historical rows with invalid or missing period labels fall back to `created_at::date` during migration to avoid blocking the type conversion.
 - Risk: External code that expects the raw text label must format the date before display.
 
 ## Related Notes
