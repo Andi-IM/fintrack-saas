@@ -1,3 +1,18 @@
+# [1.11.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.10.0...v1.11.0) (2026-07-21)
+
+
+### Bug Fixes
+
+* harden statement period migration ([06e6679](https://github.com/Andi-IM/fintrack-saas/commit/06e6679f9ba9eb24caf62ee23c0133f8265ff1c7))
+* normalize statement period fallback dates ([8471de9](https://github.com/Andi-IM/fintrack-saas/commit/8471de9a7b50bb434314e334c36089734e72850a))
+* parse terminal statement period in migration ([817b9e7](https://github.com/Andi-IM/fintrack-saas/commit/817b9e7c3bbc964daac865490a2d611eef0d0e54))
+* reject reversed statement period ranges ([753ff3d](https://github.com/Andi-IM/fintrack-saas/commit/753ff3de633eecc1f81b981fd12df3aa9b1f2a0b))
+
+
+### Features
+
+* store statement period as date ([a0cba85](https://github.com/Andi-IM/fintrack-saas/commit/a0cba857c848c3f404de47b18e9ebd8c3f914da2))
+
 # [1.11.0-rc.5](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.0-rc.4...v1.11.0-rc.5) (2026-07-21)
 
 
