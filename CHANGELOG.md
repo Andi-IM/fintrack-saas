@@ -1,3 +1,10 @@
+# [1.11.0-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.0-rc.2...v1.11.0-rc.3) (2026-07-21)
+
+
+### Bug Fixes
+
+* reject reversed statement period ranges ([753ff3d](https://github.com/Andi-IM/fintrack-saas/commit/753ff3de633eecc1f81b981fd12df3aa9b1f2a0b))
+
 # [1.11.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.0-rc.1...v1.11.0-rc.2) (2026-07-21)
 
 
