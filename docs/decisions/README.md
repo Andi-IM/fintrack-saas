@@ -61,3 +61,5 @@ Setiap keputusan desain yang signifikan dan berpengaruh besar terhadap struktur 
 - [ADR-053](053-server-side-filtering.md) - Server-Side Data Filtering and Pagination
 - [ADR-054](054-ocr-fallback-mechanism.md) - Orchestrator Fallback Mechanism for Bank Statement OCR
 - [ADR-055](055-modal-doctr-as-primary-ocr-extractor.md) - Use Modal docTR as the Primary OCR Extractor
+- [ADR-056](056-convert-bank-statement-period-to-date.md) - Convert Bank Statement Period to Date
+- [ADR-057](057-enable-coderabbit-pr-review.md) - Enable CodeRabbit Pull Request Review

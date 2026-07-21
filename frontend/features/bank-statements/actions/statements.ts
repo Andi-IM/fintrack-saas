@@ -3,9 +3,13 @@
 import { z } from 'zod'
 import { invalidateCache } from '@/lib/cache'
 import { getStatementRepository } from '@/lib/repositories/statements'
-import { STATEMENT_MONTH_MAP } from '@/lib/constants/ocr'
 import { Tables } from '@/lib/database.types'
 import { ActionResponse } from '@/lib/actions/types'
+import {
+  formatStatementPeriodLabel,
+  getPeriodRange,
+  normalizeStatementPeriodToDate,
+} from '@/lib/utils/statement-period'
 
 export type BankStatementWithItems = Tables<'bank_statements'> & {
   bank_statement_items: Tables<'bank_statement_items'>[]
@@ -80,7 +84,8 @@ export async function deleteBankStatement(id: string, filePath: string): Promise
 
 const saveStatementSchema = z.object({
   bankName: z.string().min(1, 'Bank name is required'),
-  statementPeriod: z.string().min(1, 'Statement period is required'),
+  statementPeriod: z.string().min(1, 'Statement period is required')
+    .refine((period) => normalizeStatementPeriodToDate(period) !== null, 'Statement period must include a valid month and year'),
   openingBalance: z.number().optional(),
   closingBalance: z.number().optional(),
   items: z.array(z.object({
@@ -94,41 +99,6 @@ const saveStatementSchema = z.object({
 
 interface SaveStatementInput extends z.infer<typeof saveStatementSchema> {
   file: File
-}
-
-interface MonthYear {
-  year: number
-  month: number
-}
-
-function parseMonthYear(monthStr: string, yearStr: string): MonthYear {
-  const cleanMonth = monthStr.toLowerCase().substring(0, 3)
-  const monthNum = parseInt(STATEMENT_MONTH_MAP[cleanMonth] || '01', 10)
-  const yearNum = parseInt(yearStr, 10)
-  return { month: monthNum, year: yearNum }
-}
-
-function getPeriodRange(period: string): { startVal: number; endVal: number } | null {
-  const rangeRegex = /\b([a-zA-Z]{3,9})\s+(\d{4})\s*-\s*([a-zA-Z]{3,9})\s+(\d{4})\b/i
-  const matchRange = period.match(rangeRegex)
-  if (matchRange) {
-    const start = parseMonthYear(matchRange[1], matchRange[2])
-    const end = parseMonthYear(matchRange[3], matchRange[4])
-    return {
-      startVal: start.year * 12 + start.month,
-      endVal: end.year * 12 + end.month,
-    }
-  }
-
-  const singleRegex = /\b([a-zA-Z]{3,9})\s+(\d{4})\b/i
-  const matchSingle = period.match(singleRegex)
-  if (matchSingle) {
-    const single = parseMonthYear(matchSingle[1], matchSingle[2])
-    const val = single.year * 12 + single.month
-    return { startVal: val, endVal: val }
-  }
-
-  return null
 }
 
 function compareRanges(
@@ -235,7 +205,7 @@ export async function getStatementAnalytics(): Promise<ActionResponse<StatementA
     bankSummaries.push({
       bankName,
       latestBalance: latest.closing_balance || 0,
-      latestPeriod: latest.statement_period,
+      latestPeriod: formatStatementPeriodLabel(latest.statement_period),
       statementsCount: stmts.length,
       totalIncome: bankIncome,
       totalExpense: bankExpense,
@@ -335,6 +305,7 @@ export async function saveBankStatement({
   const repo = getStatementRepository()
   try {
     const existingStatements = await repo.checkExistingForBank(bankName)
+    const normalizedStatementPeriod = normalizeStatementPeriodToDate(statementPeriod)!
 
     const newRange = getPeriodRange(statementPeriod)
     if (existingStatements && existingStatements.length > 0) {
@@ -345,17 +316,17 @@ export async function saveBankStatement({
           const relation = compareRanges(newRange, oldRange)
 
           if (relation === 'subset_or_duplicate') {
-            return { success: false, error: `Laporan mutasi untuk ${bankName} dengan periode ${statementPeriod} sudah tercakup oleh laporan periode ${existing.statement_period} yang diunggah sebelumnya.` }
+            return { success: false, error: `Laporan mutasi untuk ${bankName} dengan periode ${formatStatementPeriodLabel(statementPeriod)} sudah tercakup oleh laporan periode ${formatStatementPeriodLabel(existing.statement_period)} yang diunggah sebelumnya.` }
           } else if (relation === 'superset') {
-            console.log(`Replacing existing statement ${existing.id} (${existing.statement_period}) with new statement (${statementPeriod})`)
+            console.log(`Replacing existing statement ${existing.id} (${formatStatementPeriodLabel(existing.statement_period)}) with new statement (${formatStatementPeriodLabel(statementPeriod)})`)
             await repo.delete(existing.id, existing.file_path)
             await repo.removeFile(existing.file_path)
           } else if (relation === 'overlap') {
-            return { success: false, error: `Laporan mutasi yang diunggah (${statementPeriod}) tumpang tindih dengan laporan periode ${existing.statement_period}. Harap periksa kembali berkas Anda untuk menghindari duplikasi transaksi.` }
+            return { success: false, error: `Laporan mutasi yang diunggah (${formatStatementPeriodLabel(statementPeriod)}) tumpang tindih dengan laporan periode ${formatStatementPeriodLabel(existing.statement_period)}. Harap periksa kembali berkas Anda untuk menghindari duplikasi transaksi.` }
           }
         } else {
-          if (existing.statement_period === statementPeriod) {
-            return { success: false, error: `Laporan mutasi untuk ${bankName} dengan periode ${statementPeriod} sudah pernah diunggah sebelumnya.` }
+          if (existing.statement_period === normalizedStatementPeriod) {
+            return { success: false, error: `Laporan mutasi untuk ${bankName} dengan periode ${formatStatementPeriodLabel(statementPeriod)} sudah pernah diunggah sebelumnya.` }
           }
         }
       }
@@ -363,7 +334,7 @@ export async function saveBankStatement({
 
     const statement = await repo.save({
       bankName,
-      statementPeriod,
+      statementPeriod: normalizedStatementPeriod,
       openingBalance: openingBalance ?? 0,
       closingBalance: closingBalance ?? 0,
       items,
