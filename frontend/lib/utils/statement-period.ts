@@ -29,6 +29,10 @@ function toPeriodValue({ year, month }: MonthYear): number {
   return year * 12 + month
 }
 
+function isForwardRange(start: MonthYear, end: MonthYear): boolean {
+  return toPeriodValue(end) >= toPeriodValue(start)
+}
+
 function toPeriodDate({ year, month }: MonthYear): string {
   return `${year}-${String(month).padStart(2, '0')}-01`
 }
@@ -61,6 +65,7 @@ export function getPeriodRange(period: string | null | undefined): StatementPeri
     const start = parseMonthYear(matchRange[1], matchRange[2])
     const end = parseMonthYear(matchRange[3], matchRange[4])
     if (!start || !end) return null
+    if (!isForwardRange(start, end)) return null
     return {
       startVal: toPeriodValue(start),
       endVal: toPeriodValue(end),
@@ -91,8 +96,11 @@ export function normalizeStatementPeriodToDate(period: string): string | null {
   const rangeRegex = /\b([a-zA-Z]{3,9})\s+(\d{4})\s*-\s*([a-zA-Z]{3,9})\s+(\d{4})\b/i
   const matchRange = period.match(rangeRegex)
   if (matchRange) {
+    const start = parseMonthYear(matchRange[1], matchRange[2])
     const end = parseMonthYear(matchRange[3], matchRange[4])
-    return end ? toPeriodDate(end) : null
+    if (!start || !end) return null
+    if (!isForwardRange(start, end)) return null
+    return toPeriodDate(end)
   }
 
   const singleRegex = /\b([a-zA-Z]{3,9})\s+(\d{4})\b/i
