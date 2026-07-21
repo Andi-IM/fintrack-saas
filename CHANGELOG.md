@@ -1,3 +1,10 @@
+# [1.11.0-rc.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.0-rc.3...v1.11.0-rc.4) (2026-07-21)
+
+
+### Bug Fixes
+
+* parse terminal statement period in migration ([817b9e7](https://github.com/Andi-IM/fintrack-saas/commit/817b9e7c3bbc964daac865490a2d611eef0d0e54))
+
 # [1.11.0-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.0-rc.2...v1.11.0-rc.3) (2026-07-21)
 
 
