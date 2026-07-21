@@ -305,10 +305,7 @@ export async function saveBankStatement({
   const repo = getStatementRepository()
   try {
     const existingStatements = await repo.checkExistingForBank(bankName)
-    const normalizedStatementPeriod = normalizeStatementPeriodToDate(statementPeriod)
-    if (!normalizedStatementPeriod) {
-      return { success: false, error: 'Statement period must include a valid month and year' }
-    }
+    const normalizedStatementPeriod = normalizeStatementPeriodToDate(statementPeriod)!
 
     const newRange = getPeriodRange(statementPeriod)
     if (existingStatements && existingStatements.length > 0) {
