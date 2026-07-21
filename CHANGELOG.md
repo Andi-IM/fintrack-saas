@@ -1,9 +1,9 @@
-# [1.10.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.10.0-rc.1...v1.10.0-rc.2) (2026-07-21)
+# [1.10.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.7...v1.10.0) (2026-07-20)
 
 
 ### Features
 
-* store statement period as date ([a0cba85](https://github.com/Andi-IM/fintrack-saas/commit/a0cba857c848c3f404de47b18e9ebd8c3f914da2))
+* use Modal docTR as primary OCR extractor ([db1658c](https://github.com/Andi-IM/fintrack-saas/commit/db1658c12a7db6324cbb487cf05e7d30695b69c7))
 
 ## [1.9.7](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.6...v1.9.7) (2026-07-07)
 
