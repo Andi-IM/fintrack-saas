@@ -71,7 +71,7 @@ BEGIN
     END IF;
   END IF;
 
-  RETURN COALESCE(created_at_value::date, CURRENT_DATE);
+  RETURN date_trunc('month', COALESCE(created_at_value, CURRENT_DATE::timestamp with time zone))::date;
 END;
 $$;
 
