@@ -1,3 +1,10 @@
+# [1.11.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.10.0...v1.11.0-rc.1) (2026-07-21)
+
+
+### Features
+
+* store statement period as date ([a0cba85](https://github.com/Andi-IM/fintrack-saas/commit/a0cba857c848c3f404de47b18e9ebd8c3f914da2))
+
 # [1.10.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.9.7...v1.10.0) (2026-07-20)
 
 
