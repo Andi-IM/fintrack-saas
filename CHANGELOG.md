@@ -1,3 +1,10 @@
+# [1.11.0-rc.5](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.0-rc.4...v1.11.0-rc.5) (2026-07-21)
+
+
+### Bug Fixes
+
+* normalize statement period fallback dates ([8471de9](https://github.com/Andi-IM/fintrack-saas/commit/8471de9a7b50bb434314e334c36089734e72850a))
+
 # [1.11.0-rc.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.0-rc.3...v1.11.0-rc.4) (2026-07-21)
 
 
