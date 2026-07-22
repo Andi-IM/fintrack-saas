@@ -8,6 +8,17 @@ vi.mock('../hooks/use-scan-store', () => ({
   useScanStore: vi.fn()
 }))
 
+const mockHandleReparseBankStatement = vi.fn()
+let mockRescanState = {
+  handleReparseBankStatement: mockHandleReparseBankStatement,
+  isRescanning: false,
+  canReparseBankStatement: true,
+}
+
+vi.mock('../hooks/use-bank-statement-rescan', () => ({
+  useBankStatementRescan: vi.fn(() => mockRescanState)
+}))
+
 const mockHandleSaveScannedItems = vi.fn()
 
 vi.mock('../hooks/use-submit-scanned-data', () => ({
@@ -27,6 +38,11 @@ describe('BankStatementReviewForm Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    mockRescanState = {
+      handleReparseBankStatement: mockHandleReparseBankStatement,
+      isRescanning: false,
+      canReparseBankStatement: true,
+    }
     vi.mocked(useScanStore).mockReturnValue(mockStore as any)
   })
 
@@ -164,6 +180,41 @@ describe('BankStatementReviewForm Component', () => {
     expect(mockHandleSaveScannedItems).toHaveBeenCalled()
   })
 
+  it('disables review editing and final actions while re-scanning', () => {
+    mockRescanState = {
+      handleReparseBankStatement: mockHandleReparseBankStatement,
+      isRescanning: true,
+      canReparseBankStatement: true,
+    }
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      scanResult: {
+        bank: 'BCA',
+        statementPeriod: 'May 2026',
+        openingBalance: 100000,
+        closingBalance: 200000,
+        items: [
+          { name: 'Transfer in', amount: 50000, type: 'income', category: 'Transfer', bank: 'BCA', date: '2026-05-01T10:00:00.000Z' }
+        ]
+      }
+    } as any)
+
+    render(<BankStatementReviewForm />)
+
+    expect(screen.getByLabelText('Bank Name')).toBeDisabled()
+    expect(screen.getByLabelText('Period')).toBeDisabled()
+    expect(screen.getByLabelText('Opening Balance')).toBeDisabled()
+    expect(screen.getByLabelText('Closing Balance')).toBeDisabled()
+    expect(screen.getByLabelText('Nama transaksi bank 1')).toBeDisabled()
+    expect(screen.getByRole('combobox', { name: 'Transaction Type' })).toBeDisabled()
+    expect(screen.getByLabelText('Tanggal transaksi bank 1')).toBeDisabled()
+    expect(screen.getByLabelText('Nominal transaksi bank 1')).toBeDisabled()
+    expect(screen.getByRole('button', { name: /Hapus transaksi ini/i })).toBeDisabled()
+    expect(screen.getByText('Discard')).toBeDisabled()
+    expect(screen.getByText('Confirm & Save')).toBeDisabled()
+    expect(screen.getByRole('button', { name: /Re-scanning/i })).toBeDisabled()
+  })
+
   it('renders when scanResult.items is an empty array', () => {
     vi.mocked(useScanStore).mockReturnValue({
       ...mockStore,
@@ -214,5 +265,23 @@ describe('BankStatementReviewForm Component', () => {
     render(<BankStatementReviewForm />)
     const numberInputs = screen.getAllByDisplayValue('0')
     expect(numberInputs.length).toBeGreaterThan(0)
+  })
+
+  it('announces asynchronous re-scan errors with an alert role', () => {
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      errorMessage: 'Failed to re-scan bank statement.',
+      scanResult: {
+        bank: 'BCA',
+        statementPeriod: 'May 2026',
+        openingBalance: 100000,
+        closingBalance: 200000,
+        items: []
+      }
+    } as any)
+
+    render(<BankStatementReviewForm />)
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Failed to re-scan bank statement.')
   })
 })

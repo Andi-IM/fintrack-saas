@@ -1,4 +1,5 @@
 export interface OCRResult {
+  rawText?: string
   merchant?: string
   items?: (ReceiptItem | BankTransaction)[]
   total?: number

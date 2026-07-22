@@ -1,8 +1,9 @@
-import { CheckCircle2, Trash2 } from 'lucide-react'
+import { AlertCircle, CheckCircle2, RefreshCw, Trash2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useScanStore } from '@/features/receipts/hooks/use-scan-store'
 import { useSubmitScannedData } from '@/features/receipts/hooks/use-submit-scanned-data'
+import { useBankStatementRescan } from '@/features/receipts/hooks/use-bank-statement-rescan'
 import { isBankTransaction } from '../utils/scan-mapper'
 import { cn } from '@/lib/utils'
 import { formatDateForInput } from '@/lib/utils/date'
@@ -10,6 +11,7 @@ import { formatDateForInput } from '@/lib/utils/date'
 export function BankStatementReviewForm() {
   const {
     scanResult,
+    errorMessage,
     updateScanResultItem,
     deleteScanResultItem,
     updateScanResultField,
@@ -17,6 +19,7 @@ export function BankStatementReviewForm() {
   } = useScanStore()
 
   const { handleSaveScannedItems } = useSubmitScannedData('BankStatement')
+  const { handleReparseBankStatement, isRescanning, canReparseBankStatement } = useBankStatementRescan()
 
   if (!scanResult) return null
 
@@ -27,8 +30,26 @@ export function BankStatementReviewForm() {
           <CheckCircle2 className="w-5 h-5 text-emerald-500" />
           <p className="text-sm font-bold text-emerald-800">Extraction Successful - Review & Edit</p>
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-100 hover:text-emerald-900"
+          onClick={handleReparseBankStatement}
+          disabled={!canReparseBankStatement || isRescanning}
+        >
+          <RefreshCw className={cn('w-3.5 h-3.5 mr-1.5', isRescanning && 'animate-spin')} />
+          {isRescanning ? 'Re-scanning' : 'Re-scan AI'}
+        </Button>
       </div>
       <div className="p-4 space-y-4">
+        {errorMessage && (
+          <div role="alert" className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="bank-name" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Bank Name</label>
@@ -38,6 +59,7 @@ export function BankStatementReviewForm() {
               value={scanResult.bank || ''}
               onChange={(e) => updateScanResultField('bank', e.target.value)}
               className="h-8 text-xs font-bold"
+              disabled={isRescanning}
             />
           </div>
           <div>
@@ -48,6 +70,7 @@ export function BankStatementReviewForm() {
               value={scanResult.statementPeriod || ''}
               onChange={(e) => updateScanResultField('statementPeriod', e.target.value)}
               className="h-8 text-xs font-bold text-right"
+              disabled={isRescanning}
             />
           </div>
           <div>
@@ -59,6 +82,7 @@ export function BankStatementReviewForm() {
               value={scanResult.openingBalance ?? 0}
               onChange={(e) => updateScanResultField('openingBalance', parseFloat(e.target.value) || 0)}
               className="h-8 text-xs font-bold font-mono"
+              disabled={isRescanning}
             />
           </div>
           <div>
@@ -70,6 +94,7 @@ export function BankStatementReviewForm() {
               value={scanResult.closingBalance ?? 0}
               onChange={(e) => updateScanResultField('closingBalance', parseFloat(e.target.value) || 0)}
               className="h-8 text-xs font-bold text-right font-mono text-indigo-600"
+              disabled={isRescanning}
             />
           </div>
         </div>
@@ -83,12 +108,14 @@ export function BankStatementReviewForm() {
                   value={item.name}
                   onChange={(e) => updateScanResultItem(i, 'name', e.target.value)}
                   className="h-7 text-[11px] font-bold flex-1"
+                  disabled={isRescanning}
                 />
                 <select
                   aria-label="Transaction Type"
                   value={item.type}
                   onChange={(e) => updateScanResultItem(i, 'type', e.target.value)}
                   className={cn("h-7 w-20 text-[10px] font-bold rounded-md border border-slate-200 bg-white px-1 focus:outline-none focus:ring-1 focus:ring-indigo-500", item.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}
+                  disabled={isRescanning}
                 >
                   <option value="income">INCOME</option>
                   <option value="expense">EXPENSE</option>
@@ -101,6 +128,7 @@ export function BankStatementReviewForm() {
                   value={item.date ? formatDateForInput(item.date) : ''}
                   onChange={(e) => updateScanResultItem(i, 'date', e.target.value ? new Date(e.target.value).toISOString() : '')}
                   className="h-7 text-[10px] flex-1"
+                  disabled={isRescanning}
                 />
                 <Input
                   aria-label={`Nominal transaksi bank ${i + 1}`}
@@ -108,11 +136,13 @@ export function BankStatementReviewForm() {
                   value={item.amount}
                   onChange={(e) => updateScanResultItem(i, 'amount', parseFloat(e.target.value))}
                   className="h-7 text-[11px] w-24 text-right font-mono font-bold"
+                  disabled={isRescanning}
                 />
                 <button
                   onClick={() => deleteScanResultItem(i)}
                   className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded transition-colors"
                   aria-label="Hapus transaksi ini"
+                  disabled={isRescanning}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -122,10 +152,10 @@ export function BankStatementReviewForm() {
         </div>
 
         <div className="pt-2 flex gap-3">
-          <Button variant="outline" className="flex-1 font-bold h-10 shadow-sm" onClick={resetScan}>
+          <Button variant="outline" className="flex-1 font-bold h-10 shadow-sm" onClick={resetScan} disabled={isRescanning}>
             Discard
           </Button>
-          <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 shadow-md shadow-emerald-100" onClick={handleSaveScannedItems}>
+          <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 shadow-md shadow-emerald-100" onClick={handleSaveScannedItems} disabled={isRescanning}>
             Confirm & Save
           </Button>
         </div>

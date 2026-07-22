@@ -163,6 +163,53 @@ describe('OpenAIBankStatementParser', () => {
 
     expect(result.statementPeriod).toBe('01/08/2021')
   })
+
+  it('re-parses bank statements by comparing raw OCR text with the previous JSON draft', async () => {
+    mockCreate.mockResolvedValue({
+      choices: [{
+        message: {
+          content: JSON.stringify({
+            bank: 'Bank Jago',
+            statementPeriod: 'Agustus 2021',
+            openingBalance: 100000,
+            closingBalance: 150000,
+            items: [{
+              date: '02/08/2021',
+              name: 'Corrected transfer',
+              amount: 50000,
+              type: 'income',
+              category: 'Transfer',
+            }]
+          })
+        }
+      }]
+    })
+
+    const parser = new OpenAIBankStatementParser()
+    const result = await parser.reparse(
+      '02/08/2021 Corrected transfer Kredit 50.000,00',
+      {
+        rawText: 'this should not be duplicated in current JSON',
+        bank: 'Bank Jago',
+        statementPeriod: '01/08/2021',
+        items: [{ date: '2021-08-02', name: 'Wrong transfer', amount: 5000, type: 'income', category: 'Transfer', bank: 'Bank Jago' }],
+      },
+      '+07:00',
+      'statement.pdf'
+    )
+
+    const prompt = mockCreate.mock.calls[0][0].messages[1].content
+    expect(prompt).toContain('Current Parsed JSON:')
+    expect(prompt).toContain('Wrong transfer')
+    expect(prompt).not.toContain('this should not be duplicated')
+    expect(prompt).toContain('Raw OCR Text:')
+    expect(prompt).toContain('02/08/2021 Corrected transfer Kredit 50.000,00')
+    expect(result.statementPeriod).toBe('01/08/2021')
+    expect(result.items?.[0]).toMatchObject({
+      name: 'Corrected transfer',
+      bank: 'Bank Jago',
+    })
+  })
 })
 
 describe('ReceiptParser delegation', () => {

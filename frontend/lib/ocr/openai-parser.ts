@@ -236,25 +236,30 @@ export class OpenAIBankStatementParser implements IBankParser {
     return true
   }
 
-  async parse(text: string, timezoneOffset?: string, filename?: string): Promise<OCRResult> {
+  private normalizeBankStatementResult(parsedData: OCRResult, timezoneOffset?: string): OCRResult {
+    if (parsedData.statementPeriod) {
+      parsedData.statementPeriod = formatStatementPeriodInputDate(parsedData.statementPeriod) || parsedData.statementPeriod
+    }
+    
+    // Normalize dates in the transaction items
+    if (parsedData.items) {
+      parsedData.items = parsedData.items.map(item => {
+        if ('date' in item && item.date) {
+          item.date = formatWithTimezone(item.date, '00:00:00', timezoneOffset || '+07:00')
+        }
+        if (parsedData.bank) {
+          const bankTx = item as any
+          bankTx.bank = bankTx.bank || parsedData.bank
+        }
+        return item
+      })
+    }
+
+    return parsedData
+  }
+
+  private async parsePrompt(prompt: string, timezoneOffset?: string): Promise<OCRResult> {
     const openai = getOpenAiClient()
-
-    const currentDate = new Date().toISOString().split('T')[0]
-    const prompt = `
-      Extract structured bank statement data from the following raw OCR text.
-      Identify each transaction correctly as 'income' or 'expense'.
-      Extract the dates as accurately as possible.
-
-      Context details:
-      - Current Date Reference: ${currentDate}
-      - Timezone Offset: ${timezoneOffset || 'Not specified'}
-      - Filename: ${filename || 'Not specified'}
-
-      ${bankStatementSchemaPrompt}
-
-      Raw OCR Text:
-      ${text}
-    `
 
     const response = await openai.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
@@ -279,29 +284,57 @@ export class OpenAIBankStatementParser implements IBankParser {
 
     try {
       const parsedData = JSON.parse(content) as OCRResult
-
-      if (parsedData.statementPeriod) {
-        parsedData.statementPeriod = formatStatementPeriodInputDate(parsedData.statementPeriod) || parsedData.statementPeriod
-      }
-      
-      // Normalize dates in the transaction items
-      if (parsedData.items) {
-        parsedData.items = parsedData.items.map(item => {
-          if ('date' in item && item.date) {
-            item.date = formatWithTimezone(item.date, '00:00:00', timezoneOffset || '+07:00')
-          }
-          if (parsedData.bank) {
-            const bankTx = item as any
-            bankTx.bank = bankTx.bank || parsedData.bank
-          }
-          return item
-        })
-      }
-
-      return parsedData
+      return this.normalizeBankStatementResult(parsedData, timezoneOffset)
     } catch (e) {
       console.error('Failed to parse OpenAI JSON response. Content:', content, e)
       throw new Error('Failed to parse OpenAI JSON response.')
     }
+  }
+
+  async parse(text: string, timezoneOffset?: string, filename?: string): Promise<OCRResult> {
+    const currentDate = new Date().toISOString().split('T')[0]
+    const prompt = `
+      Extract structured bank statement data from the following raw OCR text.
+      Identify each transaction correctly as 'income' or 'expense'.
+      Extract the dates as accurately as possible.
+
+      Context details:
+      - Current Date Reference: ${currentDate}
+      - Timezone Offset: ${timezoneOffset || 'Not specified'}
+      - Filename: ${filename || 'Not specified'}
+
+      ${bankStatementSchemaPrompt}
+
+      Raw OCR Text:
+      ${text}
+    `
+
+    return this.parsePrompt(prompt, timezoneOffset)
+  }
+
+  async reparse(text: string, currentResult: OCRResult, timezoneOffset?: string, filename?: string): Promise<OCRResult> {
+    const currentDate = new Date().toISOString().split('T')[0]
+    const { rawText: _rawText, ...draftResult } = currentResult
+    const prompt = `
+      Re-parse this bank statement by comparing the raw OCR text from Modal/docTR with the current parsed JSON.
+      The OCR text is the source of truth. Use the current JSON only as a draft to correct.
+      Preserve fields that are already correct, fix missing or incorrect transactions, balances, bank name, statement period, transaction dates, amounts, and income/expense types.
+      Do not invent transactions that are not supported by the raw OCR text.
+
+      Context details:
+      - Current Date Reference: ${currentDate}
+      - Timezone Offset: ${timezoneOffset || 'Not specified'}
+      - Filename: ${filename || 'Not specified'}
+
+      ${bankStatementSchemaPrompt}
+
+      Current Parsed JSON:
+      ${JSON.stringify(draftResult, null, 2)}
+
+      Raw OCR Text:
+      ${text}
+    `
+
+    return this.parsePrompt(prompt, timezoneOffset)
   }
 }
