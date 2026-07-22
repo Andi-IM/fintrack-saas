@@ -1,5 +1,10 @@
 import { Tables } from '@/lib/database.types'
-import type { StatementPeriodDate } from '@/lib/utils/statement-period'
+
+declare const statementPeriodDateBrand: unique symbol
+
+export type StatementPeriodDate = string & {
+  readonly [statementPeriodDateBrand]: 'StatementPeriodDate'
+}
 
 export interface CashFlowFilterOptions {
   range?: string

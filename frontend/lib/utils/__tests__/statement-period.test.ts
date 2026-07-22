@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  assertStatementPeriodDate,
   formatStatementPeriodInputDate,
   getPeriodRange,
+  isStatementPeriodDate,
   normalizeStatementPeriodToDate,
 } from '@/lib/utils/statement-period'
 
@@ -35,5 +37,14 @@ describe('statement period utils', () => {
       startVal: 2021 * 12 + 8,
       endVal: 2021 * 12 + 8,
     })
+  })
+
+  it('validates persisted statement periods as normalized month-start dates', () => {
+    expect(isStatementPeriodDate('2021-08-01')).toBe(true)
+    expect(isStatementPeriodDate('2021-08-02')).toBe(false)
+    expect(isStatementPeriodDate('2021-8-01')).toBe(false)
+    expect(() => assertStatementPeriodDate('2021-08-02')).toThrow(
+      'Statement period must be normalized to YYYY-MM-01'
+    )
   })
 })

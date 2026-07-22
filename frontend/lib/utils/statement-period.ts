@@ -1,4 +1,5 @@
 import { STATEMENT_MONTH_MAP } from '@/lib/constants/ocr'
+import type { StatementPeriodDate } from '@/lib/repositories/types'
 
 const MONTH_LABELS = [
   'JAN',
@@ -14,8 +15,6 @@ const MONTH_LABELS = [
   'NOV',
   'DEC',
 ] as const
-
-export type StatementPeriodDate = `${number}-${number}-${number}`
 
 export interface StatementPeriodRange {
   startVal: number
@@ -37,6 +36,16 @@ function isForwardRange(start: MonthYear, end: MonthYear): boolean {
 
 function toPeriodDate({ year, month }: MonthYear): StatementPeriodDate {
   return `${year}-${String(month).padStart(2, '0')}-01` as StatementPeriodDate
+}
+
+export function isStatementPeriodDate(period: string): period is StatementPeriodDate {
+  return /^\d{4}-(0[1-9]|1[0-2])-01$/.test(period)
+}
+
+export function assertStatementPeriodDate(period: string): asserts period is StatementPeriodDate {
+  if (!isStatementPeriodDate(period)) {
+    throw new Error('Statement period must be normalized to YYYY-MM-01')
+  }
 }
 
 function parseDayMonthYear(period: string): MonthYear | null {

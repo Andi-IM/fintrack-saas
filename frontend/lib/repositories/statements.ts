@@ -1,8 +1,9 @@
 import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/server'
+import { assertStatementPeriodDate } from '@/lib/utils/statement-period'
 import { FakeStatementRepository } from './fake-statements'
 import { StatementRepository } from './types'
-import type { StatementPeriodDate } from '@/lib/utils/statement-period'
+import type { StatementPeriodDate } from './types'
 export class SupabaseStatementsRepository implements StatementRepository {
   async checkExistingForBank(bankName: string): Promise<Pick<Tables<'bank_statements'>, 'id' | 'statement_period' | 'file_path'>[]> {
     const supabase = await createClient()
@@ -73,6 +74,7 @@ export class SupabaseStatementsRepository implements StatementRepository {
     const user = authData.user
 
     const { bankName: actualBankName, statementPeriod: actualPeriod, openingBalance, closingBalance, items, file } = data
+    assertStatementPeriodDate(actualPeriod)
 
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
