@@ -63,3 +63,5 @@ Setiap keputusan desain yang signifikan dan berpengaruh besar terhadap struktur 
 - [ADR-055](055-modal-doctr-as-primary-ocr-extractor.md) - Use Modal docTR as the Primary OCR Extractor
 - [ADR-056](056-convert-bank-statement-period-to-date.md) - Convert Bank Statement Period to Date
 - [ADR-057](057-enable-coderabbit-pr-review.md) - Enable CodeRabbit Pull Request Review
+- [ADR-058](058-bank-statement-ai-reparse.md) - Bank Statement AI Reparse from OCR Text
+- [ADR-059](059-add-mistral-fallback-for-openai-compatible-parser.md) - Add Mistral Fallback for OpenAI-Compatible OCR Parsing
