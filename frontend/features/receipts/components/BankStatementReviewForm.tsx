@@ -1,8 +1,9 @@
-import { CheckCircle2, Trash2 } from 'lucide-react'
+import { AlertCircle, CheckCircle2, RefreshCw, Trash2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useScanStore } from '@/features/receipts/hooks/use-scan-store'
 import { useSubmitScannedData } from '@/features/receipts/hooks/use-submit-scanned-data'
+import { useBankStatementRescan } from '@/features/receipts/hooks/use-bank-statement-rescan'
 import { isBankTransaction } from '../utils/scan-mapper'
 import { cn } from '@/lib/utils'
 import { formatDateForInput } from '@/lib/utils/date'
@@ -10,6 +11,7 @@ import { formatDateForInput } from '@/lib/utils/date'
 export function BankStatementReviewForm() {
   const {
     scanResult,
+    errorMessage,
     updateScanResultItem,
     deleteScanResultItem,
     updateScanResultField,
@@ -17,6 +19,7 @@ export function BankStatementReviewForm() {
   } = useScanStore()
 
   const { handleSaveScannedItems } = useSubmitScannedData('BankStatement')
+  const { handleReparseBankStatement, isRescanning, canReparseBankStatement } = useBankStatementRescan()
 
   if (!scanResult) return null
 
@@ -27,8 +30,26 @@ export function BankStatementReviewForm() {
           <CheckCircle2 className="w-5 h-5 text-emerald-500" />
           <p className="text-sm font-bold text-emerald-800">Extraction Successful - Review & Edit</p>
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-100 hover:text-emerald-900"
+          onClick={handleReparseBankStatement}
+          disabled={!canReparseBankStatement || isRescanning}
+        >
+          <RefreshCw className={cn('w-3.5 h-3.5 mr-1.5', isRescanning && 'animate-spin')} />
+          {isRescanning ? 'Re-scanning' : 'Re-scan AI'}
+        </Button>
       </div>
       <div className="p-4 space-y-4">
+        {errorMessage && (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="bank-name" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Bank Name</label>

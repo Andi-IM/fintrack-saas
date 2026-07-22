@@ -94,7 +94,8 @@ export class DocumentProcessor {
     }
 
     // 5. Parse Text
-    return await parser.parse(rawText, timezoneOffset, file.name)
+    const result = await parser.parse(rawText, timezoneOffset, file.name)
+    return result ? { ...result, rawText } : result
   }
 
   private inferMimeType(filename: string): string {
