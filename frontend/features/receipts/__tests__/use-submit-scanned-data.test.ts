@@ -64,7 +64,7 @@ describe('useSubmitScannedData', () => {
 
     expect(saveReceipt).toHaveBeenCalled()
     expect(mockStore.resetScan).toHaveBeenCalled()
-    expect(mockPush).toHaveBeenCalledWith('/')
+    expect(mockPush).toHaveBeenCalledWith('/receipts')
   })
 
   it('handles Receipt save failure', async () => {
@@ -92,7 +92,7 @@ describe('useSubmitScannedData', () => {
 
     expect(saveBankStatement).toHaveBeenCalled()
     expect(mockStore.resetScan).toHaveBeenCalled()
-    expect(mockPush).toHaveBeenCalledWith('/')
+    expect(mockPush).toHaveBeenCalledWith('/statements')
   })
 
   it('handles BankStatement save failure', async () => {
