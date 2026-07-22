@@ -21,6 +21,8 @@ export class BankStatementParser implements IParser {
   }
 
   async parse(text: string, timezoneOffset?: string, filename?: string): Promise<OCRResult> {
+    const parserFailures: string[] = []
+
     for (const bankParser of this.bankParsers) {
       if (bankParser.identify(text)) {
         try {
@@ -28,12 +30,20 @@ export class BankStatementParser implements IParser {
           if (result && result.items && result.items.length > 0) {
             return result
           } else {
-            console.warn(`[OCR] Parser ${bankParser.bankName} returned 0 items, falling back to next parser...`)
+            const reason = `${bankParser.bankName} returned 0 items`
+            parserFailures.push(reason)
+            console.warn(`[OCR] Parser ${reason}, falling back to next parser...`)
           }
         } catch (e) {
+          const message = e instanceof Error ? e.message : String(e)
+          parserFailures.push(`${bankParser.bankName}: ${message}`)
           console.warn(`[OCR] Parser ${bankParser.bankName} threw an error, falling back to next parser...`, e)
         }
       }
+    }
+
+    if (parserFailures.length > 0) {
+      throw new Error(`Gagal memproses bank statement. Detail parser: ${parserFailures.join('; ')}`)
     }
 
     throw new Error(
