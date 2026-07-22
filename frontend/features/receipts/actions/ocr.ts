@@ -6,16 +6,56 @@ import { documentProcessor } from '@/lib/ocr/processor'
 import { ActionResponse } from '@/lib/actions/types'
 import { OpenAIBankStatementParser } from '@/lib/ocr/openai-parser'
 
+const RAW_OCR_TEXT_MAX_LENGTH = 200_000
+const REPARSE_PROMPT_INPUT_MAX_LENGTH = 240_000
+
 const scanInputSchema = z.object({
   context: z.enum(['Receipt', 'BankStatement']),
   timezoneOffset: z.string().optional(),
 })
 
+const receiptItemSchema = z.object({
+  name: z.string(),
+  amount: z.number(),
+  quantity: z.number().optional(),
+  price: z.number().optional(),
+}).strict()
+
+const bankTransactionSchema = z.object({
+  date: z.string(),
+  name: z.string(),
+  amount: z.number(),
+  type: z.enum(['income', 'expense']),
+  category: z.string(),
+  bank: z.string(),
+}).strict()
+
+const ocrResultSchema = z.object({
+  rawText: z.string().optional(),
+  merchant: z.string().optional(),
+  items: z.array(z.union([receiptItemSchema, bankTransactionSchema])).optional(),
+  total: z.number().optional(),
+  category: z.string().optional(),
+  statementPeriod: z.string().optional(),
+  totalItems: z.number().optional(),
+  bank: z.string().optional(),
+  openingBalance: z.number().optional(),
+  closingBalance: z.number().optional(),
+  address: z.string().optional(),
+  date: z.string().optional(),
+  paymentMethod: z.string().optional(),
+  amountPaid: z.number().optional(),
+  change: z.number().optional(),
+  type: z.enum(['shopping', 'atm']).optional(),
+  atmId: z.string().optional(),
+  transactionType: z.enum(['withdrawal', 'deposit', 'transfer']).optional(),
+  fee: z.number().optional(),
+  referenceNumber: z.string().optional(),
+}).strict()
+
 const reparseInputSchema = z.object({
-  rawText: z.string().trim().min(1, 'Raw OCR text is required').max(200_000),
-  currentResult: z.object({
-    rawText: z.string().optional(),
-  }).passthrough(),
+  rawText: z.string().trim().min(1, 'Raw OCR text is required').max(RAW_OCR_TEXT_MAX_LENGTH),
+  currentResult: ocrResultSchema,
   timezoneOffset: z.string().optional(),
   filename: z.string().optional(),
 })
@@ -76,10 +116,14 @@ export async function reparseBankStatementWithAI(input: unknown): Promise<Action
   }
 
   const { rawText, currentResult, timezoneOffset, filename } = parsed.data
+  const serializedCurrentResult = JSON.stringify(currentResult)
+  if (rawText.length + serializedCurrentResult.length > REPARSE_PROMPT_INPUT_MAX_LENGTH) {
+    return { success: false, error: 'Re-scan input is too large. Reduce the current parsed result before trying again.' }
+  }
 
   try {
     const parser = new OpenAIBankStatementParser()
-    const result = await parser.reparse(rawText, currentResult as OCRResult, timezoneOffset, filename)
+    const result = await parser.reparse(rawText, currentResult, timezoneOffset, filename)
 
     if (!result) {
       return { success: false, error: 'AI returned an empty re-scan result.' }

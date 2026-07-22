@@ -1,10 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { scanDocumentWithAI } from '@/features/receipts/actions/ocr'
+import { reparseBankStatementWithAI, scanDocumentWithAI } from '@/features/receipts/actions/ocr'
 import { documentProcessor } from '@/lib/ocr/processor'
+
+const mockReparse = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/ocr/processor', () => ({
   documentProcessor: {
     process: vi.fn(),
+  },
+}))
+
+vi.mock('@/lib/ocr/openai-parser', () => ({
+  OpenAIBankStatementParser: class {
+    reparse = mockReparse
   },
 }))
 
@@ -87,5 +95,73 @@ describe('ocr server actions', () => {
 
     expect(result.success).toBe(false)
     expect((result as any).error).toBe('OCR engine offline')
+  })
+
+  it('rejects re-scan input when currentResult does not match the OCR result shape', async () => {
+    const result = await reparseBankStatementWithAI({
+      rawText: 'valid raw OCR text',
+      currentResult: {
+        bank: 'Bank Jago',
+        unsupportedField: 'not part of OCRResult',
+      },
+    })
+
+    expect(result.success).toBe(false)
+    expect((result as any).error).toBe('Invalid re-scan input')
+    expect(mockReparse).not.toHaveBeenCalled()
+  })
+
+  it('rejects oversized combined raw OCR text and currentResult before invoking the parser', async () => {
+    const result = await reparseBankStatementWithAI({
+      rawText: 'x'.repeat(200_000),
+      currentResult: {
+        rawText: 'y'.repeat(39_950),
+        bank: 'Bank Jago',
+        statementPeriod: '01/08/2021',
+        items: [],
+      },
+    })
+
+    expect(result.success).toBe(false)
+    expect((result as any).error).toBe('Re-scan input is too large. Reduce the current parsed result before trying again.')
+    expect(mockReparse).not.toHaveBeenCalled()
+  })
+
+  it('re-parses valid bank statement input with the validated OCR result shape', async () => {
+    mockReparse.mockResolvedValue({
+      bank: 'Bank Jago',
+      statementPeriod: '01/08/2021',
+      items: [],
+    })
+
+    const result = await reparseBankStatementWithAI({
+      rawText: 'valid raw OCR text',
+      currentResult: {
+        rawText: 'valid raw OCR text',
+        bank: 'Bank Jago',
+        statementPeriod: '01/08/2021',
+        openingBalance: 100000,
+        closingBalance: 150000,
+        items: [{
+          date: '2021-08-02T00:00:00+07:00',
+          name: 'Transfer',
+          amount: 50000,
+          type: 'income',
+          category: 'Transfer',
+          bank: 'Bank Jago',
+        }],
+      },
+      timezoneOffset: '+07:00',
+      filename: 'statement.pdf',
+    })
+
+    expect(result.success).toBe(true)
+    expect(mockReparse).toHaveBeenCalledWith(
+      'valid raw OCR text',
+      expect.objectContaining({ bank: 'Bank Jago' }),
+      '+07:00',
+      'statement.pdf'
+    )
+    expect((result as any).data.rawText).toBe('valid raw OCR text')
   })
 })
