@@ -1,3 +1,10 @@
+## [1.11.2-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.2-rc.1...v1.11.2-rc.2) (2026-07-22)
+
+
+### Bug Fixes
+
+* validate statement period persistence format ([1369648](https://github.com/Andi-IM/fintrack-saas/commit/1369648d79d1e557089cc46aea521f549f023cba))
+
 ## [1.11.2-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.1...v1.11.2-rc.1) (2026-07-22)
 
 
