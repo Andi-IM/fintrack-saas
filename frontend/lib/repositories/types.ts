@@ -1,5 +1,11 @@
 import { Tables } from '@/lib/database.types'
 
+declare const statementPeriodDateBrand: unique symbol
+
+export type StatementPeriodDate = string & {
+  readonly [statementPeriodDateBrand]: 'StatementPeriodDate'
+}
+
 export interface CashFlowFilterOptions {
   range?: string
   date?: string
@@ -39,7 +45,7 @@ export interface StatementRepository {
     file,
   }: {
     bankName: string
-    statementPeriod: string
+    statementPeriod: StatementPeriodDate
     openingBalance: number | null
     closingBalance: number | null
     items: any[]

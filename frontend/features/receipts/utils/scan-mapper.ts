@@ -1,4 +1,5 @@
 import { OCRResult, ReceiptItem, BankTransaction } from '@/lib/ocr/types'
+import { formatStatementPeriodInputDate } from '@/lib/utils/statement-period'
 
 export function isReceiptItem(item: ReceiptItem | BankTransaction): item is ReceiptItem {
   return 'name' in item && 'amount' in item && !('date' in item);
@@ -42,7 +43,7 @@ export function mapBankStatementResultToPayload(scanResult: OCRResult, fileToSca
 
   return {
     bankName: scanResult.bank || 'Unknown Bank',
-    statementPeriod: scanResult.statementPeriod || 'Unknown Period',
+    statementPeriod: formatStatementPeriodInputDate(scanResult.statementPeriod) || scanResult.statementPeriod || 'Unknown Period',
     openingBalance: scanResult.openingBalance,
     closingBalance: scanResult.closingBalance,
     items: bankTransactions,
