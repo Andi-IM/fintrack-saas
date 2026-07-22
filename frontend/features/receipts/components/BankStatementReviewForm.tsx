@@ -44,7 +44,7 @@ export function BankStatementReviewForm() {
       </div>
       <div className="p-4 space-y-4">
         {errorMessage && (
-          <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
+          <div role="alert" className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
             <span>{errorMessage}</span>
           </div>

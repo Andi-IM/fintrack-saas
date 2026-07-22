@@ -215,4 +215,22 @@ describe('BankStatementReviewForm Component', () => {
     const numberInputs = screen.getAllByDisplayValue('0')
     expect(numberInputs.length).toBeGreaterThan(0)
   })
+
+  it('announces asynchronous re-scan errors with an alert role', () => {
+    vi.mocked(useScanStore).mockReturnValue({
+      ...mockStore,
+      errorMessage: 'Failed to re-scan bank statement.',
+      scanResult: {
+        bank: 'BCA',
+        statementPeriod: 'May 2026',
+        openingBalance: 100000,
+        closingBalance: 200000,
+        items: []
+      }
+    } as any)
+
+    render(<BankStatementReviewForm />)
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Failed to re-scan bank statement.')
+  })
 })
