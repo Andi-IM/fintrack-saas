@@ -1,3 +1,10 @@
+# [1.12.0-rc.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.12.0-rc.3...v1.12.0-rc.4) (2026-07-22)
+
+
+### Bug Fixes
+
+* prevent stale bank statement re-scan updates ([ca2ff40](https://github.com/Andi-IM/fintrack-saas/commit/ca2ff40c3efd79dea9cd636b3a295b1659cf103f))
+
 # [1.12.0-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.12.0-rc.2...v1.12.0-rc.3) (2026-07-22)
 
 
