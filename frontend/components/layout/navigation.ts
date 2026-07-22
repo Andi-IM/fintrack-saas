@@ -59,7 +59,14 @@ export function getNavigationContext(
     }
   }
 
-  if (pathname?.startsWith('/transactions') || pathname === '/add') {
+  if (pathname?.startsWith('/transactions')) {
+    return {
+      activeSection: 'transactions',
+      breadcrumbs: [root, { label: 'Transactions' }],
+    }
+  }
+
+  if (pathname === '/add') {
     return {
       activeSection: 'transactions',
       breadcrumbs: [root, { label: 'Transactions', href: '/transactions' }, { label: edit ? 'Edit Transaction' : 'Add Transaction' }],

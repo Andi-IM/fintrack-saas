@@ -27,4 +27,11 @@ describe('getNavigationContext', () => {
     expect(editContext.activeSection).toBe('transactions')
     expect(editContext.breadcrumbs.at(-1)).toEqual({ label: 'Edit Transaction' })
   })
+
+  it('shows only the Transactions breadcrumb on the transactions list route', () => {
+    expect(getNavigationContext('/transactions').breadcrumbs).toEqual([
+      { label: 'Dashboard', href: '/' },
+      { label: 'Transactions' },
+    ])
+  })
 })
