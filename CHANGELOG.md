@@ -1,3 +1,11 @@
+## [1.11.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.2...v1.11.3) (2026-07-22)
+
+
+### Bug Fixes
+
+* align upload navigation breadcrumbs ([aafa3da](https://github.com/Andi-IM/fintrack-saas/commit/aafa3dae9d242323ca9a27746b5bf9342d619acc))
+* scope transaction breadcrumbs to add route ([2d6247f](https://github.com/Andi-IM/fintrack-saas/commit/2d6247f48ce78465e928cdb53bf5164c04fa3b85))
+
 ## [1.11.3-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.3-rc.1...v1.11.3-rc.2) (2026-07-22)
 
 
