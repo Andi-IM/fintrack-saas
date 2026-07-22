@@ -1,3 +1,10 @@
+# [1.12.0-rc.5](https://github.com/Andi-IM/fintrack-saas/compare/v1.12.0-rc.4...v1.12.0-rc.5) (2026-07-22)
+
+
+### Bug Fixes
+
+* expose bank statement parser failure details ([3dd1454](https://github.com/Andi-IM/fintrack-saas/commit/3dd14549df3e1dca5ef54766bba66d1a169f4f28))
+
 # [1.12.0-rc.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.12.0-rc.3...v1.12.0-rc.4) (2026-07-22)
 
 
