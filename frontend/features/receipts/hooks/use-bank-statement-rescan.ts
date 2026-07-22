@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import { reparseBankStatementWithAI } from '@/features/receipts/actions/ocr'
 import { useScanStore } from '@/features/receipts/hooks/use-scan-store'
+import type { OCRResult } from '@/lib/ocr/types'
 import { getBrowserTimezoneOffset } from '@/lib/utils/date'
+
+function serializeReviewedResult(result: OCRResult) {
+  const { rawText: _rawText, ...reviewedResult } = result
+  return JSON.stringify(reviewedResult)
+}
 
 export function useBankStatementRescan() {
   const [isRescanning, setIsRescanning] = useState(false)
@@ -21,6 +27,7 @@ export function useBankStatementRescan() {
 
     setIsRescanning(true)
     setErrorMessage(null)
+    const submittedResultSnapshot = serializeReviewedResult(scanResult)
 
     try {
       const result = await reparseBankStatementWithAI({
@@ -31,6 +38,10 @@ export function useBankStatementRescan() {
       })
 
       if (result.success) {
+        const latestResult = useScanStore.getState().scanResult
+        if (!latestResult || serializeReviewedResult(latestResult) !== submittedResultSnapshot) {
+          return
+        }
         setScanResult({ ...result.data, rawText })
       } else {
         setErrorMessage(result.error)

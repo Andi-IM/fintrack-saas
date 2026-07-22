@@ -36,6 +36,7 @@ describe('useBankStatementRescan', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(useScanStore).mockReturnValue(mockStore as any)
+    vi.mocked(useScanStore).getState = vi.fn(() => mockStore as any)
   })
 
   it('re-parses from raw OCR text and current parsed JSON without re-uploading the file', async () => {
@@ -64,6 +65,32 @@ describe('useBankStatementRescan', () => {
       rawText: 'raw OCR from Modal',
       bank: 'Bank Jago',
     }))
+  })
+
+  it('does not overwrite newer review edits with a stale successful re-scan response', async () => {
+    vi.mocked(useScanStore).getState = vi.fn(() => ({
+      ...mockStore,
+      scanResult: {
+        ...mockStore.scanResult,
+        bank: 'Edited Bank Jago',
+      },
+    }) as any)
+    vi.mocked(reparseBankStatementWithAI).mockResolvedValue({
+      success: true,
+      data: {
+        bank: 'Bank Jago',
+        statementPeriod: '01/08/2021',
+        items: [{ date: '2021-08-02T00:00:00+07:00', name: 'Corrected transfer', amount: 50000, type: 'income', category: 'Transfer', bank: 'Bank Jago' }],
+      },
+    })
+
+    const { result } = renderHook(() => useBankStatementRescan())
+
+    await act(async () => {
+      await result.current.handleReparseBankStatement()
+    })
+
+    expect(mockStore.setScanResult).not.toHaveBeenCalled()
   })
 
   it('rejects re-scan when raw OCR text is unavailable', async () => {

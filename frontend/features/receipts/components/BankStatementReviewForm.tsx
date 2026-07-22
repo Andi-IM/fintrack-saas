@@ -59,6 +59,7 @@ export function BankStatementReviewForm() {
               value={scanResult.bank || ''}
               onChange={(e) => updateScanResultField('bank', e.target.value)}
               className="h-8 text-xs font-bold"
+              disabled={isRescanning}
             />
           </div>
           <div>
@@ -69,6 +70,7 @@ export function BankStatementReviewForm() {
               value={scanResult.statementPeriod || ''}
               onChange={(e) => updateScanResultField('statementPeriod', e.target.value)}
               className="h-8 text-xs font-bold text-right"
+              disabled={isRescanning}
             />
           </div>
           <div>
@@ -80,6 +82,7 @@ export function BankStatementReviewForm() {
               value={scanResult.openingBalance ?? 0}
               onChange={(e) => updateScanResultField('openingBalance', parseFloat(e.target.value) || 0)}
               className="h-8 text-xs font-bold font-mono"
+              disabled={isRescanning}
             />
           </div>
           <div>
@@ -91,6 +94,7 @@ export function BankStatementReviewForm() {
               value={scanResult.closingBalance ?? 0}
               onChange={(e) => updateScanResultField('closingBalance', parseFloat(e.target.value) || 0)}
               className="h-8 text-xs font-bold text-right font-mono text-indigo-600"
+              disabled={isRescanning}
             />
           </div>
         </div>
@@ -104,12 +108,14 @@ export function BankStatementReviewForm() {
                   value={item.name}
                   onChange={(e) => updateScanResultItem(i, 'name', e.target.value)}
                   className="h-7 text-[11px] font-bold flex-1"
+                  disabled={isRescanning}
                 />
                 <select
                   aria-label="Transaction Type"
                   value={item.type}
                   onChange={(e) => updateScanResultItem(i, 'type', e.target.value)}
                   className={cn("h-7 w-20 text-[10px] font-bold rounded-md border border-slate-200 bg-white px-1 focus:outline-none focus:ring-1 focus:ring-indigo-500", item.type === 'income' ? 'text-emerald-600' : 'text-rose-600')}
+                  disabled={isRescanning}
                 >
                   <option value="income">INCOME</option>
                   <option value="expense">EXPENSE</option>
@@ -122,6 +128,7 @@ export function BankStatementReviewForm() {
                   value={item.date ? formatDateForInput(item.date) : ''}
                   onChange={(e) => updateScanResultItem(i, 'date', e.target.value ? new Date(e.target.value).toISOString() : '')}
                   className="h-7 text-[10px] flex-1"
+                  disabled={isRescanning}
                 />
                 <Input
                   aria-label={`Nominal transaksi bank ${i + 1}`}
@@ -129,11 +136,13 @@ export function BankStatementReviewForm() {
                   value={item.amount}
                   onChange={(e) => updateScanResultItem(i, 'amount', parseFloat(e.target.value))}
                   className="h-7 text-[11px] w-24 text-right font-mono font-bold"
+                  disabled={isRescanning}
                 />
                 <button
                   onClick={() => deleteScanResultItem(i)}
                   className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded transition-colors"
                   aria-label="Hapus transaksi ini"
+                  disabled={isRescanning}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -143,10 +152,10 @@ export function BankStatementReviewForm() {
         </div>
 
         <div className="pt-2 flex gap-3">
-          <Button variant="outline" className="flex-1 font-bold h-10 shadow-sm" onClick={resetScan}>
+          <Button variant="outline" className="flex-1 font-bold h-10 shadow-sm" onClick={resetScan} disabled={isRescanning}>
             Discard
           </Button>
-          <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 shadow-md shadow-emerald-100" onClick={handleSaveScannedItems}>
+          <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 shadow-md shadow-emerald-100" onClick={handleSaveScannedItems} disabled={isRescanning}>
             Confirm & Save
           </Button>
         </div>
