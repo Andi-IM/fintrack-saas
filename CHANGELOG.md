@@ -1,3 +1,10 @@
+## [1.11.2-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.2-rc.2...v1.11.2-rc.3) (2026-07-22)
+
+
+### Bug Fixes
+
+* validate statement period calendar dates ([7ee30a3](https://github.com/Andi-IM/fintrack-saas/commit/7ee30a3f767e46936972652b81460ea898a9f762))
+
 ## [1.11.2-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.2-rc.1...v1.11.2-rc.2) (2026-07-22)
 
 
