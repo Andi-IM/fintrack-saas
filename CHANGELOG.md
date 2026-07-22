@@ -1,9 +1,9 @@
-## [1.11.1-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.1-rc.1...v1.11.1-rc.2) (2026-07-22)
+## [1.11.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.0...v1.11.1) (2026-07-22)
 
 
 ### Bug Fixes
 
-* normalize AI statement periods to date inputs ([842d989](https://github.com/Andi-IM/fintrack-saas/commit/842d98986e23c2d01554ed19e23fdb0513eb2a2d))
+* preserve upload redirect destinations ([fbea9c5](https://github.com/Andi-IM/fintrack-saas/commit/fbea9c501985fd4816d3e0734773a166f1fc56fb))
 
 ## [1.11.1-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.0...v1.11.1-rc.1) (2026-07-22)
 
