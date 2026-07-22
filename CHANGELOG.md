@@ -1,3 +1,10 @@
+# [1.11.0-rc.6](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.0-rc.5...v1.11.0-rc.6) (2026-07-22)
+
+
+### Bug Fixes
+
+* preserve upload redirect destinations ([fbea9c5](https://github.com/Andi-IM/fintrack-saas/commit/fbea9c501985fd4816d3e0734773a166f1fc56fb))
+
 # [1.11.0-rc.5](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.0-rc.4...v1.11.0-rc.5) (2026-07-21)
 
 
