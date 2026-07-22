@@ -39,6 +39,21 @@ describe('statement period utils', () => {
     })
   })
 
+  it('rejects impossible day-month-year dates', () => {
+    expect(normalizeStatementPeriodToDate('31/02/2021')).toBeNull()
+    expect(formatStatementPeriodInputDate('31/04/2021')).toBeNull()
+    expect(getPeriodRange('00/08/2021')).toBeNull()
+  })
+
+  it('handles leap-year day-month-year dates', () => {
+    expect(normalizeStatementPeriodToDate('29/02/2020')).toBe('2020-02-01')
+    expect(getPeriodRange('29/02/2020')).toEqual({
+      startVal: 2020 * 12 + 2,
+      endVal: 2020 * 12 + 2,
+    })
+    expect(normalizeStatementPeriodToDate('29/02/2021')).toBeNull()
+  })
+
   it('validates persisted statement periods as normalized month-start dates', () => {
     expect(isStatementPeriodDate('2021-08-01')).toBe(true)
     expect(isStatementPeriodDate('2021-08-02')).toBe(false)

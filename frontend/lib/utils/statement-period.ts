@@ -38,6 +38,13 @@ function toPeriodDate({ year, month }: MonthYear): StatementPeriodDate {
   return `${year}-${String(month).padStart(2, '0')}-01` as StatementPeriodDate
 }
 
+function isValidCalendarDate({ day, month, year }: MonthYear & { day: number }): boolean {
+  const date = new Date(Date.UTC(year, month - 1, day))
+  return date.getUTCFullYear() === year
+    && date.getUTCMonth() === month - 1
+    && date.getUTCDate() === day
+}
+
 export function isStatementPeriodDate(period: string): period is StatementPeriodDate {
   return /^\d{4}-(0[1-9]|1[0-2])-01$/.test(period)
 }
@@ -57,6 +64,7 @@ function parseDayMonthYear(period: string): MonthYear | null {
   const year = Number.parseInt(match[3], 10)
 
   if (day < 1 || day > 31 || month < 1 || month > 12 || !year) return null
+  if (!isValidCalendarDate({ day, month, year })) return null
   return { month, year }
 }
 
