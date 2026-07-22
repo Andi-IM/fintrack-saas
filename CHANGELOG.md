@@ -1,3 +1,10 @@
+# [1.12.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.12.0-rc.1...v1.12.0-rc.2) (2026-07-22)
+
+
+### Bug Fixes
+
+* validate bank statement re-scan input ([01b142e](https://github.com/Andi-IM/fintrack-saas/commit/01b142e1aefd67dd9ee824da268d7bd107e68e23))
+
 ## [1.11.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.2...v1.11.3) (2026-07-22)
 
 
