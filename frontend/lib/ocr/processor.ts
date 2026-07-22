@@ -6,6 +6,7 @@ import { BankStatementParser } from './bank-statement-parser'
 import { SeabankParser } from './banks/seabank-parser'
 import { JagoParser } from './banks/jago-parser'
 import { BniParser } from './banks/bni-parser'
+import { BsiParser } from './banks/bsi-parser'
 
 import { OpenAIReceiptParser, OpenAIBankStatementParser } from './openai-parser'
 
@@ -25,6 +26,7 @@ export class DocumentProcessor {
       new BniParser(),
       new JagoParser(),
       new SeabankParser(),
+      new BsiParser(),
       new OpenAIBankStatementParser(),
     ]))
   }
