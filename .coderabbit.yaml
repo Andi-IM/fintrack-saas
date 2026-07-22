@@ -7,6 +7,8 @@ reviews:
   high_level_summary: true
   review_status: true
   review_details: true
+  path_filters:
+    - "!CHANGELOG.md"
   auto_review:
     enabled: true
     drafts: true
