@@ -3,17 +3,25 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { OpenAIBankStatementParser, OpenAIReceiptParser } from '@/lib/ocr/openai-parser'
 import { ReceiptParser } from '@/lib/ocr/receipt-parser'
 
-// Mock environment variable
-const originalEnv = process.env.GROQ_API_KEY
+const originalGroqEnv = process.env.GROQ_API_KEY
+const originalMistralEnv = process.env.MISTRAL_API_KEY
 
 const mockCreate = vi.fn()
+const mockOpenAIConfig = vi.fn()
 
 vi.mock('openai', () => {
   return {
     default: class {
+      config: unknown
+
+      constructor(config: unknown) {
+        this.config = config
+        mockOpenAIConfig(config)
+      }
+
       chat = {
         completions: {
-          create: mockCreate
+          create: (payload: unknown) => mockCreate(this.config, payload)
         }
       }
     }
@@ -24,16 +32,21 @@ describe('OpenAIReceiptParser', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     process.env.GROQ_API_KEY = 'test-api-key'
+    process.env.MISTRAL_API_KEY = 'test-mistral-key'
   })
 
   afterEach(() => {
-    process.env.GROQ_API_KEY = originalEnv
+    process.env.GROQ_API_KEY = originalGroqEnv
+    process.env.MISTRAL_API_KEY = originalMistralEnv
   })
 
-  it('should throw error if GROQ_API_KEY is not defined', async () => {
+  it('should throw error if no LLM provider API key is configured', async () => {
     delete process.env.GROQ_API_KEY
+    delete process.env.MISTRAL_API_KEY
     const parser = new OpenAIReceiptParser()
-    await expect(parser.parse('some raw text')).rejects.toThrow('GROQ_API_KEY is not defined in environment variables')
+    await expect(parser.parse('some raw text')).rejects.toThrow(
+      'No LLM provider API key is configured. Set GROQ_API_KEY or MISTRAL_API_KEY.'
+    )
   })
 
   it('should parse shopping receipt successfully', async () => {
@@ -68,6 +81,72 @@ describe('OpenAIReceiptParser', () => {
       ...mockResponse,
       date: '2026-06-25T12:00:00+07:00'
     })
+  })
+
+  it('should fallback to Mistral and keep Groq error logged', async () => {
+    const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const mockResponse = {
+      merchant: 'Fallback Mart',
+      date: '2026-06-27',
+      total: 88000,
+      type: 'shopping',
+      items: [{ name: 'Item Fallback', amount: 88000, quantity: 1, price: 88000 }]
+    }
+
+    mockCreate.mockImplementation(async (config: { baseURL?: string }, payload: { model?: string }) => {
+      if (config.baseURL === 'https://api.groq.com/openai/v1') {
+        expect(payload.model).toBe('llama-3.3-70b-versatile')
+        throw new Error('Groq upstream timeout')
+      }
+
+      expect(config.baseURL).toBe('https://api.mistral.ai/v1')
+      expect(payload.model).toBe('mistral-large-2512')
+      return {
+        choices: [{
+          message: {
+            content: JSON.stringify(mockResponse)
+          }
+        }]
+      }
+    })
+
+    const parser = new OpenAIReceiptParser()
+    const result = await parser.parse('raw ocr text with provider fallback')
+
+    expect(mockCreate).toHaveBeenCalledTimes(2)
+    expect(result).toEqual({
+      ...mockResponse,
+      date: '2026-06-27T12:00:00+07:00'
+    })
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '[OCR] Groq failed during receipt parsing.',
+      expect.any(Error)
+    )
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      '[OCR] Calling external LLM provider Groq for receipt parsing.',
+      expect.objectContaining({
+        attempt: 1,
+        totalProviders: 2,
+        baseURL: 'https://api.groq.com/openai/v1',
+        model: 'llama-3.3-70b-versatile',
+      })
+    )
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      '[OCR] Falling back to the next external LLM provider after Groq failed during receipt parsing.'
+    )
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      '[OCR] External LLM provider Mistral Large 3 succeeded for receipt parsing.',
+      expect.objectContaining({
+        attempt: 2,
+        totalProviders: 2,
+        baseURL: 'https://api.mistral.ai/v1',
+        model: 'mistral-large-2512',
+      })
+    )
+
+    consoleInfoSpy.mockRestore()
+    consoleErrorSpy.mockRestore()
   })
 
   it('should parse ATM receipt successfully and generate items fallback', async () => {
@@ -107,6 +186,7 @@ describe('OpenAIReceiptParser', () => {
   })
 
   it('should throw error when create returns empty message content', async () => {
+    delete process.env.MISTRAL_API_KEY
     mockCreate.mockResolvedValue({
       choices: [{
         message: {
@@ -116,10 +196,13 @@ describe('OpenAIReceiptParser', () => {
     })
 
     const parser = new OpenAIReceiptParser()
-    await expect(parser.parse('some text')).rejects.toThrow('OpenAI failed to extract data from the receipt.')
+    await expect(parser.parse('some text')).rejects.toThrow(
+      'All LLM providers failed during receipt parsing. Detail: Groq: Groq failed to extract data from the receipt.'
+    )
   })
 
   it('should throw error when create returns invalid JSON', async () => {
+    delete process.env.MISTRAL_API_KEY
     mockCreate.mockResolvedValue({
       choices: [{
         message: {
@@ -129,7 +212,9 @@ describe('OpenAIReceiptParser', () => {
     })
 
     const parser = new OpenAIReceiptParser()
-    await expect(parser.parse('some text')).rejects.toThrow('Failed to parse OpenAI JSON response.')
+    await expect(parser.parse('some text')).rejects.toThrow(
+      'All LLM providers failed during receipt parsing. Detail: Groq: Failed to parse OpenAI JSON response.'
+    )
   })
 })
 
@@ -137,10 +222,12 @@ describe('OpenAIBankStatementParser', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     process.env.GROQ_API_KEY = 'test-api-key'
+    process.env.MISTRAL_API_KEY = 'test-mistral-key'
   })
 
   afterEach(() => {
-    process.env.GROQ_API_KEY = originalEnv
+    process.env.GROQ_API_KEY = originalGroqEnv
+    process.env.MISTRAL_API_KEY = originalMistralEnv
   })
 
   it('normalizes AI statement period labels to first-day date input format', async () => {
@@ -162,6 +249,78 @@ describe('OpenAIBankStatementParser', () => {
     const result = await parser.parse('raw bank statement text')
 
     expect(result.statementPeriod).toBe('01/08/2021')
+  })
+
+  it('falls back to Mistral when Groq fails for bank statements', async () => {
+    const consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    mockCreate.mockImplementation(async (config: { baseURL?: string }, payload: { model?: string }) => {
+      if (config.baseURL === 'https://api.groq.com/openai/v1') {
+        expect(payload.model).toBe('llama-3.3-70b-versatile')
+        throw new Error('Groq rate limited')
+      }
+
+      expect(config.baseURL).toBe('https://api.mistral.ai/v1')
+      expect(payload.model).toBe('mistral-large-2512')
+      return {
+        choices: [{
+          message: {
+            content: JSON.stringify({
+              bank: 'BCA',
+              statementPeriod: 'Agustus 2021',
+              openingBalance: 100000,
+              closingBalance: 120000,
+              items: [{
+                date: '02/08/2021 07:15',
+                name: 'Transfer masuk',
+                amount: 20000,
+                type: 'income',
+                category: 'Transfer',
+              }]
+            })
+          }
+        }]
+      }
+    })
+
+    const parser = new OpenAIBankStatementParser()
+    const result = await parser.parse('raw bank statement text')
+
+    expect(mockCreate).toHaveBeenCalledTimes(2)
+    expect(result.statementPeriod).toBe('01/08/2021')
+    expect(result.items?.[0]).toMatchObject({
+      name: 'Transfer masuk',
+      bank: 'BCA',
+    })
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '[OCR] Groq failed during bank statement parsing.',
+      expect.any(Error)
+    )
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      '[OCR] Calling external LLM provider Groq for bank statement parsing.',
+      expect.objectContaining({
+        attempt: 1,
+        totalProviders: 2,
+        baseURL: 'https://api.groq.com/openai/v1',
+        model: 'llama-3.3-70b-versatile',
+      })
+    )
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      '[OCR] Falling back to the next external LLM provider after Groq failed during bank statement parsing.'
+    )
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      '[OCR] External LLM provider Mistral Large 3 succeeded for bank statement parsing.',
+      expect.objectContaining({
+        attempt: 2,
+        totalProviders: 2,
+        baseURL: 'https://api.mistral.ai/v1',
+        model: 'mistral-large-2512',
+      })
+    )
+
+    consoleInfoSpy.mockRestore()
+    consoleErrorSpy.mockRestore()
   })
 
   it('re-parses bank statements by comparing raw OCR text with the previous JSON draft', async () => {
@@ -198,7 +357,7 @@ describe('OpenAIBankStatementParser', () => {
       'statement.pdf'
     )
 
-    const prompt = mockCreate.mock.calls[0][0].messages[1].content
+    const prompt = mockCreate.mock.calls[0][1].messages[1].content
     expect(prompt).toContain('Current Parsed JSON:')
     expect(prompt).toContain('Wrong transfer')
     expect(prompt).not.toContain('this should not be duplicated')
@@ -216,10 +375,12 @@ describe('ReceiptParser delegation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     process.env.GROQ_API_KEY = 'test-api-key'
+    process.env.MISTRAL_API_KEY = 'test-mistral-key'
   })
 
   afterEach(() => {
-    process.env.GROQ_API_KEY = originalEnv
+    process.env.GROQ_API_KEY = originalGroqEnv
+    process.env.MISTRAL_API_KEY = originalMistralEnv
   })
 
   it('should delegate parsing to OpenAIReceiptParser by default', async () => {

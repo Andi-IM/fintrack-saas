@@ -3,15 +3,76 @@ import { IBankParser, IReceiptParser } from './interfaces'
 import { OCRResult } from './types'
 import { formatStatementPeriodInputDate } from '@/lib/utils/statement-period'
 
-// Initialize the OpenAI client pointing to Groq
-const getOpenAiClient = () => {
-  if (!process.env.GROQ_API_KEY) {
-    throw new Error('GROQ_API_KEY is not defined in environment variables')
-  }
-  return new OpenAI({
+type LlmProvider = {
+  name: string
+  apiKey?: string
+  baseURL: string
+  model: string
+}
+
+const getConfiguredProviders = (): LlmProvider[] => [
+  {
+    name: 'Groq',
     apiKey: process.env.GROQ_API_KEY,
     baseURL: 'https://api.groq.com/openai/v1',
-  })
+    model: 'llama-3.3-70b-versatile',
+  },
+  {
+    name: 'Mistral Large 3',
+    apiKey: process.env.MISTRAL_API_KEY,
+    baseURL: 'https://api.mistral.ai/v1',
+    model: 'mistral-large-2512',
+  },
+].filter(provider => provider.apiKey)
+
+const getProviderClient = (provider: LlmProvider) => new OpenAI({
+  apiKey: provider.apiKey,
+  baseURL: provider.baseURL,
+})
+
+async function withLlmProviderFallback<T>(
+  context: string,
+  operation: (provider: LlmProvider, client: OpenAI) => Promise<T>
+): Promise<T> {
+  const providers = getConfiguredProviders()
+
+  if (providers.length === 0) {
+    throw new Error('No LLM provider API key is configured. Set GROQ_API_KEY or MISTRAL_API_KEY.')
+  }
+
+  const failures: string[] = []
+
+  for (const [index, provider] of providers.entries()) {
+    try {
+      console.info(`[OCR] Calling external LLM provider ${provider.name} for ${context}.`, {
+        attempt: index + 1,
+        totalProviders: providers.length,
+        baseURL: provider.baseURL,
+        model: provider.model,
+      })
+
+      const result = await operation(provider, getProviderClient(provider))
+
+      console.info(`[OCR] External LLM provider ${provider.name} succeeded for ${context}.`, {
+        attempt: index + 1,
+        totalProviders: providers.length,
+        baseURL: provider.baseURL,
+        model: provider.model,
+      })
+
+      return result
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      failures.push(`${provider.name}: ${message}`)
+      console.error(`[OCR] ${provider.name} failed during ${context}.`, error)
+
+      if (index < providers.length - 1) {
+        console.info(`[OCR] Falling back to the next external LLM provider after ${provider.name} failed during ${context}.`)
+      }
+    }
+  }
+
+  throw new Error(`All LLM providers failed during ${context}. Detail: ${failures.join('; ')}`)
 }
 
 function formatWithTimezone(dateStr: string, defaultTime = '12:00:00', timezoneOffset = '+07:00'): string {
@@ -151,8 +212,6 @@ export class OpenAIReceiptParser implements IReceiptParser {
   }
 
   async parse(text: string, timezoneOffset?: string, filename?: string): Promise<OCRResult> {
-    const openai = getOpenAiClient()
-
     const currentDate = new Date().toISOString().split('T')[0]
     const prompt = `
       Extract structured receipt data from the following raw OCR text.
@@ -170,61 +229,62 @@ export class OpenAIReceiptParser implements IReceiptParser {
       Raw OCR Text:
       ${text}
     `
+    return withLlmProviderFallback('receipt parsing', async (provider, client) => {
+      const response = await client.chat.completions.create({
+        model: provider.model,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a precise data extraction assistant. You always output valid, clean JSON matching the requested structure. You pay extra attention to extracting both the date and the specific time (e.g. 11:03:32) from the text, and combining them into an ISO 8601 string.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.1,
+      })
 
-    const response = await openai.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a precise data extraction assistant. You always output valid, clean JSON matching the requested structure. You pay extra attention to extracting both the date and the specific time (e.g. 11:03:32) from the text, and combining them into an ISO 8601 string.'
-        },
-        {
-          role: 'user',
-          content: prompt
+      const content = response.choices[0]?.message?.content
+      if (!content) {
+        throw new Error(`${provider.name} failed to extract data from the receipt.`)
+      }
+
+      try {
+        const parsedData = JSON.parse(content) as OCRResult
+
+        // Post-processing to normalize date to full local ISO8601 string
+        if (parsedData.date) {
+          parsedData.date = formatWithTimezone(parsedData.date, '12:00:00', timezoneOffset || '+07:00')
+        } else {
+          const today = new Date().toISOString().split('T')[0]
+          parsedData.date = `${today}T12:00:00${timezoneOffset || '+07:00'}`
         }
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.1,
+
+        // Post-processing for ATM receipts to guarantee at least one item exists
+        if (parsedData.type === 'atm') {
+          const merchant = parsedData.merchant || 'ATM'
+          const txType = parsedData.transactionType || ''
+          const label = txType
+            ? `${txType.charAt(0).toUpperCase() + txType.slice(1)} - ${merchant}`
+            : merchant
+          if (!parsedData.items || parsedData.items.length === 0) {
+            parsedData.items = [{
+              name: label,
+              amount: parsedData.total || 0,
+              quantity: 1,
+              price: parsedData.total || 0
+            }]
+          }
+        }
+
+        return parsedData
+      } catch (error) {
+        console.error('Failed to parse OpenAI JSON response. Content:', content, error)
+        throw new Error('Failed to parse OpenAI JSON response.')
+      }
     })
-
-    const content = response.choices[0]?.message?.content
-    if (!content) {
-      throw new Error('OpenAI failed to extract data from the receipt.')
-    }
-
-    try {
-      const parsedData = JSON.parse(content) as OCRResult
-
-      // Post-processing to normalize date to full local ISO8601 string
-      if (parsedData.date) {
-        parsedData.date = formatWithTimezone(parsedData.date, '12:00:00', timezoneOffset || '+07:00')
-      } else {
-        const today = new Date().toISOString().split('T')[0]
-        parsedData.date = `${today}T12:00:00${timezoneOffset || '+07:00'}`
-      }
-
-      // Post-processing for ATM receipts to guarantee at least one item exists
-      if (parsedData.type === 'atm') {
-        const merchant = parsedData.merchant || 'ATM'
-        const txType = parsedData.transactionType || ''
-        const label = txType
-          ? `${txType.charAt(0).toUpperCase() + txType.slice(1)} - ${merchant}`
-          : merchant
-        if (!parsedData.items || parsedData.items.length === 0) {
-          parsedData.items = [{
-            name: label,
-            amount: parsedData.total || 0,
-            quantity: 1,
-            price: parsedData.total || 0
-          }]
-        }
-      }
-
-      return parsedData
-    } catch (e) {
-      console.error('Failed to parse OpenAI JSON response. Content:', content, e)
-      throw new Error('Failed to parse OpenAI JSON response.')
-    }
   }
 }
 
@@ -259,36 +319,36 @@ export class OpenAIBankStatementParser implements IBankParser {
   }
 
   private async parsePrompt(prompt: string, timezoneOffset?: string): Promise<OCRResult> {
-    const openai = getOpenAiClient()
+    return withLlmProviderFallback('bank statement parsing', async (provider, client) => {
+      const response = await client.chat.completions.create({
+        model: provider.model,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a precise data extraction assistant. You always output valid, clean JSON matching the requested structure.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.1,
+      })
 
-    const response = await openai.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a precise data extraction assistant. You always output valid, clean JSON matching the requested structure.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.1,
+      const content = response.choices[0]?.message?.content
+      if (!content) {
+        throw new Error(`${provider.name} failed to extract data from the bank statement.`)
+      }
+
+      try {
+        const parsedData = JSON.parse(content) as OCRResult
+        return this.normalizeBankStatementResult(parsedData, timezoneOffset)
+      } catch (error) {
+        console.error('Failed to parse OpenAI JSON response. Content:', content, error)
+        throw new Error('Failed to parse OpenAI JSON response.')
+      }
     })
-
-    const content = response.choices[0]?.message?.content
-    if (!content) {
-      throw new Error('OpenAI failed to extract data from the bank statement.')
-    }
-
-    try {
-      const parsedData = JSON.parse(content) as OCRResult
-      return this.normalizeBankStatementResult(parsedData, timezoneOffset)
-    } catch (e) {
-      console.error('Failed to parse OpenAI JSON response. Content:', content, e)
-      throw new Error('Failed to parse OpenAI JSON response.')
-    }
   }
 
   async parse(text: string, timezoneOffset?: string, filename?: string): Promise<OCRResult> {
