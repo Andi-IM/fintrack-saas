@@ -1,9 +1,16 @@
-# [1.12.0-rc.5](https://github.com/Andi-IM/fintrack-saas/compare/v1.12.0-rc.4...v1.12.0-rc.5) (2026-07-22)
+# [1.12.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.3...v1.12.0) (2026-07-22)
 
 
 ### Bug Fixes
 
-* expose bank statement parser failure details ([3dd1454](https://github.com/Andi-IM/fintrack-saas/commit/3dd14549df3e1dca5ef54766bba66d1a169f4f28))
+* announce bank statement re-scan errors ([2915caa](https://github.com/Andi-IM/fintrack-saas/commit/2915caae83509af8e198c0ae1c72978fc96f89e3))
+* prevent stale bank statement re-scan updates ([ca2ff40](https://github.com/Andi-IM/fintrack-saas/commit/ca2ff40c3efd79dea9cd636b3a295b1659cf103f))
+* validate bank statement re-scan input ([01b142e](https://github.com/Andi-IM/fintrack-saas/commit/01b142e1aefd67dd9ee824da268d7bd107e68e23))
+
+
+### Features
+
+* add bank statement AI re-scan ([34a51d1](https://github.com/Andi-IM/fintrack-saas/commit/34a51d16dfe7df797629054f078f21986f6ccfeb))
 
 # [1.12.0-rc.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.12.0-rc.3...v1.12.0-rc.4) (2026-07-22)
 
