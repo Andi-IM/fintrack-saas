@@ -186,7 +186,7 @@ describe('ScanDialog Component', () => {
     await waitFor(() => {
       expect(saveReceipt).toHaveBeenCalled()
       expect(mockStore.resetScan).toHaveBeenCalled()
-      expect(mockPush).toHaveBeenCalledWith('/')
+      expect(mockPush).toHaveBeenCalledWith('/receipts')
     })
   })
 
@@ -215,7 +215,7 @@ describe('ScanDialog Component', () => {
     await waitFor(() => {
       expect(saveBankStatement).toHaveBeenCalled()
       expect(mockStore.resetScan).toHaveBeenCalled()
-      expect(mockPush).toHaveBeenCalledWith('/')
+      expect(mockPush).toHaveBeenCalledWith('/statements')
     })
   })
 
