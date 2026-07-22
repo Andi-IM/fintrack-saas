@@ -4,36 +4,37 @@ import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { LayoutDashboard, FileText, Camera, Building2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getNavigationContext } from './navigation'
 
 export function BottomNav() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const isScanReceipt = pathname === '/add' && searchParams?.get('scan') === 'Receipt'
+  const { activeSection } = getNavigationContext(pathname, searchParams)
 
   const navItems = [
     {
       label: 'Dashboard',
       href: '/',
       icon: LayoutDashboard,
-      active: pathname === '/'
+      active: activeSection === 'dashboard'
     },
     {
       label: 'Transaksi',
       href: '/transactions',
       icon: FileText,
-      active: pathname?.startsWith('/transactions') || (pathname === '/add' && !isScanReceipt)
+      active: activeSection === 'transactions'
     },
     {
       label: 'Bank',
       href: '/statements',
       icon: Building2,
-      active: !!pathname?.startsWith('/statements')
+      active: activeSection === 'statements'
     },
     {
       label: 'Struk',
       href: '/receipts',
       icon: Camera,
-      active: !!pathname?.startsWith('/receipts') || isScanReceipt
+      active: activeSection === 'receipts'
     }
   ]
 

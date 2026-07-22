@@ -2,6 +2,7 @@ import { getCachedUser } from '@/lib/supabase/cached-user'
 import { Topbar } from '@/components/layout/Topbar'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { BottomNav } from '@/components/layout/BottomNav'
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs'
 import { Suspense } from 'react'
 
 async function UserTopbar() {
@@ -38,6 +39,9 @@ export default function DashboardLayout({
         </Suspense>
         <main className="flex-1 overflow-y-auto p-4 pb-6 md:p-8 relative scroll-smooth">
           <div className="max-w-6xl mx-auto space-y-8">
+            <Suspense fallback={<div className="mb-4 h-5 w-48 rounded bg-slate-200 animate-pulse"></div>}>
+              <Breadcrumbs />
+            </Suspense>
             {children}
           </div>
         </main>
