@@ -1,3 +1,10 @@
+# [1.13.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.12.1-rc.1...v1.13.0-rc.1) (2026-07-22)
+
+
+### Features
+
+* add Mistral parser fallback ([e279689](https://github.com/Andi-IM/fintrack-saas/commit/e279689f41fe5eb63a251f13f3c2abd5c1dd81ca))
+
 ## [1.12.1-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.12.0...v1.12.1-rc.1) (2026-07-22)
 
 
