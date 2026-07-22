@@ -4,6 +4,11 @@ import { saveReceipt } from '@/features/receipts/actions/receipts'
 import { saveBankStatement } from '@/features/bank-statements/actions/statements'
 import { mapReceiptResultToPayload, mapBankStatementResultToPayload } from '../utils/scan-mapper'
 
+const POST_SAVE_REDIRECTS = {
+  Receipt: '/receipts',
+  BankStatement: '/statements',
+} as const
+
 export function useSubmitScannedData(scanContext: 'Receipt' | 'BankStatement') {
   const router = useRouter()
   const {
@@ -38,7 +43,7 @@ export function useSubmitScannedData(scanContext: 'Receipt' | 'BankStatement') {
       }
 
       resetScan()
-      router.push('/')
+      router.push(POST_SAVE_REDIRECTS[scanContext])
     } catch (err) {
       setScanStatus('error')
       const message = err instanceof Error ? err.message : 'Failed to save data.'
