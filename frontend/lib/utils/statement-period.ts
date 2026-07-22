@@ -15,6 +15,8 @@ const MONTH_LABELS = [
   'DEC',
 ] as const
 
+export type StatementPeriodDate = `${number}-${number}-${number}`
+
 export interface StatementPeriodRange {
   startVal: number
   endVal: number
@@ -33,8 +35,20 @@ function isForwardRange(start: MonthYear, end: MonthYear): boolean {
   return toPeriodValue(end) >= toPeriodValue(start)
 }
 
-function toPeriodDate({ year, month }: MonthYear): string {
-  return `${year}-${String(month).padStart(2, '0')}-01`
+function toPeriodDate({ year, month }: MonthYear): StatementPeriodDate {
+  return `${year}-${String(month).padStart(2, '0')}-01` as StatementPeriodDate
+}
+
+function parseDayMonthYear(period: string): MonthYear | null {
+  const match = period.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/)
+  if (!match) return null
+
+  const day = Number.parseInt(match[1], 10)
+  const month = Number.parseInt(match[2], 10)
+  const year = Number.parseInt(match[3], 10)
+
+  if (day < 1 || day > 31 || month < 1 || month > 12 || !year) return null
+  return { month, year }
 }
 
 function parseMonthYear(monthStr: string, yearStr: string): MonthYear | null {
@@ -48,6 +62,12 @@ function parseMonthYear(monthStr: string, yearStr: string): MonthYear | null {
 
 export function getPeriodRange(period: string | null | undefined): StatementPeriodRange | null {
   if (!period) return null
+
+  const dayMonthYear = parseDayMonthYear(period)
+  if (dayMonthYear) {
+    const val = toPeriodValue(dayMonthYear)
+    return { startVal: val, endVal: val }
+  }
 
   const isoDate = period.match(/^(\d{4})-(\d{2})-\d{2}$/)
   if (isoDate) {
@@ -84,7 +104,10 @@ export function getPeriodRange(period: string | null | undefined): StatementPeri
   return null
 }
 
-export function normalizeStatementPeriodToDate(period: string): string | null {
+export function normalizeStatementPeriodToDate(period: string): StatementPeriodDate | null {
+  const dayMonthYear = parseDayMonthYear(period)
+  if (dayMonthYear) return toPeriodDate(dayMonthYear)
+
   const isoDate = period.match(/^(\d{4})-(\d{2})-\d{2}$/)
   if (isoDate) {
     const year = Number.parseInt(isoDate[1], 10)
@@ -111,6 +134,16 @@ export function normalizeStatementPeriodToDate(period: string): string | null {
   }
 
   return null
+}
+
+export function formatStatementPeriodInputDate(period: string | null | undefined): string | null {
+  if (!period) return null
+
+  const normalized = normalizeStatementPeriodToDate(period)
+  if (!normalized) return null
+
+  const [year, month] = normalized.split('-')
+  return `01/${month}/${year}`
 }
 
 export function formatStatementPeriodLabel(period: string | null | undefined): string {

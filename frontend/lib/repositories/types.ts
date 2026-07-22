@@ -1,4 +1,5 @@
 import { Tables } from '@/lib/database.types'
+import type { StatementPeriodDate } from '@/lib/utils/statement-period'
 
 export interface CashFlowFilterOptions {
   range?: string
@@ -39,7 +40,7 @@ export interface StatementRepository {
     file,
   }: {
     bankName: string
-    statementPeriod: string
+    statementPeriod: StatementPeriodDate
     openingBalance: number | null
     closingBalance: number | null
     items: any[]

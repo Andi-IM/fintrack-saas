@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { OpenAIReceiptParser } from '@/lib/ocr/openai-parser'
+import { OpenAIBankStatementParser, OpenAIReceiptParser } from '@/lib/ocr/openai-parser'
 import { ReceiptParser } from '@/lib/ocr/receipt-parser'
 
 // Mock environment variable
@@ -130,6 +130,38 @@ describe('OpenAIReceiptParser', () => {
 
     const parser = new OpenAIReceiptParser()
     await expect(parser.parse('some text')).rejects.toThrow('Failed to parse OpenAI JSON response.')
+  })
+})
+
+describe('OpenAIBankStatementParser', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    process.env.GROQ_API_KEY = 'test-api-key'
+  })
+
+  afterEach(() => {
+    process.env.GROQ_API_KEY = originalEnv
+  })
+
+  it('normalizes AI statement period labels to first-day date input format', async () => {
+    mockCreate.mockResolvedValue({
+      choices: [{
+        message: {
+          content: JSON.stringify({
+            bank: 'BCA',
+            statementPeriod: 'Agustus 2021',
+            openingBalance: 100000,
+            closingBalance: 120000,
+            items: []
+          })
+        }
+      }]
+    })
+
+    const parser = new OpenAIBankStatementParser()
+    const result = await parser.parse('raw bank statement text')
+
+    expect(result.statementPeriod).toBe('01/08/2021')
   })
 })
 

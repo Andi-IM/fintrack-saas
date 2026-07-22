@@ -70,7 +70,7 @@ describe('scan-mapper utilities', () => {
       const payload = mapBankStatementResultToPayload(scanResult, fakeFile)
 
       expect(payload.bankName).toBe('BCA')
-      expect(payload.statementPeriod).toBe('June 2026')
+      expect(payload.statementPeriod).toBe('01/06/2026')
       expect(payload.openingBalance).toBe(100000)
       expect(payload.closingBalance).toBe(150000)
       expect(payload.items).toHaveLength(1)
@@ -84,6 +84,18 @@ describe('scan-mapper utilities', () => {
       expect(payload.bankName).toBe('Unknown Bank')
       expect(payload.statementPeriod).toBe('Unknown Period')
       expect(payload.items).toEqual([])
+    })
+
+    it('normalizes Indonesian AI period labels to first-day date input format', () => {
+      const scanResult: OCRResult = {
+        bank: 'BCA',
+        statementPeriod: 'Agustus 2021',
+        items: []
+      }
+
+      const payload = mapBankStatementResultToPayload(scanResult, fakeFile)
+
+      expect(payload.statementPeriod).toBe('01/08/2021')
     })
   })
 })

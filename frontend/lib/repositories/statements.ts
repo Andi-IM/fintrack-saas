@@ -2,6 +2,7 @@ import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/server'
 import { FakeStatementRepository } from './fake-statements'
 import { StatementRepository } from './types'
+import type { StatementPeriodDate } from '@/lib/utils/statement-period'
 export class SupabaseStatementsRepository implements StatementRepository {
   async checkExistingForBank(bankName: string): Promise<Pick<Tables<'bank_statements'>, 'id' | 'statement_period' | 'file_path'>[]> {
     const supabase = await createClient()
@@ -60,7 +61,7 @@ export class SupabaseStatementsRepository implements StatementRepository {
 
   async save(data: {
     bankName: string
-    statementPeriod: string
+    statementPeriod: StatementPeriodDate
     openingBalance: number | null
     closingBalance: number | null
     items: any[]

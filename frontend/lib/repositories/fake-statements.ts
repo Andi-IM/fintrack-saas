@@ -1,6 +1,7 @@
 import { Tables } from '@/lib/database.types'
 import { StatementRepository } from './types'
 import { readDB, writeDB } from './fs-mock-db'
+import type { StatementPeriodDate } from '@/lib/utils/statement-period'
 
 export class FakeStatementRepository implements StatementRepository {
   async findAllWithItems(): Promise<(Tables<'bank_statements'> & { bank_statement_items: Tables<'bank_statement_items'>[] })[]> {
@@ -25,7 +26,7 @@ export class FakeStatementRepository implements StatementRepository {
 
   async save(data: {
     bankName: string
-    statementPeriod: string
+    statementPeriod: StatementPeriodDate
     openingBalance: number | null
     closingBalance: number | null
     items: any[]

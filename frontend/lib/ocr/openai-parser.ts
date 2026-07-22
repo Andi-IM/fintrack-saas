@@ -1,6 +1,7 @@
 import OpenAI from 'openai'
 import { IBankParser, IReceiptParser } from './interfaces'
 import { OCRResult } from './types'
+import { formatStatementPeriodInputDate } from '@/lib/utils/statement-period'
 
 // Initialize the OpenAI client pointing to Groq
 const getOpenAiClient = () => {
@@ -110,7 +111,7 @@ const bankStatementSchemaPrompt = `
 You must return a JSON object conforming exactly to this structure:
 {
   "bank": string (Name of the bank, e.g., "BSI", "Bank Mandiri". Do not confuse with recipient banks in transactions),
-  "statementPeriod": string (Period of the statement),
+  "statementPeriod": string (Period of the statement. Use the first day of the statement month in DD/MM/YYYY format. Example: for August 2021, return "01/08/2021"),
   "openingBalance": number (Opening balance / Saldo Awal / Saldo Bulan Lalu. Must be a valid amount, never an account number),
   "closingBalance": number (Closing balance / Saldo Akhir. Must be a valid amount),
   "items": Array of objects:
@@ -278,6 +279,10 @@ export class OpenAIBankStatementParser implements IBankParser {
 
     try {
       const parsedData = JSON.parse(content) as OCRResult
+
+      if (parsedData.statementPeriod) {
+        parsedData.statementPeriod = formatStatementPeriodInputDate(parsedData.statementPeriod) || parsedData.statementPeriod
+      }
       
       // Normalize dates in the transaction items
       if (parsedData.items) {
