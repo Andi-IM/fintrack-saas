@@ -1,3 +1,10 @@
+# [1.12.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.3-rc.2...v1.12.0-rc.1) (2026-07-22)
+
+
+### Features
+
+* add bank statement AI re-scan ([34a51d1](https://github.com/Andi-IM/fintrack-saas/commit/34a51d16dfe7df797629054f078f21986f6ccfeb))
+
 ## [1.11.3-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.11.3-rc.1...v1.11.3-rc.2) (2026-07-22)
 
 
