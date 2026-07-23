@@ -10,6 +10,7 @@ export class FakeReceiptRepository implements ReceiptRepository {
     const id = `receipt-e2e-${Date.now()}`
     
     // Create mock receipt
+    const ownerId = data.userId || MOCK_USER_ID
     const newReceipt: Tables<'receipts'> = {
       id,
       created_at: new Date().toISOString(),
@@ -24,9 +25,9 @@ export class FakeReceiptRepository implements ReceiptRepository {
       atm_id: data.atmId || null,
       transaction_type: data.transactionType || null,
       fee: data.fee ?? 0,
-      file_path: data.file ? `${data.userId}/mock-path/${data.file.name}` : null,
+      file_path: data.file ? `${ownerId}/mock-path/${data.file.name}` : null,
       bank_statement_item_id: data.bankStatementItemId || null,
-      user_id: data.userId || MOCK_USER_ID,
+      user_id: ownerId,
     }
 
     db.receipts.push(newReceipt)
