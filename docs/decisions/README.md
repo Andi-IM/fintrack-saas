@@ -66,3 +66,5 @@ Setiap keputusan desain yang signifikan dan berpengaruh besar terhadap struktur 
 - [ADR-058](058-bank-statement-ai-reparse.md) - Bank Statement AI Reparse from OCR Text
 - [ADR-059](059-add-mistral-fallback-for-openai-compatible-parser.md) - Add Mistral Fallback for OpenAI-Compatible OCR Parsing
 - [ADR-060](060-allow-owned-legacy-receipt-file-access.md) - Allow Owned Legacy Receipt File Access
+- [ADR-061](061-secure-low-latency-dashboard-rendering.md) - Secure Low-Latency Dashboard Rendering
+- [ADR-062](062-enable-codeql-code-scanning.md) - Enable CodeQL Code Scanning
