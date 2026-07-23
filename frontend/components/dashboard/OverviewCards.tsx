@@ -1,11 +1,11 @@
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Banknote, TrendingUp, TrendingDown, PiggyBank } from "lucide-react"
-import { Tables } from "@/lib/database.types"
+import { DashboardCashFlowEntry } from "@/lib/repositories/types"
 import { useMemo } from 'react'
 import { formatCurrency } from "@/lib/utils/transaction"
 import { cn } from "@/lib/utils"
 
-export function OverviewCards({ transactions }: { transactions: Tables<'cash_flow'>[] }) {
+export function OverviewCards({ transactions }: { transactions: DashboardCashFlowEntry[] }) {
   // Data is already filtered by timeRange on the server
   const timeFilteredTransactions = transactions
 

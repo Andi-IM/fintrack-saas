@@ -15,7 +15,7 @@ import {
   ShieldAlert,
   Info
 } from "lucide-react"
-import { Tables } from "@/lib/database.types"
+import { DashboardCashFlowEntry } from "@/lib/repositories/types"
 import { formatCurrency } from "@/lib/utils/transaction"
 import { cn } from "@/lib/utils"
 
@@ -30,7 +30,7 @@ function formatMonthName(monthStr: string) {
   return `${monthsIndo[mIndex]} ${year}`
 }
 
-export function FinancialInsights({ transactions }: { transactions: Tables<'cash_flow'>[] }) {
+export function FinancialInsights({ transactions }: { transactions: DashboardCashFlowEntry[] }) {
   const [activeTab, setActiveTab] = useState<'summary' | 'leak' | 'recommendations'>('summary')
   const [completedRecommendations, setCompletedRecommendations] = useState<Record<string, boolean>>({})
 

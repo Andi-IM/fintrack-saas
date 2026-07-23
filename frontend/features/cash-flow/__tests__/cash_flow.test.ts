@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getCashFlow, insertCashFlow, updateCashFlow, deleteCashFlow } from '@/features/cash-flow/actions/cash_flow'
+import { deleteCashFlow, getCashFlow, getDashboardCashFlow, insertCashFlow, updateCashFlow } from '@/features/cash-flow/actions/cash_flow'
 import { setCashFlowRepository } from '@/lib/repositories/cash_flow'
 import { CashFlowRepository } from '@/lib/repositories/types'
 import { Tables } from '@/lib/database.types'
@@ -16,6 +16,8 @@ describe('cash_flow server actions', () => {
     vi.clearAllMocks()
     mockRepo = {
       findAll: vi.fn(),
+      findDashboardEntries: vi.fn(),
+      findById: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -32,8 +34,24 @@ describe('cash_flow server actions', () => {
 
     it('returns data on success', async () => {
       const data = [{ id: '1', description: 'coffee' }] as Tables<'cash_flow'>[]
-      mockRepo.findAll = vi.fn().mockResolvedValue(data)
+      mockRepo.findAll = vi.fn().mockResolvedValue({ data, count: 1 })
       const result = await getCashFlow()
+      expect(result).toEqual({ data, count: 1 })
+    })
+  })
+
+  describe('getDashboardCashFlow', () => {
+    it('returns empty array on dashboard database error', async () => {
+      mockRepo.findDashboardEntries = vi.fn().mockRejectedValue(new Error('DB connection lost'))
+      const result = await getDashboardCashFlow({ range: '1M' })
+      expect(result).toEqual([])
+    })
+
+    it('returns dashboard entries and forwards range', async () => {
+      const data = [{ id: '1', date: '2026-07-01', description: 'coffee', main_category: 'Food', income: 0, expense: 10000, payment_method: 'Cash' }]
+      mockRepo.findDashboardEntries = vi.fn().mockResolvedValue(data)
+      const result = await getDashboardCashFlow({ range: 'YTD' })
+      expect(mockRepo.findDashboardEntries).toHaveBeenCalledWith({ range: 'YTD' })
       expect(result).toEqual(data)
     })
   })

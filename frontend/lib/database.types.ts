@@ -257,7 +257,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      dashboard_cash_flow_entries: {
+        Row: {
+          id: string
+          date: string
+          main_category: string
+          description: string | null
+          income: number | null
+          expense: number | null
+          payment_method: string | null
+        }
+        Insert: {
+          id?: never
+          date?: never
+          main_category?: never
+          description?: never
+          income?: never
+          expense?: never
+          payment_method?: never
+        }
+        Update: {
+          id?: never
+          date?: never
+          main_category?: never
+          description?: never
+          income?: never
+          expense?: never
+          payment_method?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
