@@ -1,23 +1,9 @@
-# [1.13.0-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.13.0-rc.2...v1.13.0-rc.3) (2026-07-23)
+# [1.13.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.12.1...v1.13.0) (2026-07-22)
 
 
-### Bug Fixes
+### Features
 
-* preserve auth cookies on login redirects ([4d81a51](https://github.com/Andi-IM/fintrack-saas/commit/4d81a51381f41f437e034814be275ad82cf246ea))
-* restrict dashboard view privileges ([cedd42f](https://github.com/Andi-IM/fintrack-saas/commit/cedd42f515479145090c3d13db50584693aa8d91))
-
-# [1.13.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.13.0-rc.1...v1.13.0-rc.2) (2026-07-23)
-
-
-### Bug Fixes
-
-* allow owned legacy receipt file access ([264fb4c](https://github.com/Andi-IM/fintrack-saas/commit/264fb4cc3113ae436912fde2bd456551f064071f))
-* sync supabase migration history ([1116ea8](https://github.com/Andi-IM/fintrack-saas/commit/1116ea898af22c93ac266bca81f9dda99a8b5710))
-
-
-### Performance Improvements
-
-* optimize secure dashboard rendering ([0503451](https://github.com/Andi-IM/fintrack-saas/commit/050345105d738f8e100129ac7e10fa5c7803767d))
+* add Mistral parser fallback ([e279689](https://github.com/Andi-IM/fintrack-saas/commit/e279689f41fe5eb63a251f13f3c2abd5c1dd81ca))
 
 ## [1.12.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.12.0...v1.12.1) (2026-07-22)
 
