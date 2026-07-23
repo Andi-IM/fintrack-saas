@@ -6,14 +6,14 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { TrendingUp } from "lucide-react"
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useQueryState } from 'nuqs'
-import { Tables } from "@/lib/database.types"
+import { DashboardCashFlowEntry } from "@/lib/repositories/types"
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
 import { useMemo } from 'react'
 import { formatCurrency } from '@/lib/utils/transaction'
 
-export function TransactionChart({ transactions, }: { transactions: Tables<'cash_flow'>[] }) {
+export function TransactionChart({ transactions, }: { transactions: DashboardCashFlowEntry[] }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isMounted, setIsMounted] = useState(false)

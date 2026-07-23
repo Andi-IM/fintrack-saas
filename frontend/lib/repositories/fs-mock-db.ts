@@ -10,6 +10,7 @@ export interface MockDatabase {
 }
 
 const DB_PATH = path.join(process.cwd(), '.e2e-db.json')
+export const MOCK_USER_ID = '00000000-0000-4000-8000-000000000001'
 
 export const DEFAULT_MOCK_DATA: MockDatabase = {
   cashFlows: [
@@ -25,6 +26,7 @@ export const DEFAULT_MOCK_DATA: MockDatabase = {
       payment_method: 'Bank JAGO',
       receipt_id: null,
       source_item_id: null,
+      user_id: MOCK_USER_ID,
     },
     {
       id: 'cf-e2e-2',
@@ -38,6 +40,7 @@ export const DEFAULT_MOCK_DATA: MockDatabase = {
       payment_method: 'Tunai',
       receipt_id: null,
       source_item_id: null,
+      user_id: MOCK_USER_ID,
     },
     {
       id: 'cf-e2e-3',
@@ -51,6 +54,7 @@ export const DEFAULT_MOCK_DATA: MockDatabase = {
       payment_method: 'Gopay',
       receipt_id: null,
       source_item_id: null,
+      user_id: MOCK_USER_ID,
     },
   ],
   statements: [],
@@ -72,6 +76,7 @@ export const DEFAULT_MOCK_DATA: MockDatabase = {
       fee: 0,
       bank_statement_item_id: null,
       file_path: null,
+      user_id: MOCK_USER_ID,
     },
     {
       id: 'test-receipt-2',
@@ -89,6 +94,7 @@ export const DEFAULT_MOCK_DATA: MockDatabase = {
       fee: 5000,
       bank_statement_item_id: null,
       file_path: null,
+      user_id: MOCK_USER_ID,
     }
   ]
 }

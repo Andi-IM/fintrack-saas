@@ -1,7 +1,7 @@
 import { Tables } from '@/lib/database.types'
 import { assertStatementPeriodDate } from '@/lib/utils/statement-period'
 import { StatementRepository } from './types'
-import { readDB, writeDB } from './fs-mock-db'
+import { MOCK_USER_ID, readDB, writeDB } from './fs-mock-db'
 import type { StatementPeriodDate } from './types'
 
 export class FakeStatementRepository implements StatementRepository {
@@ -46,7 +46,8 @@ export class FakeStatementRepository implements StatementRepository {
       file_path: `fake/path/${data.file.name}`,
       total_items: data.items.length,
       metadata: {},
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      user_id: MOCK_USER_ID,
     })
 
     const newItems = data.items.map((item, index) => ({

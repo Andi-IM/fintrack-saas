@@ -1,48 +1,61 @@
 import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/server'
-import { CashFlowRepository, CashFlowFilterOptions, PaginatedResult } from './types'
+import { CashFlowRepository, CashFlowFilterOptions, DashboardCashFlowEntry, PaginatedResult } from './types'
 import { FakeCashFlowRepository } from './fake-cash-flow'
 
 // Concrete implementation using Supabase client
 export class SupabaseCashFlowRepository implements CashFlowRepository {
-  async findAll(options?: CashFlowFilterOptions): Promise<PaginatedResult<Tables<'cash_flow'>>> {
-    const supabase = await createClient()
-    let query = supabase.from('cash_flow').select('*', { count: 'exact' }).order('date', { ascending: false })
-
+  private applyDateFilters<T extends { gte: (column: string, value: string) => T; lte: (column: string, value: string) => T }>(
+    query: T,
+    options?: Pick<CashFlowFilterOptions, 'date' | 'range'>
+  ): T {
     if (options?.date) {
-      // If a specific date is requested (e.g. from chart click)
       const dateStart = new Date(options.date)
       dateStart.setHours(0, 0, 0, 0)
       const dateEnd = new Date(options.date)
       dateEnd.setHours(23, 59, 59, 999)
-      
-      query = query.gte('date', dateStart.toISOString()).lte('date', dateEnd.toISOString())
-    } else if (options?.range && options.range !== 'ALL') {
+
+      return query.gte('date', dateStart.toISOString()).lte('date', dateEnd.toISOString())
+    }
+
+    if (options?.range && options.range !== 'ALL') {
       const now = new Date()
       let daysToSubtract = 0
-      
+
       switch (options.range) {
         case '1W': daysToSubtract = 7; break
         case '1M': daysToSubtract = 30; break
         case '3M': daysToSubtract = 90; break
         case '1Y': daysToSubtract = 365; break
       }
-      
+
       let startDate = new Date(now)
       if (options.range === 'YTD') {
-        startDate = new Date(now.getFullYear(), 0, 1) // Jan 1st
-        query = query.gte('date', startDate.toISOString())
-      } else if (options.range === 'MTD') {
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1) // 1st of current month
-        query = query.gte('date', startDate.toISOString())
-      } else if (options.range === 'TODAY') {
-        startDate.setHours(0, 0, 0, 0) // Midnight today
-        query = query.gte('date', startDate.toISOString())
-      } else if (daysToSubtract > 0) {
+        startDate = new Date(now.getFullYear(), 0, 1)
+        return query.gte('date', startDate.toISOString())
+      }
+      if (options.range === 'MTD') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+        return query.gte('date', startDate.toISOString())
+      }
+      if (options.range === 'TODAY') {
+        startDate.setHours(0, 0, 0, 0)
+        return query.gte('date', startDate.toISOString())
+      }
+      if (daysToSubtract > 0) {
         startDate.setDate(startDate.getDate() - daysToSubtract)
-        query = query.gte('date', startDate.toISOString())
+        return query.gte('date', startDate.toISOString())
       }
     }
+
+    return query
+  }
+
+  async findAll(options?: CashFlowFilterOptions): Promise<PaginatedResult<Tables<'cash_flow'>>> {
+    const supabase = await createClient()
+    let query = supabase.from('cash_flow').select('*', { count: 'exact' }).order('date', { ascending: false })
+
+    query = this.applyDateFilters(query, options)
 
     if (options?.search) {
       // Use or for description, main_category, sub_category
@@ -79,6 +92,23 @@ export class SupabaseCashFlowRepository implements CashFlowRepository {
       throw new Error(error.message)
     }
     return { data: data || [], count: count || 0 }
+  }
+
+  async findDashboardEntries(options?: Pick<CashFlowFilterOptions, 'range'>): Promise<DashboardCashFlowEntry[]> {
+    const supabase = await createClient()
+    let query = supabase
+      .from('dashboard_cash_flow_entries')
+      .select('id,date,main_category,description,income,expense,payment_method')
+      .order('date', { ascending: false })
+
+    query = this.applyDateFilters(query, options)
+
+    const { data, error } = await query
+
+    if (error) {
+      throw new Error(error.message)
+    }
+    return data || []
   }
 
   async findById(id: string): Promise<Tables<'cash_flow'> | null> {

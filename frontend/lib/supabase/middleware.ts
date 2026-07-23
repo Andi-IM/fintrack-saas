@@ -52,18 +52,64 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // refreshing the auth token
+  const authorizedEmail = process.env.AUTHORIZED_EMAIL
+  const redirectToLogin = (message?: string) => {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    if (message) {
+      url.searchParams.set('message', message)
+    }
+    const redirectResponse = NextResponse.redirect(url)
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+    })
+    return redirectResponse
+  }
+
+  const attachUserHeaders = (id: string, email: string) => {
+    requestHeaders.set('x-user-email', email)
+    requestHeaders.set('x-user-id', id)
+
+    const finalResponse = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    })
+
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      finalResponse.cookies.set(cookie.name, cookie.value, cookie)
+    })
+
+    return finalResponse
+  }
+
+  const {
+    data: claimsData,
+    error: claimsError,
+  } = await supabase.auth.getClaims()
+
+  const claims = claimsData?.claims
+  const claimedUserId = typeof claims?.sub === 'string' ? claims.sub : null
+  const claimedEmail = typeof claims?.email === 'string' ? claims.email : null
+
+  if (claimedUserId && claimedEmail && !claimsError) {
+    if (claimedEmail !== authorizedEmail) {
+      await supabase.auth.signOut()
+      return redirectToLogin('Unauthorized user email')
+    }
+
+    return attachUserHeaders(claimedUserId, claimedEmail)
+  }
+
+  // Fallback keeps SSR session refresh and stale-token handling secure when
+  // claims cannot be validated locally, at the cost of one Auth network call.
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const authorizedEmail = process.env.AUTHORIZED_EMAIL
   if (user && user.email !== authorizedEmail) {
     await supabase.auth.signOut()
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    url.searchParams.set('message', 'Unauthorized user email')
-    return NextResponse.redirect(url)
+    return redirectToLogin('Unauthorized user email')
   }
 
   if (
@@ -72,30 +118,12 @@ export async function updateSession(request: NextRequest) {
     !request.nextUrl.pathname.startsWith('/auth')
   ) {
     // no user, potentially respond by redirecting the user to the login page
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
+    return redirectToLogin()
   }
 
   // If user is successfully authenticated and authorized, set the email and id in request headers
   if (user && user.email) {
-    requestHeaders.set('x-user-email', user.email)
-    requestHeaders.set('x-user-id', user.id)
-    
-    // We must recreate the response to enforce the updated request headers, 
-    // while preserving any cookies set by Supabase
-    const finalResponse = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    })
-    
-    // Copy cookies from the intermediate supabaseResponse
-    supabaseResponse.cookies.getAll().forEach((cookie) => {
-      finalResponse.cookies.set(cookie.name, cookie.value, cookie)
-    })
-    
-    supabaseResponse = finalResponse
+    supabaseResponse = attachUserHeaders(user.id, user.email)
   }
 
   return supabaseResponse
