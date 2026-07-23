@@ -1,3 +1,16 @@
+# [1.13.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.13.0-rc.1...v1.13.0-rc.2) (2026-07-23)
+
+
+### Bug Fixes
+
+* allow owned legacy receipt file access ([264fb4c](https://github.com/Andi-IM/fintrack-saas/commit/264fb4cc3113ae436912fde2bd456551f064071f))
+* sync supabase migration history ([1116ea8](https://github.com/Andi-IM/fintrack-saas/commit/1116ea898af22c93ac266bca81f9dda99a8b5710))
+
+
+### Performance Improvements
+
+* optimize secure dashboard rendering ([0503451](https://github.com/Andi-IM/fintrack-saas/commit/050345105d738f8e100129ac7e10fa5c7803767d))
+
 ## [1.12.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.12.0...v1.12.1) (2026-07-22)
 
 
