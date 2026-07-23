@@ -1,3 +1,12 @@
+## [1.13.2-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.13.1...v1.13.2-rc.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **repositories:** constrain dashboard range to validated DashboardRange type ([6f536b5](https://github.com/Andi-IM/fintrack-saas/commit/6f536b52c61c09e532117bf2a3096665740eb8c5))
+* **repositories:** resolve owner ID once in fake receipt creation flow ([a7af0df](https://github.com/Andi-IM/fintrack-saas/commit/a7af0dfb100e02f67d9a1b6db26df28a0c3fcbff))
+* **security:** enforce user-scoped file_path on receipts table writes ([c8eb1ab](https://github.com/Andi-IM/fintrack-saas/commit/c8eb1aba6d2621c18cde6e99755a87d81b02c90c))
+
 ## [1.13.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.13.0...v1.13.1) (2026-07-23)
 
 
