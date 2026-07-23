@@ -1,3 +1,11 @@
+# [1.13.0-rc.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.13.0-rc.2...v1.13.0-rc.3) (2026-07-23)
+
+
+### Bug Fixes
+
+* preserve auth cookies on login redirects ([4d81a51](https://github.com/Andi-IM/fintrack-saas/commit/4d81a51381f41f437e034814be275ad82cf246ea))
+* restrict dashboard view privileges ([cedd42f](https://github.com/Andi-IM/fintrack-saas/commit/cedd42f515479145090c3d13db50584693aa8d91))
+
 # [1.13.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.13.0-rc.1...v1.13.0-rc.2) (2026-07-23)
 
 
