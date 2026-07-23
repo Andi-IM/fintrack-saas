@@ -1,6 +1,6 @@
 import { Tables } from '@/lib/database.types'
 import { ReceiptRepository } from './receipts'
-import { readDB, writeDB } from './fs-mock-db'
+import { MOCK_USER_ID, readDB, writeDB } from './fs-mock-db'
 
 export class FakeReceiptRepository implements ReceiptRepository {
   private _items: Map<string, Tables<'receipts_items'>[]> = new Map()
@@ -26,6 +26,7 @@ export class FakeReceiptRepository implements ReceiptRepository {
       fee: data.fee ?? 0,
       file_path: data.file ? `${data.userId}/mock-path/${data.file.name}` : null,
       bank_statement_item_id: data.bankStatementItemId || null,
+      user_id: data.userId || MOCK_USER_ID,
     }
 
     db.receipts.push(newReceipt)

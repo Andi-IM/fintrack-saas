@@ -22,9 +22,15 @@ export interface PaginatedResult<T> {
   count: number
 }
 
+export type DashboardCashFlowEntry = Pick<
+  Tables<'cash_flow'>,
+  'id' | 'date' | 'main_category' | 'description' | 'income' | 'expense' | 'payment_method'
+>
+
 // Interface representing the cash flow database access layer
 export interface CashFlowRepository {
   findAll(options?: CashFlowFilterOptions): Promise<PaginatedResult<Tables<'cash_flow'>>>
+  findDashboardEntries(options?: Pick<CashFlowFilterOptions, 'range'>): Promise<DashboardCashFlowEntry[]>
   findById(id: string): Promise<Tables<'cash_flow'> | null>
   create(data: Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id' | 'source_item_id'> & { source_item_id?: string | null }): Promise<Tables<'cash_flow'>>
   update(id: string, data: Partial<Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id'>>): Promise<void>

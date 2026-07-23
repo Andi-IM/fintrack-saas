@@ -1,13 +1,12 @@
 import { Suspense } from 'react'
-import { getCashFlow } from '@/features/cash-flow/actions/cash_flow'
+import { getDashboardCashFlow } from '@/features/cash-flow/actions/cash_flow'
 import { OverviewCards } from '@/components/dashboard/OverviewCards'
 import { TransactionChartLazy, FinancialInsightsLazy } from '@/components/dashboard/DynamicCharts'
 import { DashboardSkeleton } from '@/components/ui/dashboard-skeleton'
 import Link from 'next/link'
 
 async function DashboardData({ range }: { range: string }) {
-  const result = await getCashFlow({ range })
-  const transactions = result.data
+  const transactions = await getDashboardCashFlow({ range })
 
   return (
     <div className="space-y-8">
