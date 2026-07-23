@@ -17,7 +17,7 @@ const cashFlowSchema = z.object({
   receipt_id: z.string().uuid().optional().nullable(),
 })
 
-import { CashFlowFilterOptions, DashboardCashFlowEntry, PaginatedResult } from '@/lib/repositories/types'
+import { CashFlowFilterOptions, DashboardCashFlowEntry, DashboardRange, PaginatedResult, parseDashboardRange } from '@/lib/repositories/types'
 
 // Data-fetching action - called from Server Components, returns raw data.
 export async function getCashFlow(options?: CashFlowFilterOptions): Promise<PaginatedResult<Tables<'cash_flow'>>> {
@@ -30,10 +30,11 @@ export async function getCashFlow(options?: CashFlowFilterOptions): Promise<Pagi
   }
 }
 
-export async function getDashboardCashFlow(options?: Pick<CashFlowFilterOptions, 'range'>): Promise<DashboardCashFlowEntry[]> {
+export async function getDashboardCashFlow(options?: { range?: string }): Promise<DashboardCashFlowEntry[]> {
   try {
     const repo = getCashFlowRepository()
-    return await repo.findDashboardEntries(options)
+    const validatedRange = parseDashboardRange(options?.range)
+    return await repo.findDashboardEntries({ range: validatedRange })
   } catch (error: any) {
     console.error("Error fetching dashboard cash flow:", error)
     return []

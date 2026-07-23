@@ -1,11 +1,12 @@
 import { Tables } from '@/lib/database.types'
-import { CashFlowRepository, CashFlowFilterOptions, DashboardCashFlowEntry, PaginatedResult } from './types'
+import { CashFlowRepository, CashFlowFilterOptions, DashboardCashFlowEntry, PaginatedResult, DashboardRange, parseDashboardRange } from './types'
 
 import { MOCK_USER_ID, readDB, writeDB } from './fs-mock-db'
 
 export class FakeCashFlowRepository implements CashFlowRepository {
-  async findDashboardEntries(options?: Pick<CashFlowFilterOptions, 'range'>): Promise<DashboardCashFlowEntry[]> {
-    const result = await this.findAll(options)
+  async findDashboardEntries(options?: { range?: DashboardRange }): Promise<DashboardCashFlowEntry[]> {
+    const validatedRange = parseDashboardRange(options?.range)
+    const result = await this.findAll({ range: validatedRange })
     return result.data.map((entry) => ({
       id: entry.id,
       date: entry.date,
