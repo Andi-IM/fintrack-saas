@@ -1,7 +1,7 @@
 import { Tables } from '@/lib/database.types'
 import { CashFlowRepository, CashFlowFilterOptions, DashboardCashFlowEntry, PaginatedResult } from './types'
 
-import { readDB, writeDB } from './fs-mock-db'
+import { MOCK_USER_ID, readDB, writeDB } from './fs-mock-db'
 
 export class FakeCashFlowRepository implements CashFlowRepository {
   async findDashboardEntries(options?: Pick<CashFlowFilterOptions, 'range'>): Promise<DashboardCashFlowEntry[]> {
@@ -108,6 +108,7 @@ export class FakeCashFlowRepository implements CashFlowRepository {
       receipt_id: data.receipt_id,
       source_item_id: data.source_item_id ?? null,
       created_at: new Date().toISOString(),
+      user_id: MOCK_USER_ID,
     }
     
     const db = readDB()

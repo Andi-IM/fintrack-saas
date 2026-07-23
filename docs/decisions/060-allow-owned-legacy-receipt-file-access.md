@@ -27,5 +27,5 @@ Keep the strict user-scoped path requirement for new receipt uploads, updates, a
 - Risk: If a receipt row points to an unintended object name, the owner of that row can read that object. This is bounded by receipt row ownership and the `receipts` bucket.
 
 ## Related Notes
-- Migration: `supabase/migrations/20260722090000_allow_owned_legacy_receipt_file_access.sql`
+- Migration: `supabase/migrations/20260722134652_allow_owned_legacy_receipt_file_access.sql`
 - Prior decision: `docs/decisions/052-production-rls-implementation.md`

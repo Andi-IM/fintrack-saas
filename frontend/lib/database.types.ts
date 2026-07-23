@@ -79,6 +79,7 @@ export type Database = {
           opening_balance: number | null
           statement_period: string
           total_items: number | null
+          user_id: string
         }
         Insert: {
           bank_name: string
@@ -90,6 +91,7 @@ export type Database = {
           opening_balance?: number | null
           statement_period: string
           total_items?: number | null
+          user_id?: string
         }
         Update: {
           bank_name?: string
@@ -101,8 +103,17 @@ export type Database = {
           opening_balance?: number | null
           statement_period?: string
           total_items?: number | null
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bank_statements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       receipts: {
         Row: {
@@ -121,6 +132,7 @@ export type Database = {
           total_price: number
           transaction_type: string | null
           type: string
+          user_id: string
         }
         Insert: {
           amount_paid?: number | null
@@ -138,6 +150,7 @@ export type Database = {
           total_price: number
           transaction_type?: string | null
           type?: string
+          user_id?: string
         }
         Update: {
           amount_paid?: number | null
@@ -155,6 +168,7 @@ export type Database = {
           total_price?: number
           transaction_type?: string | null
           type?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -162,6 +176,13 @@ export type Database = {
             columns: ["bank_statement_item_id"]
             isOneToOne: false
             referencedRelation: "bank_statement_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -211,6 +232,7 @@ export type Database = {
           payment_method: string | null
           receipt_id: string | null
           source_item_id: string | null
+          user_id: string
         }
         Insert: {
           id?: string
@@ -224,6 +246,7 @@ export type Database = {
           payment_method?: string | null
           receipt_id?: string | null
           source_item_id?: string | null
+          user_id?: string
         }
         Update: {
           id?: string
@@ -237,6 +260,7 @@ export type Database = {
           payment_method?: string | null
           receipt_id?: string | null
           source_item_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -251,6 +275,13 @@ export type Database = {
             columns: ["source_item_id"]
             isOneToOne: false
             referencedRelation: "bank_statement_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_flow_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
