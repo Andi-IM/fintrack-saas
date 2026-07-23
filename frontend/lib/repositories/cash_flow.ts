@@ -1,13 +1,13 @@
 import { Tables } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/server'
-import { CashFlowRepository, CashFlowFilterOptions, DashboardCashFlowEntry, PaginatedResult } from './types'
+import { CashFlowRepository, CashFlowFilterOptions, DashboardCashFlowEntry, PaginatedResult, DashboardRange, parseDashboardRange } from './types'
 import { FakeCashFlowRepository } from './fake-cash-flow'
 
 // Concrete implementation using Supabase client
 export class SupabaseCashFlowRepository implements CashFlowRepository {
   private applyDateFilters<T extends { gte: (column: string, value: string) => T; lte: (column: string, value: string) => T }>(
     query: T,
-    options?: Pick<CashFlowFilterOptions, 'date' | 'range'>
+    options?: Pick<CashFlowFilterOptions, 'date'> & { range?: DashboardRange }
   ): T {
     if (options?.date) {
       const dateStart = new Date(options.date)
@@ -55,7 +55,10 @@ export class SupabaseCashFlowRepository implements CashFlowRepository {
     const supabase = await createClient()
     let query = supabase.from('cash_flow').select('*', { count: 'exact' }).order('date', { ascending: false })
 
-    query = this.applyDateFilters(query, options)
+    query = this.applyDateFilters(query, {
+      date: options?.date,
+      range: parseDashboardRange(options?.range),
+    })
 
     if (options?.search) {
       // Use or for description, main_category, sub_category
@@ -94,14 +97,15 @@ export class SupabaseCashFlowRepository implements CashFlowRepository {
     return { data: data || [], count: count || 0 }
   }
 
-  async findDashboardEntries(options?: Pick<CashFlowFilterOptions, 'range'>): Promise<DashboardCashFlowEntry[]> {
+  async findDashboardEntries(options?: { range?: DashboardRange }): Promise<DashboardCashFlowEntry[]> {
     const supabase = await createClient()
+    const validatedRange = parseDashboardRange(options?.range)
     let query = supabase
       .from('dashboard_cash_flow_entries')
       .select('id,date,main_category,description,income,expense,payment_method')
       .order('date', { ascending: false })
 
-    query = this.applyDateFilters(query, options)
+    query = this.applyDateFilters(query, { range: validatedRange })
 
     const { data, error } = await query
 

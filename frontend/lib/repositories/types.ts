@@ -27,10 +27,21 @@ export type DashboardCashFlowEntry = Pick<
   'id' | 'date' | 'main_category' | 'description' | 'income' | 'expense' | 'payment_method'
 >
 
+export const DASHBOARD_RANGES = ['TODAY', 'MTD', 'YTD', '1W', '1M', '3M', '1Y', 'ALL'] as const
+export type DashboardRange = (typeof DASHBOARD_RANGES)[number]
+
+/** Narrows an arbitrary string to DashboardRange, falling back to the supplied default. */
+export function parseDashboardRange(value: string | undefined, fallback: DashboardRange = '1M'): DashboardRange {
+  if (value !== undefined && (DASHBOARD_RANGES as readonly string[]).includes(value)) {
+    return value as DashboardRange
+  }
+  return fallback
+}
+
 // Interface representing the cash flow database access layer
 export interface CashFlowRepository {
   findAll(options?: CashFlowFilterOptions): Promise<PaginatedResult<Tables<'cash_flow'>>>
-  findDashboardEntries(options?: Pick<CashFlowFilterOptions, 'range'>): Promise<DashboardCashFlowEntry[]>
+  findDashboardEntries(options?: { range?: DashboardRange }): Promise<DashboardCashFlowEntry[]>
   findById(id: string): Promise<Tables<'cash_flow'> | null>
   create(data: Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id' | 'source_item_id'> & { source_item_id?: string | null }): Promise<Tables<'cash_flow'>>
   update(id: string, data: Partial<Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id'>>): Promise<void>
