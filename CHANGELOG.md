@@ -1,3 +1,10 @@
+## [1.14.1-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.14.1-rc.1...v1.14.1-rc.2) (2026-10-01)
+
+
+### Bug Fixes
+
+* **build:** avoid standalone output mode on vercel builds ([738b478](https://github.com/Andi-IM/fintrack-saas/commit/738b478560ba0897eb96747c848b44b1d51d6bdf))
+
 ## [1.14.1-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.14.0...v1.14.1-rc.1) (2026-10-01)
 
 
