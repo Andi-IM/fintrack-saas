@@ -76,9 +76,13 @@ describe('Receipts Feature E2E Test', () => {
             // 2. Hilangkan status "hidden" yang dibuat oleh react-dropzone
             await browser.execute((el) => {
                 if (el) {
-                    el.style.display = 'block'
-                    el.style.visibility = 'visible'
-                    el.style.opacity = '1'
+                    el.style.display = 'block';
+                    el.style.visibility = 'visible';
+                    el.style.opacity = '1';
+                    el.style.width = '100px';
+                    el.style.height = '50px';
+                    el.style.position = 'relative';
+                    el.style.zIndex = '9999';
                 }
             }, fileInput)
 
