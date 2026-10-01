@@ -1,3 +1,10 @@
+## [1.14.2-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.14.2-rc.1...v1.14.2-rc.2) (2026-10-01)
+
+
+### Bug Fixes
+
+* **config:** close images object properly in next.config.ts ([940e880](https://github.com/Andi-IM/fintrack-saas/commit/940e88041ef1e9f7e81651e01b5a5355ad35f0a8))
+
 ## [1.14.2-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.14.1...v1.14.2-rc.1) (2026-10-01)
 
 
