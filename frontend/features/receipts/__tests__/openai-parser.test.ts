@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { OpenAIBankStatementParser, OpenAIReceiptParser } from '@/lib/ocr/openai-parser'
 import { ReceiptParser } from '@/lib/ocr/receipt-parser'
 
+const originalMakersEnv = process.env.MAKERS_API_KEY
 const originalGroqEnv = process.env.GROQ_API_KEY
 const originalMistralEnv = process.env.MISTRAL_API_KEY
 
@@ -31,21 +32,24 @@ vi.mock('openai', () => {
 describe('OpenAIReceiptParser', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    delete process.env.MAKERS_API_KEY
     process.env.GROQ_API_KEY = 'test-api-key'
     process.env.MISTRAL_API_KEY = 'test-mistral-key'
   })
 
   afterEach(() => {
+    process.env.MAKERS_API_KEY = originalMakersEnv
     process.env.GROQ_API_KEY = originalGroqEnv
     process.env.MISTRAL_API_KEY = originalMistralEnv
   })
 
   it('should throw error if no LLM provider API key is configured', async () => {
+    delete process.env.MAKERS_API_KEY
     delete process.env.GROQ_API_KEY
     delete process.env.MISTRAL_API_KEY
     const parser = new OpenAIReceiptParser()
     await expect(parser.parse('some raw text')).rejects.toThrow(
-      'No LLM provider API key is configured. Set GROQ_API_KEY or MISTRAL_API_KEY.'
+      'No LLM provider API key is configured. Set MAKERS_API_KEY, GROQ_API_KEY, or MISTRAL_API_KEY.'
     )
   })
 
@@ -221,11 +225,13 @@ describe('OpenAIReceiptParser', () => {
 describe('OpenAIBankStatementParser', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    delete process.env.MAKERS_API_KEY
     process.env.GROQ_API_KEY = 'test-api-key'
     process.env.MISTRAL_API_KEY = 'test-mistral-key'
   })
 
   afterEach(() => {
+    process.env.MAKERS_API_KEY = originalMakersEnv
     process.env.GROQ_API_KEY = originalGroqEnv
     process.env.MISTRAL_API_KEY = originalMistralEnv
   })
@@ -374,11 +380,13 @@ describe('OpenAIBankStatementParser', () => {
 describe('ReceiptParser delegation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    delete process.env.MAKERS_API_KEY
     process.env.GROQ_API_KEY = 'test-api-key'
     process.env.MISTRAL_API_KEY = 'test-mistral-key'
   })
 
   afterEach(() => {
+    process.env.MAKERS_API_KEY = originalMakersEnv
     process.env.GROQ_API_KEY = originalGroqEnv
     process.env.MISTRAL_API_KEY = originalMistralEnv
   })
@@ -409,5 +417,36 @@ describe('ReceiptParser delegation', () => {
       ...mockResponse,
       date: '2026-06-25T12:00:00+07:00'
     })
+  })
+
+  it('should prioritize EdgeOne Makers when MAKERS_API_KEY is present', async () => {
+    process.env.MAKERS_API_KEY = 'test-makers-key'
+    const mockResponse = {
+      merchant: 'Makers Supermarket',
+      date: '2026-10-01',
+      total: 150000,
+      type: 'shopping',
+      amountPaid: 150000,
+      change: 0,
+      items: [{ name: 'Makers Item', amount: 150000 }]
+    }
+
+    mockCreate.mockImplementation(async (config: { baseURL?: string }, payload: { model?: string }) => {
+      expect(config.baseURL).toBe('https://ai-gateway.edgeone.link/v1')
+      expect(payload.model).toBe('@makers/deepseek-v4-flash')
+      return {
+        choices: [{
+          message: {
+            content: JSON.stringify(mockResponse)
+          }
+        }]
+      }
+    })
+
+    const parser = new OpenAIReceiptParser()
+    const result = await parser.parse('makers raw text')
+
+    expect(result.merchant).toBe('Makers Supermarket')
+    expect(mockCreate).toHaveBeenCalledTimes(1)
   })
 })

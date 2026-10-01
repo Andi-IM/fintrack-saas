@@ -1,0 +1,35 @@
+{
+  "name": "fintrack-mcp-server",
+  "version": "1.0.0",
+  "description": "Model Context Protocol (MCP) server for FinTrack SaaS",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "fintrack-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "fintrack",
+    "ai",
+    "finance"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "@supabase/supabase-js": "^2.49.1",
+    "dotenv": "^16.4.7",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}
