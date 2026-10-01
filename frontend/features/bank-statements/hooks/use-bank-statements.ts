@@ -133,10 +133,34 @@ export function useBankStatements(): UseBankStatementsReturn {
     deleteItemMutation.mutate(itemId)
   }
 
+  const getSafeExternalUrl = (rawUrl: string): string | null => {
+    try {
+      const parsed = new URL(rawUrl)
+      const allowedProtocols = new Set(['http:', 'https:'])
+      const allowedHosts = new Set([
+        window.location.hostname,
+        'localhost',
+        '127.0.0.1',
+      ])
+
+      if (!allowedProtocols.has(parsed.protocol)) return null
+      if (!allowedHosts.has(parsed.hostname)) return null
+
+      return parsed.toString()
+    } catch {
+      return null
+    }
+  }
+
   const handleViewFile = async (path: string) => {
     const result = await getFileUrl(path)
     if (result.success) {
-      window.open(result.data, '_blank')
+      const safeUrl = getSafeExternalUrl(result.data)
+      if (!safeUrl) {
+        alert('Invalid file URL')
+        return
+      }
+      window.open(safeUrl, '_blank', 'noopener,noreferrer')
     } else {
       alert(result.error)
     }
