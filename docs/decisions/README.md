@@ -68,3 +68,5 @@ Setiap keputusan desain yang signifikan dan berpengaruh besar terhadap struktur 
 - [ADR-060](060-allow-owned-legacy-receipt-file-access.md) - Allow Owned Legacy Receipt File Access
 - [ADR-061](061-secure-low-latency-dashboard-rendering.md) - Secure Low-Latency Dashboard Rendering
 - [ADR-062](062-enable-codeql-code-scanning.md) - Enable CodeQL Code Scanning
+- [ADR-063](063-dedicated-fintrack-mcp-server.md) - Dedicated FinTrack MCP Server
+- [ADR-064](064-add-edgeone-makers-ocr-parser.md) - Add EdgeOne Makers as OpenAI-Compatible OCR Parser Provider

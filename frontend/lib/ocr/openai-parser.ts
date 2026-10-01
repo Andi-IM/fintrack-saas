@@ -12,16 +12,22 @@ type LlmProvider = {
 
 const getConfiguredProviders = (): LlmProvider[] => [
   {
+    name: 'EdgeOne Makers',
+    apiKey: process.env.MAKERS_API_KEY,
+    baseURL: process.env.MAKERS_BASE_URL || 'https://ai-gateway.edgeone.link/v1',
+    model: process.env.MAKERS_MODEL || '@makers/deepseek-v4-flash',
+  },
+  {
     name: 'Groq',
     apiKey: process.env.GROQ_API_KEY,
-    baseURL: 'https://api.groq.com/openai/v1',
-    model: 'llama-3.3-70b-versatile',
+    baseURL: process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1',
+    model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
   },
   {
     name: 'Mistral Large 3',
     apiKey: process.env.MISTRAL_API_KEY,
-    baseURL: 'https://api.mistral.ai/v1',
-    model: 'mistral-large-2512',
+    baseURL: process.env.MISTRAL_BASE_URL || 'https://api.mistral.ai/v1',
+    model: process.env.MISTRAL_MODEL || 'mistral-large-2512',
   },
 ].filter(provider => provider.apiKey)
 
@@ -37,7 +43,7 @@ async function withLlmProviderFallback<T>(
   const providers = getConfiguredProviders()
 
   if (providers.length === 0) {
-    throw new Error('No LLM provider API key is configured. Set GROQ_API_KEY or MISTRAL_API_KEY.')
+    throw new Error('No LLM provider API key is configured. Set MAKERS_API_KEY, GROQ_API_KEY, or MISTRAL_API_KEY.')
   }
 
   const failures: string[] = []
