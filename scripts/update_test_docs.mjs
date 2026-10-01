@@ -55,7 +55,7 @@ while ((match = regex.exec(readmeContent)) !== null) {
   
   tests.forEach((desc, index) => {
     const id = `TC-${shortCode}-${String(index + 1).padStart(3, '0')}`;
-    const safeDesc = desc.replace(/\|/g, "\\|");
+    const safeDesc = desc.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
     markdown += `| ${id} | ${safeDesc} | 1. Render test subject<br>2. Eksekusi kondisi | Sesuai mock data | - Asserts berhasil sesuai dengan deskripsi | Sesuai ekspektasi | Lulus |\n`;
   });
   
