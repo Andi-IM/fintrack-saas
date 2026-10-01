@@ -118,7 +118,7 @@ function formatWithTimezone(dateStr: string, defaultTime = '12:00:00', timezoneO
     // Normalize timePart (HH:mm:ss or HH:mm)
     let time = timePart ? timePart.trim() : defaultTime
     // Remove any trailing fractional seconds or Z/offset leftover
-    time = time.split(/[+-Z]/)[0]
+    time = time.split(/[-+Z]/)[0]
     
     const timeParts = time.split(':')
     if (timeParts.length === 2) {
