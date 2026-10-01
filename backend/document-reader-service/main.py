@@ -1,5 +1,8 @@
 import os
+import logging
 import modal
+
+logger = logging.getLogger(__name__)
 
 # 1. Definisi Image
 image = (
@@ -161,9 +164,10 @@ def api():
         except HTTPException as he:
             raise he
         except Exception as e:
+            logger.exception("Unhandled error in ocr_endpoint")
             return {
                 "status": "error",
-                "message": f"An unexpected error occurred: {str(e)}",
+                "message": "An unexpected error occurred.",
                 "metadata": {
                     "timestamp": datetime.utcnow().isoformat()
                 }
