@@ -1,3 +1,10 @@
+## [1.14.4-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.14.3...v1.14.4-rc.1) (2026-10-01)
+
+
+### Bug Fixes
+
+* **bank-statements:** allow optional rawUrl in getSafeExternalUrl and whitelist supabase hosts ([0480e7e](https://github.com/Andi-IM/fintrack-saas/commit/0480e7e145e1367a9ea995499d60837de10d4e0b))
+
 ## [1.14.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.14.2...v1.14.3) (2026-10-01)
 
 
