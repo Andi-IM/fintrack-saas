@@ -1,3 +1,10 @@
+## [1.14.1-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.14.0...v1.14.1-rc.1) (2026-10-01)
+
+
+### Bug Fixes
+
+* **e2e:** make dropzone file input interactable in receipts test ([02737e6](https://github.com/Andi-IM/fintrack-saas/commit/02737e61ea63b26d3ace5502a4bb23f0852db92d))
+
 # [1.14.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.13.2...v1.14.0) (2026-10-01)
 
 
