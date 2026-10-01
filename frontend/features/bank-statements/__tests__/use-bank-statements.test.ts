@@ -195,7 +195,7 @@ describe('useBankStatements hook', () => {
 
   it('handleViewFile opens window on success', async () => {
     vi.mocked(getGroupedBankStatements).mockResolvedValue({ success: true, data: mockGroupedData as any })
-    vi.mocked(getFileUrl).mockResolvedValue({ success: true, data: 'https://example.com/file.pdf' })
+    vi.mocked(getFileUrl).mockResolvedValue({ success: true, data: 'https://localhost/file.pdf' })
     const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
 
     const { result } = renderHook(() => useBankStatements(), { wrapper: makeWrapper() })
@@ -203,7 +203,7 @@ describe('useBankStatements hook', () => {
 
     await act(async () => result.current.handleViewFile('statements/test.pdf'))
 
-    expect(openSpy).toHaveBeenCalledWith('https://example.com/file.pdf', '_blank')
+    expect(openSpy).toHaveBeenCalledWith('https://localhost/file.pdf', '_blank', 'noopener,noreferrer')
     vi.restoreAllMocks()
   })
 

@@ -133,15 +133,26 @@ export function useBankStatements(): UseBankStatementsReturn {
     deleteItemMutation.mutate(itemId)
   }
 
-  const getSafeExternalUrl = (rawUrl: string): string | null => {
+  const getSafeExternalUrl = (rawUrl?: string): string | null => {
+    if (!rawUrl) return null
     try {
       const parsed = new URL(rawUrl)
       const allowedProtocols = new Set(['http:', 'https:'])
+      
       const allowedHosts = new Set([
         window.location.hostname,
         'localhost',
         '127.0.0.1',
       ])
+
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      if (supabaseUrl) {
+        try {
+          allowedHosts.add(new URL(supabaseUrl).hostname)
+        } catch {
+          // ignore invalid env url
+        }
+      }
 
       if (!allowedProtocols.has(parsed.protocol)) return null
       if (!allowedHosts.has(parsed.hostname)) return null
