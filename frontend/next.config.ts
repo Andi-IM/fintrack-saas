@@ -39,6 +39,7 @@ const nextConfig: NextConfig = {
         pathname: '/**', // This allows any path under the hostname
       },
     ],
+  },
   // In Vercel environments, Vercel natively packages serverless functions and does not use standalone output.
   // Standalone mode is only needed for self-hosted Docker builds.
   output: (process.env.VERCEL === '1' || process.env.NEXT_PUBLIC_IS_TESTING === 'true') ? undefined : 'standalone',
