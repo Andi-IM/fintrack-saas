@@ -1,3 +1,10 @@
+# [1.16.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.15.2-rc.1...v1.16.0-rc.1) (2026-10-02)
+
+
+### Features
+
+* **mcp:** support receipt creation and image upload with cash flow sync ([e2212c0](https://github.com/Andi-IM/fintrack-saas/commit/e2212c0452f0b08e5e892a335f30ac0718aa5937))
+
 ## [1.15.2-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.15.1...v1.15.2-rc.1) (2026-10-02)
 
 
