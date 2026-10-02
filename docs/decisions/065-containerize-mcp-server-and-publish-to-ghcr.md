@@ -13,8 +13,8 @@ Additionally, team members and external tools need access to versioned, containe
 ## Decision
 
 1. **Containerization**:
-   - Provide a multi-stage `Dockerfile` in `mcp-server/Dockerfile` using `node:20-alpine`.
-   - Use `pnpm` (enabled via Corepack) for lean, deterministic builds with `--frozen-lockfile`.
+   - Provide a multi-stage `Dockerfile` in `mcp-server/Dockerfile` using `node:22-alpine`.
+   - Use `pnpm` (enabled via Corepack / pinned installation) for lean, deterministic builds with `--frozen-lockfile`.
    - Prune development dependencies (`pnpm prune --prod`) and run under the unprivileged `node` system user for container security.
    - Maintain a `.dockerignore` file in `mcp-server/` to omit `node_modules`, `dist`, local environment files (`.env*`), and git metadata from container builds.
 

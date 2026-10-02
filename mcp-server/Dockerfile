@@ -1,5 +1,5 @@
 # Step 1: Base image with pnpm enabled
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN npm install -g pnpm@11.22.0
@@ -19,7 +19,7 @@ RUN pnpm run build
 RUN pnpm prune --prod
 
 # Step 3: Production runner
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
