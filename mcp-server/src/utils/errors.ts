@@ -13,7 +13,8 @@ export function formatErrorResponse(error: unknown) {
     message = String(error);
   }
 
-  process.stderr.write(`[FinTrack MCP Error] ${message}\n`);
+  const timestamp = new Date().toISOString();
+  process.stderr.write(`[${timestamp}] [FinTrack MCP Error] ${message}\n`);
 
   return {
     content: [
