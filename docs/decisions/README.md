@@ -71,3 +71,4 @@ Setiap keputusan desain yang signifikan dan berpengaruh besar terhadap struktur 
 - [ADR-063](063-dedicated-fintrack-mcp-server.md) - Dedicated FinTrack MCP Server
 - [ADR-064](064-add-edgeone-makers-ocr-parser.md) - Add EdgeOne Makers as OpenAI-Compatible OCR Parser Provider
 - [ADR-065](065-containerize-mcp-server-and-publish-to-ghcr.md) - Containerize MCP Server and Publish to GHCR
+- [ADR-066](066-add-mcp-receipt-creation-and-image-upload.md) - Add MCP Receipt Creation and Image Upload Support
