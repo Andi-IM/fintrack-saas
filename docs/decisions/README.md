@@ -70,3 +70,4 @@ Setiap keputusan desain yang signifikan dan berpengaruh besar terhadap struktur 
 - [ADR-062](062-enable-codeql-code-scanning.md) - Enable CodeQL Code Scanning
 - [ADR-063](063-dedicated-fintrack-mcp-server.md) - Dedicated FinTrack MCP Server
 - [ADR-064](064-add-edgeone-makers-ocr-parser.md) - Add EdgeOne Makers as OpenAI-Compatible OCR Parser Provider
+- [ADR-065](065-containerize-mcp-server-and-publish-to-ghcr.md) - Containerize MCP Server and Publish to GHCR
