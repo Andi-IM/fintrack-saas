@@ -1,3 +1,10 @@
+# [1.16.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.16.0-rc.1...v1.16.0-rc.2) (2026-10-02)
+
+
+### Bug Fixes
+
+* **mcp:** support .env.local, robust error serialization, and storage path handling ([2134d46](https://github.com/Andi-IM/fintrack-saas/commit/2134d467d90f907eb7db8487f07b952e3e67e64f))
+
 ## [1.15.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.15.1...v1.15.2) (2026-10-02)
 
 
