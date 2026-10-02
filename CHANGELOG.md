@@ -1,3 +1,10 @@
+## [1.16.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.16.1...v1.16.2) (2026-10-02)
+
+
+### Bug Fixes
+
+* **mcp:** add ISO timestamp to error log output ([07b6928](https://github.com/Andi-IM/fintrack-saas/commit/07b6928ab9a8ae60a273de2cf34d48d4fd8d485f))
+
 ## [1.16.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.16.0...v1.16.1) (2026-10-02)
 
 
