@@ -1,3 +1,10 @@
+## [1.15.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.15.1...v1.15.2) (2026-10-02)
+
+
+### Bug Fixes
+
+* **mcp:** upgrade base image to node 22 to satisfy pnpm 11 sqlite requirement ([0415426](https://github.com/Andi-IM/fintrack-saas/commit/0415426609a86a6c6af10d4f13202beb364b09fc))
+
 ## [1.15.2-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.15.1...v1.15.2-rc.1) (2026-10-02)
 
 
