@@ -1,3 +1,10 @@
+# [1.15.0-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.14.4...v1.15.0-rc.1) (2026-10-02)
+
+
+### Features
+
+* **mcp:** containerize mcp server and add ghcr publishing workflow ([a7f2eff](https://github.com/Andi-IM/fintrack-saas/commit/a7f2efff94c06aa8dbf41b59053e90592510a031))
+
 ## [1.14.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.14.3...v1.14.4) (2026-10-01)
 
 

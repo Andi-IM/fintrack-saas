@@ -61,9 +61,54 @@ pnpm run dev
 
 ---
 
+## Menjalankan via Docker / Container
+
+### 1. Build & Run Lokal dengan Docker
+```bash
+# Build image lokal
+docker build -t fintrack-mcp-server ./mcp-server
+
+# Jalankan via stdio
+docker run -i --rm \
+  -e SUPABASE_URL="https://your-project.supabase.co" \
+  -e SUPABASE_SERVICE_ROLE_KEY="your-service-role-key" \
+  -e FINTRACK_USER_ID="your-user-uuid" \
+  fintrack-mcp-server
+```
+
+### 2. Menggunakan Image dari GitHub Container Registry (GHCR)
+Setelah workflow GitHub Actions `.github/workflows/mcp-docker.yml` dijalankan, image container otomatis dipublikasikan ke GitHub Packages:
+```bash
+docker pull ghcr.io/<github-username>/fintrack-saas-mcp:latest
+```
+
+---
+
 ## Integrasi dengan Client Eksternal
 
-### 1. Claude Desktop
+### 1. Claude Desktop / Cursor / Antigravity via Docker (Zero Dependency)
+Anda dapat menjalankan container langsung dari client tanpa perlu Node.js di komputer host:
+
+```json
+{
+  "mcpServers": {
+    "fintrack": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e", "SUPABASE_URL=https://your-project.supabase.co",
+        "-e", "SUPABASE_SERVICE_ROLE_KEY=your-service-role-key",
+        "-e", "FINTRACK_USER_ID=your-user-uuid",
+        "ghcr.io/<github-username>/fintrack-saas-mcp:latest"
+      ]
+    }
+  }
+}
+```
+
+### 2. Claude Desktop (Local Node.js)
 Tambahkan ke konfigurasi `claude_desktop_config.json`:
 
 ```json
@@ -82,9 +127,10 @@ Tambahkan ke konfigurasi `claude_desktop_config.json`:
 }
 ```
 
-### 2. Cursor IDE
+### 3. Cursor IDE (Local Node.js)
 Pada Cursor settings (`Cursor Settings -> Features -> MCP`):
 - **Name**: `fintrack`
 - **Type**: `command`
 - **Command**: `node D:/01_Projects/fintrack-saas/mcp-server/dist/index.js`
 - Masukkan env variables yang sesuai di file `.env` direktori `mcp-server/`.
+
