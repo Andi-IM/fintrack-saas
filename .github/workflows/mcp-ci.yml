@@ -1,0 +1,42 @@
+name: MCP Server CI
+
+on:
+  push:
+    branches: [ main, dev ]
+    paths:
+      - 'mcp-server/**'
+      - '.github/workflows/mcp*.yml'
+  pull_request:
+    branches: [ main, dev ]
+    paths:
+      - 'mcp-server/**'
+      - '.github/workflows/mcp*.yml'
+
+jobs:
+  validate:
+    name: Build & Validate MCP Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          cache-dependency-path: mcp-server/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: mcp-server
+
+      - name: Build TypeScript
+        run: pnpm run build
+        working-directory: mcp-server
