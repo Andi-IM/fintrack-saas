@@ -94,37 +94,19 @@ $SSH_CMD "${VPS_USER}@${VPS_HOST}" bash <<EOF
   mkdir -p "$REMOTE_APP_DIR"
 EOF
 
-# 3. Transfer compose and environment files
+# 3. Transfer compose and environment files (via cat over ssh, bypassing scp)
 echo "Step 3/5: Transferring configuration files to VPS..."
-$SCP_CMD "$COMPOSE_FILE" "${VM_USER}@${VM_HOST}:${REMOTE_APP_DIR}/docker-compose.yml"
-$SCP_CMD "$LOCAL_ENV_FILE" "${VM_USER}@${VM_HOST}:${REMOTE_APP_DIR}/.env"
+cat "$COMPOSE_FILE" | $SSH_CMD "${VM_USER}@${VM_HOST}" "cat > ${REMOTE_APP_DIR}/docker-compose.yml"
+cat "$LOCAL_ENV_FILE" | $SSH_CMD "${VM_USER}@${VM_HOST}" "cat > ${REMOTE_APP_DIR}/.env"
 
-# 4. Pull latest image and restart service
+# 4. Pull latest image and restart service (podman or docker)
 echo "Step 4/5: Pulling latest image and restarting container..."
-$SSH_CMD "${VM_USER}@${VM_HOST}" bash <<EOF
-  set -e
-  cd "$REMOTE_APP_DIR"
-
-  # Optional GHCR login if credentials provided
-  if [ -n "$GHCR_USER" ] && [ -n "$GHCR_PAT" ]; then
-    echo "Logging in to GitHub Container Registry..."
-    echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
-  fi
-
-  echo "Pulling latest Docker image..."
-  docker compose pull
-
-  echo "Restarting services..."
-  docker compose down --remove-orphans || true
-  docker compose up -d
-
-  echo "Pruning dangling images..."
-  docker image prune -f
-EOF
+$SSH_CMD "${VM_USER}@${VM_HOST}" "podman pull ghcr.io/andi-im/fintrack-saas-mcp:latest 2>/dev/null || docker pull ghcr.io/andi-im/fintrack-saas-mcp:latest"
+$SSH_CMD "${VM_USER}@${VM_HOST}" "cd ${REMOTE_APP_DIR} && (podman compose down --remove-orphans 2>/dev/null || docker compose down --remove-orphans 2>/dev/null || true) && (podman compose up -d 2>/dev/null || docker compose up -d)"
 
 # 5. Verify deployment
 echo "Step 5/5: Verifying container status..."
-$SSH_CMD "${VM_USER}@${VM_HOST}" "cd $REMOTE_APP_DIR && docker compose ps && docker compose logs --tail 20"
+$SSH_CMD "${VM_USER}@${VM_HOST}" "cd ${REMOTE_APP_DIR} && (podman compose ps 2>/dev/null || docker compose ps)"
 
 echo "=========================================================="
 echo " Deployment completed successfully!"
