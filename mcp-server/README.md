@@ -13,9 +13,11 @@ Model Context Protocol (MCP) server yang memungkinkan LLM agents (Claude Desktop
    - `list_bank_statements`: Melihat daftar rekening koran/mutasi bank yang sudah diunggah.
    - `get_statement_mutations`: Mengambil item mutasi transaksi (CR/DB) dari statement tertentu.
 
-3. **Receipts & OCR Tools**:
-   - `list_receipts`: Menampilkan daftar riwayat struk belanja.
+3. **Receipts & Image Tools**:
+   - `list_receipts`: Menampilkan daftar riwayat struk belanja / penerimaan.
    - `get_receipt_details`: Mengambil informasi struk lengkap beserta rincian item barang belanja (`receipts_items`).
+   - `create_receipt`: Mencatat struk/slip gaji baru lengkap dengan bukti gambar (upload file lokal atau Base64 ke Supabase Storage) dan otomatis sinkronisasi ke tabel `cash_flow`.
+   - `get_receipt_image_url`: Menghasilkan signed URL sementara (1 jam) untuk melihat/mengunduh gambar struk dari Supabase Storage.
 
 4. **Analytics Tools**:
    - `get_financial_analytics`: Analitik perbandingan pemasukan vs pengeluaran sesuai filter dashboard (`TODAY`, `MTD`, `YTD`, `1W`, `1M`, `3M`, `1Y`, `ALL`).
