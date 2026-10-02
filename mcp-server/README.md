@@ -136,3 +136,41 @@ Pada Cursor settings (`Cursor Settings -> Features -> MCP`):
 - **Command**: `node D:/01_Projects/fintrack-saas/mcp-server/dist/index.js`
 - Masukkan env variables yang sesuai di file `.env` direktori `mcp-server/`.
 
+---
+
+## Deploy ke VPS dengan SSH Key
+
+Tersedia skrip otomatis untuk deploy container MCP Server ke VPS Linux menggunakan autentikasi SSH key:
+
+### 1. Konfigurasi Kredensial VPS
+Salin template konfigurasi:
+```bash
+cp scripts/deploy-vps.env.example .env.deploy
+```
+Edit `.env.deploy`:
+```env
+VPS_HOST="ip.atau.domain.vps"
+VPS_USER="root"
+VPS_PORT="22"
+SSH_KEY_PATH="~/.ssh/id_ed25519"
+REMOTE_APP_DIR="/opt/fintrack-mcp"
+LOCAL_ENV_FILE="./mcp-server/.env.local"
+```
+
+### 2. Jalankan Deploy
+- **Linux / macOS / WSL / Git Bash**:
+  ```bash
+  chmod +x ./scripts/deploy-vps.sh
+  ./scripts/deploy-vps.sh
+  ```
+- **Windows (PowerShell)**:
+  ```powershell
+  .\scripts\deploy-vps.ps1
+  ```
+
+Skrip ini akan otomatis:
+1. Menguji koneksi SSH dengan SSH private key Anda.
+2. Mentransfer `docker-compose.vps.yml` dan file environment (`.env`) ke remote VPS.
+3. Menjalankan `docker compose pull` dan `docker compose up -d`.
+4. Memvalidasi status kontainer yang berjalan.
+

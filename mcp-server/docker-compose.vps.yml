@@ -1,0 +1,17 @@
+services:
+  mcp-server:
+    image: ghcr.io/andi-im/fintrack-saas-mcp:latest
+    container_name: fintrack-mcp-server
+    restart: unless-stopped
+    env_file:
+      - .env
+    # Optional: If you need to mount a host directory for local receipt files:
+    # volumes:
+    #   - ./receipts-storage:/app/receipts
+    stdin_open: true
+    tty: true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
