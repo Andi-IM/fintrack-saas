@@ -1,3 +1,10 @@
+## [1.15.1-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.15.0...v1.15.1-rc.1) (2026-10-02)
+
+
+### Bug Fixes
+
+* **mcp:** pin pnpm version and copy workspace config for build script approvals ([25efc4b](https://github.com/Andi-IM/fintrack-saas/commit/25efc4b26b22d87f47322274208649b3d6d89470))
+
 # [1.15.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.14.4...v1.15.0) (2026-10-02)
 
 
