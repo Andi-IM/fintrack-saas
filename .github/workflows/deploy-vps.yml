@@ -1,0 +1,81 @@
+name: Deploy MCP to VPS
+
+on:
+  # 1. Manual trigger from GitHub Actions UI
+  workflow_dispatch:
+
+  # 2. Automated trigger after container build finishes on main
+  workflow_run:
+    workflows: ["Build and Publish MCP Container"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy to Remote VPS
+    runs-on: ubuntu-latest
+    # Only run if manual, or if triggered by workflow_run and that build succeeded
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to VPS via SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.VM_HOST }}
+          REMOTE_USER: ${{ secrets.VM_USER }}
+        run: |
+          if [ -z "$REMOTE_HOST" ] || [ -z "$REMOTE_USER" ] || [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "Error: Missing required GitHub Secrets."
+            echo "Please ensure DEPLOY_SSH_KEY, VM_HOST, and VM_USER are configured in Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+          # Setup SSH key securely
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_vps
+          chmod 600 ~/.ssh/id_vps
+
+          # Scan host keys
+          ssh-keyscan -H "$REMOTE_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+          SSH_CMD="ssh -i ~/.ssh/id_vps -o StrictHostKeyChecking=accept-new $REMOTE_USER@$REMOTE_HOST"
+          SCP_CMD="scp -i ~/.ssh/id_vps -o StrictHostKeyChecking=accept-new"
+
+          echo "=========================================================="
+          echo " Connecting to VPS: $REMOTE_USER@$REMOTE_HOST"
+          echo "=========================================================="
+
+          # 1. Prepare remote application directory
+          $SSH_CMD "mkdir -p /opt/fintrack-mcp"
+
+          # 2. Transfer docker-compose.vps.yml
+          $SCP_CMD ./mcp-server/docker-compose.vps.yml "$REMOTE_USER@$REMOTE_HOST:/opt/fintrack-mcp/docker-compose.yml"
+
+          # 3. Pull latest image and restart container
+          $SSH_CMD bash << 'EOF'
+            set -e
+            cd /opt/fintrack-mcp
+
+            # Create default .env if not yet created on the VPS
+            if [ ! -f .env ]; then
+              echo "# FinTrack MCP Environment" > .env
+              echo "Created initial .env at /opt/fintrack-mcp/.env. Please ensure SUPABASE_URL and keys are filled."
+            fi
+
+            echo "Pulling latest Docker image from GHCR..."
+            docker compose pull || true
+
+            echo "Restarting services..."
+            docker compose down --remove-orphans 2>/dev/null || true
+            docker compose up -d
+
+            echo "Current container status:"
+            docker compose ps
+          EOF
+
+          echo "=========================================================="
+          echo " Deployment to VPS completed successfully!"
+          echo "=========================================================="
