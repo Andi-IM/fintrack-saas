@@ -1,9 +1,9 @@
-# [1.16.0-rc.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.16.0-rc.1...v1.16.0-rc.2) (2026-10-02)
+# [1.16.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.15.2...v1.16.0) (2026-10-02)
 
 
-### Bug Fixes
+### Features
 
-* **mcp:** support .env.local, robust error serialization, and storage path handling ([2134d46](https://github.com/Andi-IM/fintrack-saas/commit/2134d467d90f907eb7db8487f07b952e3e67e64f))
+* **mcp:** support receipt creation and image upload with cash flow sync ([e2212c0](https://github.com/Andi-IM/fintrack-saas/commit/e2212c0452f0b08e5e892a335f30ac0718aa5937))
 
 ## [1.15.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.15.1...v1.15.2) (2026-10-02)
 
