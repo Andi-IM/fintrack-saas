@@ -1,3 +1,10 @@
+## [1.19.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.19.1...v1.19.2) (2026-10-03)
+
+
+### Bug Fixes
+
+* **db:** resolve deferred constraint trigger on index creation and sync database types ([0adeb20](https://github.com/Andi-IM/fintrack-saas/commit/0adeb2014f90ef26b34c3531906ec5b0d6308f3e))
+
 ## [1.19.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.19.0...v1.19.1) (2026-10-03)
 
 
