@@ -96,10 +96,11 @@ export class FakeCashFlowRepository implements CashFlowRepository {
     return db.cashFlows.find(cf => cf.id === id) || null
   }
 
-  async create(data: Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id' | 'source_item_id'> & { source_item_id?: string | null }): Promise<Tables<'cash_flow'>> {
+  async create(data: Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id' | 'source_item_id' | 'transaction_time'> & { source_item_id?: string | null; transaction_time?: string | null }): Promise<Tables<'cash_flow'>> {
     const newEntry: Tables<'cash_flow'> = {
       id: `cf-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       date: data.date,
+      transaction_time: data.transaction_time ?? data.date,
       main_category: data.main_category,
       sub_category: data.sub_category,
       description: data.description,

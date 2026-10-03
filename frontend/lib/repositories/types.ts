@@ -43,7 +43,7 @@ export interface CashFlowRepository {
   findAll(options?: CashFlowFilterOptions): Promise<PaginatedResult<Tables<'cash_flow'>>>
   findDashboardEntries(options?: { range?: DashboardRange }): Promise<DashboardCashFlowEntry[]>
   findById(id: string): Promise<Tables<'cash_flow'> | null>
-  create(data: Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id' | 'source_item_id'> & { source_item_id?: string | null }): Promise<Tables<'cash_flow'>>
+  create(data: Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id' | 'source_item_id' | 'transaction_time'> & { source_item_id?: string | null; transaction_time?: string | null }): Promise<Tables<'cash_flow'>>
   update(id: string, data: Partial<Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id'>>): Promise<void>
   delete(id: string): Promise<void>
 }

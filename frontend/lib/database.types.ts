@@ -127,6 +127,7 @@ export type Database = {
           receipt_id: string | null
           source_item_id: string | null
           sub_category: string | null
+          transaction_time: string | null
           user_id: string
         }
         Insert: {
@@ -141,6 +142,7 @@ export type Database = {
           receipt_id?: string | null
           source_item_id?: string | null
           sub_category?: string | null
+          transaction_time?: string | null
           user_id: string
         }
         Update: {
@@ -155,6 +157,7 @@ export type Database = {
           receipt_id?: string | null
           source_item_id?: string | null
           sub_category?: string | null
+          transaction_time?: string | null
           user_id?: string
         }
         Relationships: [
@@ -305,6 +308,19 @@ export type Database = {
       }
     }
     Functions: {
+      create_bank_statement_with_items: {
+        Args: {
+          p_bank_name: string
+          p_closing_balance?: number
+          p_file_path?: string
+          p_items?: Json
+          p_opening_balance?: number
+          p_statement_period: string
+          p_total_items?: number
+          p_user_id: string
+        }
+        Returns: Json
+      }
       get_cash_flow_summary: {
         Args: { p_date_from?: string; p_date_to?: string; p_user_id: string }
         Returns: {

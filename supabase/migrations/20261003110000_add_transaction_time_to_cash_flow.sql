@@ -107,5 +107,8 @@ CREATE TRIGGER trg_sync_cash_flow_transaction_time
   FOR EACH ROW EXECUTE FUNCTION private.sync_cash_flow_transaction_time();
 
 -- 8. Add performance index on (user_id, transaction_time DESC)
+-- Flush deferred constraint trigger events before creating index
+SET CONSTRAINTS ALL IMMEDIATE;
+
 CREATE INDEX IF NOT EXISTS idx_cash_flow_user_transaction_time
   ON public.cash_flow(user_id, transaction_time DESC);
