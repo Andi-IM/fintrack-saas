@@ -1,4 +1,4 @@
-## [1.16.2-rc.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.16.1...v1.16.2-rc.1) (2026-10-02)
+## [1.16.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.16.1...v1.16.2) (2026-10-02)
 
 
 ### Bug Fixes
