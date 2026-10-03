@@ -30,13 +30,13 @@ interface ItemEditDialogProps {
 export default function ItemEditDialog({
   open, onOpenChange, onSave, title, initialData,
 }: ItemEditDialogProps) {
-  const now = new Date()
+  const [now] = useState(() => new Date())
   const pad = (n: number) => n.toString().padStart(2, '0')
 
   const wallClockParts = (iso: string): [string, string] => {
     const parts = iso.split('T')
     const datePart = parts[0] ?? ''
-    const timePart = parts[1]?.replace(/[Z+\-].*$/, '').slice(0, 5) ?? '00:00'
+    const timePart = parts[1]?.replace(/[Z+-].*$/, '').slice(0, 5) ?? '00:00'
     return [datePart, timePart]
   }
 
@@ -99,7 +99,7 @@ export default function ItemEditDialog({
               />
               {errors.date && <p className="text-xs text-rose-500">{errors.date}</p>}
             </div>
-            <div className="w-[140px] space-y-1.5">
+            <div className="w-35 space-y-1.5">
               <Label htmlFor="item-time">Waktu</Label>
               <Input
                 id="item-time"

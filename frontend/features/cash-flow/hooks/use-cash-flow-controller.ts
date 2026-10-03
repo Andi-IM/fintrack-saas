@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { useQueryState } from 'nuqs'
 import { Tables } from '@/lib/database.types'
 import { deleteCashFlow } from '@/features/cash-flow/actions/cash_flow'
@@ -57,10 +57,12 @@ export function useCashFlowController({ initialTransactions, serverTotalItems, t
   // Local state for optimistic updates
   const [localTransactions, setLocalTransactions] = useState<Tables<'cash_flow'>[]>(initialTransactions)
 
-  // Keep local state in sync when props update
-  useEffect(() => {
+  // Keep local state in sync when props update (adjust state during render)
+  const [syncedInitial, setSyncedInitial] = useState(initialTransactions)
+  if (syncedInitial !== initialTransactions) {
+    setSyncedInitial(initialTransactions)
     setLocalTransactions(initialTransactions)
-  }, [initialTransactions])
+  }
 
   const handleClearDateFilter = () => {
     setDateFilter(null)

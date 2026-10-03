@@ -26,8 +26,7 @@ import {
   Dialog, 
   DialogContent, 
   
-  DialogTitle, 
-  DialogDescription
+  DialogTitle
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { formatCurrency } from "@/lib/utils/transaction"

@@ -15,7 +15,7 @@ import {
   Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 import {
-  Wallet, TrendingUp, TrendingDown, Building2, Loader2, Landmark,
+  Wallet, TrendingUp, TrendingDown, Building2, Landmark,
 } from 'lucide-react'
 
 const BANK_COLORS: Record<string, string> = {
@@ -194,15 +194,18 @@ function BalanceChart({ data }: { data: StatementAnalyticsData }) {
     if (e.value) toggleBank(e.value)
   }, [toggleBank])
 
-  const CustomTooltip = useCallback(({ active, payload, label }: {
-    active?: boolean; payload?: { dataKey: string; value: number; name: string }[]; label?: string
+  const renderTooltip = useCallback((props: {
+    active?: boolean; payload?: readonly unknown[]; label?: unknown
   }) => {
+    const { active, label: rawLabel } = props
+    const payload = props.payload as { dataKey: string; value: number; name: string }[] | undefined
+    const label = typeof rawLabel === 'string' ? rawLabel : undefined
     if (!active || !payload || !label) return null
     const dateStr = new Date(label).toLocaleDateString('id-ID', {
       day: '2-digit', month: 'long', year: 'numeric',
     })
     return (
-      <div className="bg-white rounded-lg border border-slate-200 shadow-lg p-3 text-xs max-w-[260px]">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-lg p-3 text-xs max-w-65">
         <p className="font-bold text-slate-700 mb-2">{dateStr}</p>
         {payload.filter(p => p.value != null && visibleBanks.has(p.name)).map(p => {
           const txs = txLookup.get(`${label}|${p.name}`)
@@ -262,7 +265,7 @@ function BalanceChart({ data }: { data: StatementAnalyticsData }) {
             ))}
           </div>
         </div>
-        <div className="h-[300px]">
+        <div className="h-75">
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <LineChart data={chartData} margin={{ top: 10, right: 20, left: 20, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -282,7 +285,7 @@ function BalanceChart({ data }: { data: StatementAnalyticsData }) {
                 tick={{ fontSize: 11, fill: '#64748b' }}
                 tickFormatter={(val: number) => formatCurrency(val)}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={renderTooltip} />
               <Legend
                 onClick={handleLegendClick}
                 wrapperStyle={{ fontSize: '11px', cursor: 'pointer', paddingTop: '8px' }}
@@ -354,7 +357,7 @@ function TotalSaldoChart({ data }: { data: StatementAnalyticsData }) {
             ))}
           </div>
         </div>
-        <div className="h-[200px]">
+        <div className="h-50">
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 20, bottom: 20 }}>
               <defs>

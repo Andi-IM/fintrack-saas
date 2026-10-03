@@ -44,7 +44,7 @@ export class MinaSwalayanReceiptParser implements IReceiptParser {
       for (let i = startIdx; i < lines.length; i++) {
         const line = lines[i]
         if (line.match(/^\d{2,4}[-#]\d+/)) break // Stop if looks like sequence number or date
-        if (line.match(/^\d{2}[\/-]\d{2}[\/-]/)) break
+        if (line.match(/^\d{2}[/-]\d{2}[/-]/)) break
         if (line.match(/^telp|fax|ksr/i)) break
         addressParts.push(line)
         if (addressParts.length >= 2) break

@@ -20,9 +20,6 @@
     "plugins": [
       {
         "name": "next"
-      },
-      {
-        "name": "typescript-eslint-language-service"
       }
     ],
     "paths": {

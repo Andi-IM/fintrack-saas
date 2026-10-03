@@ -1,26 +1,23 @@
 'use client'
 
 import { useEffect, useTransition } from 'react'
-import { useForm, useFieldArray, Controller } from 'react-hook-form'
+import { useForm, useFieldArray, useWatch, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { 
   Plus, 
   Trash2, 
   Save, 
-  X,
   Loader2,
   Calendar,
   MapPin,
   CreditCard,
   Hash,
-  ShieldAlert,
   Link as LinkIcon
 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogFooter
@@ -103,7 +100,6 @@ export function ReceiptEditDialog({ receipt, open, onOpenChange, onSuccess }: Re
     register,
     control,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors },
     reset
@@ -158,8 +154,9 @@ export function ReceiptEditDialog({ receipt, open, onOpenChange, onSuccess }: Re
     name: 'items'
   })
 
-  const type = watch('type')
-  const watchedItems = watch('items') || []
+  const type = useWatch({ control, name: 'type' })
+  const storeName = useWatch({ control, name: 'storeName' })
+  const watchedItems = useWatch({ control, name: 'items' }) || []
 
   // Auto calculate total for shopping receipt
   const calculatedTotal = watchedItems.reduce((acc, item) => {
@@ -230,7 +227,7 @@ export function ReceiptEditDialog({ receipt, open, onOpenChange, onSuccess }: Re
         className="max-w-md md:max-w-2xl p-0 overflow-hidden bg-slate-50 rounded-3xl border border-slate-200 shadow-2xl"
         aria-describedby={undefined}
       >
-        <div className="bg-gradient-to-br from-indigo-700 to-indigo-900 text-white p-6">
+        <div className="bg-linear-to-br from-indigo-700 to-indigo-900 text-white p-6">
           <DialogTitle className="text-xl font-bold">Edit Data Struk</DialogTitle>
           <DialogDescription className="text-indigo-200 mt-1">
             Perbarui data hasil ekstraksi struk Anda secara manual.
@@ -295,7 +292,7 @@ export function ReceiptEditDialog({ receipt, open, onOpenChange, onSuccess }: Re
                     <StatementItemSelect 
                       value={field.value} 
                       onChange={field.onChange}
-                      filterBankName={watch('storeName')}
+                      filterBankName={storeName}
                       onSelect={(item) => {
                         if (type === 'atm' && item.bankName) {
                           setValue('storeName', item.bankName)
@@ -432,7 +429,7 @@ export function ReceiptEditDialog({ receipt, open, onOpenChange, onSuccess }: Re
                         <div className="w-full md:w-32 text-right hidden md:block pb-2">
                           <p className="text-[10px] text-slate-400">Subtotal</p>
                           <p className="text-xs font-semibold text-slate-800 font-mono">
-                            {formatCurrency((Number(watch(`items.${idx}.quantity`)) || 0) * (Number(watch(`items.${idx}.price`)) || 0))}
+                            {formatCurrency((Number(watchedItems[idx]?.quantity) || 0) * (Number(watchedItems[idx]?.price) || 0))}
                           </p>
                         </div>
 
@@ -441,7 +438,7 @@ export function ReceiptEditDialog({ receipt, open, onOpenChange, onSuccess }: Re
                           variant="ghost"
                           size="icon"
                           onClick={() => remove(idx)}
-                          className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg md:mb-0.5 h-9 w-9 flex-shrink-0 align-bottom self-end md:self-auto"
+                          className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg md:mb-0.5 h-9 w-9 shrink-0 align-bottom self-end md:self-auto"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

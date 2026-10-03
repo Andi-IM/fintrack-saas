@@ -29,7 +29,7 @@ export const STATEMENT_STOP_KEYWORDS = [
   'saldo akhir'
 ]
 
-export const STATEMENT_DATE_REGEX = /^\b(\d{1,2})[\s\-.\/]([a-zA-Z]{3,9}|\d{1,2})([\s\-.\/]\d{2,4})?\b/
+export const STATEMENT_DATE_REGEX = /^\b(\d{1,2})[\s\-./]([a-zA-Z]{3,9}|\d{1,2})([\s\-./]\d{2,4})?\b/
 export const STATEMENT_TIME_REGEX = /^\b\d{1,2}:\d{2}(:\d{2})?\b/
 export const STATEMENT_REF_REGEX = /^[A-Za-z0-9]{8,20}$/
 

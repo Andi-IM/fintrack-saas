@@ -1,4 +1,4 @@
-import { RECEIPT_TOTAL_KEYWORDS } from '@/lib/constants/ocr'
+
 import { OCRResult, ReceiptItem } from '../types'
 import { IReceiptParser } from '../interfaces'
 import {

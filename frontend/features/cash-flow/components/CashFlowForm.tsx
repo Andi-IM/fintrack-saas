@@ -44,23 +44,25 @@ export function CashFlowForm({
   const [loading, setLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
+  const [defaultDate] = useState(() => {
+    const now = new Date()
+    const offset = now.getTimezoneOffset()
+    const localNow = new Date(now.getTime() - offset * 60 * 1000)
+    return localNow.toISOString().slice(0, 16)
+  })
+
   const {
     register,
     handleSubmit,
     reset,
     setValue,
     control,
-    watch,
+    getValues,
     formState: { errors },
   } = useForm<z.input<typeof cashFlowFormSchema>>({
     resolver: zodResolver(cashFlowFormSchema as any),
     defaultValues: {
-      date: (() => {
-        const now = new Date()
-        const offset = now.getTimezoneOffset()
-        const localNow = new Date(now.getTime() - offset * 60 * 1000)
-        return localNow.toISOString().slice(0, 16)
-      })(),
+      date: defaultDate,
       income: undefined as any,
       expense: undefined as any,
       main_category: 'Kebutuhan (Needs)',
@@ -289,8 +291,8 @@ export function CashFlowForm({
                               console.error('Invalid date format', e)
                             }
                           }
-                          if (!watch('description')) setValue('description', item.store_name)
-                          if (!watch('expense') && !watch('income')) setValue('expense', item.total_price)
+                          if (!getValues('description')) setValue('description', item.store_name)
+                          if (!getValues('expense') && !getValues('income')) setValue('expense', item.total_price)
                         }}
                       />
                     )}
@@ -322,8 +324,8 @@ export function CashFlowForm({
                               console.error('Invalid date format', e)
                             }
                           }
-                          if (!watch('description')) setValue('description', item.description)
-                          if (!watch('expense') && !watch('income')) {
+                          if (!getValues('description')) setValue('description', item.description)
+                          if (!getValues('expense') && !getValues('income')) {
                             if (item.type === 'income') setValue('income', item.amount)
                             else setValue('expense', item.amount)
                           }

@@ -154,7 +154,7 @@ export async function updateReceipt(
   try {
     const repo = getReceiptRepository()
 
-    const receipt = await repo.update(id, {
+    await repo.update(id, {
       type: parsed.data.type,
       storeName: parsed.data.storeName,
       storeAddress: parsed.data.storeAddress ?? null,

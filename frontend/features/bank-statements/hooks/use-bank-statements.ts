@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getGroupedBankStatements,
@@ -37,7 +37,8 @@ export interface UseBankStatementsReturn {
 
 export function useBankStatements(): UseBankStatementsReturn {
   const queryClient = useQueryClient()
-  const [expandedBanks, setExpandedBanks] = useState<string[]>([])
+  // null = user has not toggled yet, so the first bank group is expanded by default
+  const [userExpandedBanks, setUserExpandedBanks] = useState<string[] | null>(null)
   const [expandedPeriods, setExpandedPeriods] = useState<string[]>([])
   const [editingItem, setEditingItem] = useState<{ statementId: string; item: Tables<'bank_statement_items'> } | null>(null)
   const [addingToStatement, setAddingToStatement] = useState<string | null>(null)
@@ -52,12 +53,8 @@ export function useBankStatements(): UseBankStatementsReturn {
     },
   })
 
-  // Auto-expand first bank group once data loads
-  useEffect(() => {
-    if (groupedData && Object.keys(groupedData).length > 0 && expandedBanks.length === 0) {
-      setExpandedBanks([Object.keys(groupedData)[0]])
-    }
-  }, [groupedData])
+  const firstBank = groupedData ? Object.keys(groupedData)[0] : undefined
+  const expandedBanks = userExpandedBanks ?? (firstBank ? [firstBank] : [])
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ['bank-statements'] })
@@ -110,9 +107,10 @@ export function useBankStatements(): UseBankStatementsReturn {
   })
 
   const toggleBank = (bank: string) => {
-    setExpandedBanks(prev =>
-      prev.includes(bank) ? prev.filter(b => b !== bank) : [...prev, bank]
-    )
+    setUserExpandedBanks(prev => {
+      const current = prev ?? expandedBanks
+      return current.includes(bank) ? current.filter(b => b !== bank) : [...current, bank]
+    })
   }
 
   const togglePeriod = (id: string) => {

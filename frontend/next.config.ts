@@ -1,7 +1,7 @@
 import type {NextConfig} from 'next';
 import { codecovNextJSWebpackPlugin } from "@codecov/nextjs-webpack-plugin";
 import os from 'os';
-import path from 'path';
+
 
 // Dynamically retrieve all IPv4 addresses of this machine to allow HMR from mobile devices on any network.
 const getLocalDevOrigins = (): string[] => {

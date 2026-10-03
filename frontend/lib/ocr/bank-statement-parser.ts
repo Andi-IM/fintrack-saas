@@ -7,7 +7,7 @@ import { BsiParser } from './banks/bsi-parser'
 import { OpenAIBankStatementParser } from './openai-parser'
 
 export class BankStatementParser implements IParser {
-  context: 'BankStatement' = 'BankStatement'
+  context = 'BankStatement' as const
   private bankParsers: IBankParser[]
 
   constructor(bankParsers?: IBankParser[]) {

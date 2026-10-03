@@ -1,15 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Mail, Lock, Loader2, Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { loginWithCredentials, signUpWithCredentials } from '@/features/auth/actions/auth'
+import { loginWithCredentials } from '@/features/auth/actions/auth'
 
 const authSchema = z.object({
   email: z.string().email('Format email tidak valid'),
@@ -23,7 +22,6 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ defaultEmail = '' }: LoginFormProps) {
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
@@ -32,7 +30,6 @@ export function LoginForm({ defaultEmail = '' }: LoginFormProps) {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
   } = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
     defaultValues: {
@@ -65,7 +62,7 @@ export function LoginForm({ defaultEmail = '' }: LoginFormProps) {
         <div
           role="alert"
           aria-live="assertive"
-          className="p-4 bg-rose-950/40 text-rose-300 rounded-xl text-sm font-medium border border-rose-900/60 text-center break-words shadow-lg"
+          className="p-4 bg-rose-950/40 text-rose-300 rounded-xl text-sm font-medium border border-rose-900/60 text-center wrap-break-word shadow-lg"
         >
           {serverError}
         </div>

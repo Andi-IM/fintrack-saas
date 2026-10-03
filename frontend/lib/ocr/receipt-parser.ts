@@ -3,7 +3,7 @@ import { IParser, IReceiptParser } from './interfaces'
 import { OpenAIReceiptParser } from './openai-parser'
 
 export class ReceiptParser implements IParser {
-  context: 'Receipt' = 'Receipt'
+  context = 'Receipt' as const
   private receiptParsers: IReceiptParser[]
 
   constructor(receiptParsers?: IReceiptParser[]) {

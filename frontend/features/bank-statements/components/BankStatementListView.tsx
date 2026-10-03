@@ -1,6 +1,6 @@
 'use client'
 
-import type { Tables } from '@/lib/database.types'
+
 import type { UseBankStatementsReturn } from '@/features/bank-statements/hooks/use-bank-statements'
 import { Card, CardContent } from '@/components/ui/card'
 import {
