@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { ServerConfig } from '../config.js';
-import { getSupabaseClient, ensureUserFilter, isValidUuid } from '../db/client.js';
+import { getSupabaseClient, ensureUserFilter, isValidUuid, resolveTargetUserId } from '../db/client.js';
 import { formatSuccessResponse, formatErrorResponse } from '../utils/errors.js';
 
 function getMimeType(filePathOrExt: string): string {
@@ -158,13 +158,7 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
     async (args) => {
       try {
         const client = getSupabaseClient(config);
-        const targetUserId = args.user_id || config.userId;
-
-        if (!targetUserId || !isValidUuid(targetUserId)) {
-          throw new Error(
-            `A valid user UUID must be provided in user_id or configured in FINTRACK_USER_ID environment variable (received: "${targetUserId}"). Please configure your actual Supabase user UUID.`
-          );
-        }
+        const targetUserId = resolveTargetUserId(config, args.user_id);
 
         let supabaseStoragePath: string | null = null;
         let signedImageUrl: string | null = null;
@@ -176,8 +170,38 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
 
         const candidateLocalPath = args.local_file_path || args.file_path;
 
-        // 1. Process image upload if candidate path or base64 is provided
-        if (!supabaseStoragePath && candidateLocalPath) {
+        // 1. Process image upload: prioritize image_base64 for remote agents / containers
+        if (args.image_base64 && args.image_base64.trim().length > 0) {
+          const rawBase64 = args.image_base64.replace(/^data:[^;]+;base64,/, '').replace(/\s+/g, '');
+          const fileBuffer = Buffer.from(rawBase64, 'base64');
+          if (fileBuffer.length === 0) {
+            throw new Error('Provided image_base64 contains no valid image data or is empty.');
+          }
+
+          const filename =
+            args.image_filename ||
+            (candidateLocalPath ? path.basename(candidateLocalPath) : 'receipt.jpg');
+          const mimeType = getMimeType(filename);
+          const storagePath = buildStoragePath(targetUserId, args.store_name, filename);
+
+          const { error: uploadError } = await client.storage
+            .from('receipts')
+            .upload(storagePath, fileBuffer, {
+              contentType: mimeType,
+              upsert: false,
+            });
+
+          if (uploadError) {
+            if (uploadError.message.includes('row-level security') || (uploadError as any).statusCode === '403') {
+              throw new Error(
+                `Upload failed: Supabase Storage Row-Level Security policy violation. The MCP server requires a true 'service_role' key in SUPABASE_SERVICE_ROLE_KEY to upload files without user JWT session.`
+              );
+            }
+            throw new Error(`Failed to upload receipt image to Supabase Storage: ${uploadError.message}`);
+          }
+
+          supabaseStoragePath = storagePath;
+        } else if (!supabaseStoragePath && candidateLocalPath) {
           const resolvedPath = path.resolve(candidateLocalPath);
           if (fs.existsSync(resolvedPath)) {
             // Local file exists on disk -> upload to Supabase Storage
@@ -203,36 +227,14 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
             }
 
             supabaseStoragePath = storagePath;
-          } else if (candidateLocalPath.includes('/') && !candidateLocalPath.includes('\\')) {
-            // Path does not exist locally but has forward slashes (e.g. already a storage path)
+          } else if (candidateLocalPath.startsWith(`${targetUserId}/`) || candidateLocalPath.startsWith('receipts/')) {
+            // Already an existing storage path in the user's bucket folder
             supabaseStoragePath = candidateLocalPath;
           } else {
-            throw new Error(`Receipt image file not found on local disk: ${resolvedPath}`);
+            throw new Error(
+              `Receipt image file "${candidateLocalPath}" was not found on local disk. When running via container or remote agent, provide image data via "image_base64" instead of a host filesystem path.`
+            );
           }
-        } else if (!supabaseStoragePath && args.image_base64) {
-          const filename = args.image_filename || 'receipt.jpg';
-          const base64Data = args.image_base64.replace(/^data:[^;]+;base64,/, '');
-          const fileBuffer = Buffer.from(base64Data, 'base64');
-          const mimeType = getMimeType(filename);
-          const storagePath = buildStoragePath(targetUserId, args.store_name, filename);
-
-          const { error: uploadError } = await client.storage
-            .from('receipts')
-            .upload(storagePath, fileBuffer, {
-              contentType: mimeType,
-              upsert: false,
-            });
-
-          if (uploadError) {
-            if (uploadError.message.includes('row-level security') || (uploadError as any).statusCode === '403') {
-              throw new Error(
-                `Upload failed: Supabase Storage Row-Level Security policy violation. The MCP server requires a true 'service_role' key in SUPABASE_SERVICE_ROLE_KEY to upload files without user JWT session.`
-              );
-            }
-            throw new Error(`Failed to upload receipt image to Supabase Storage: ${uploadError.message}`);
-          }
-
-          supabaseStoragePath = storagePath;
         }
 
         // Generate signed URL if we have a Supabase Storage path
