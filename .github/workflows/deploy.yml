@@ -1,8 +1,11 @@
 name: Deploy FinTrack MCP
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Build and Publish MCP Container"]
     branches: [main]
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
@@ -11,6 +14,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 10
 
     steps:
