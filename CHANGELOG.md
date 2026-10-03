@@ -1,3 +1,10 @@
+## [1.19.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.19.0...v1.19.1) (2026-10-03)
+
+
+### Bug Fixes
+
+* **db:** drop and recreate dashboard_cash_flow_entries view during column alter ([d9d70d6](https://github.com/Andi-IM/fintrack-saas/commit/d9d70d66795b37bf2b0f422f54d0b5728e4b7a7d))
+
 # [1.19.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.18.0...v1.19.0) (2026-10-03)
 
 
