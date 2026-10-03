@@ -1,3 +1,10 @@
+## [1.20.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.20.0...v1.20.1) (2026-10-03)
+
+
+### Bug Fixes
+
+* **ci:** trigger deploy only after mcp container build completes to avoid stale image race condition ([29d31aa](https://github.com/Andi-IM/fintrack-saas/commit/29d31aaf998a90e5bf9a585c04c0f96edc5c7d1e))
+
 # [1.20.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.19.2...v1.20.0) (2026-10-03)
 
 
