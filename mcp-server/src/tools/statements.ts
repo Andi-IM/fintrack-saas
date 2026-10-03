@@ -97,10 +97,15 @@ export function registerStatementTools(server: McpServer, config: ServerConfig) 
 
         if (error) throw error;
 
+        const formattedItems = (data || []).map((item: any) => ({
+          ...item,
+          transaction_time: item.date,
+        }));
+
         return formatSuccessResponse({
           statement_id: args.statement_id,
-          count: (data || []).length,
-          items: data || [],
+          count: formattedItems.length,
+          items: formattedItems,
         });
       } catch (err) {
         return formatErrorResponse(err);
@@ -126,7 +131,8 @@ export function registerStatementTools(server: McpServer, config: ServerConfig) 
       items: z
         .array(
           z.object({
-            date: z.string().describe('Transaction date (ISO UTC e.g. "2026-07-13T16:06:42+00:00" or "2026-07-13")'),
+            date: z.string().optional().describe('Transaction date (ISO UTC e.g. "2026-07-13T16:06:42+00:00" or "2026-07-13")'),
+            transaction_time: z.string().optional().describe('Transaction timestamp with hour/minute precision (e.g. "2026-07-13T16:06:42Z")'),
             description: z.string().min(1).describe('Transaction description / counterparty'),
             amount: z.number().positive().describe('Transaction amount (must be positive number)'),
             type: z.enum(['income', 'expense', 'CR', 'DB']).describe('Direction: income / CR or expense / DB'),
@@ -230,6 +236,11 @@ export function registerStatementTools(server: McpServer, config: ServerConfig) 
           } catch {}
         }
 
+        const preparedItems = (args.items || []).map((item) => ({
+          ...item,
+          date: item.transaction_time || item.date || new Date().toISOString(),
+        }));
+
         // 3. Try calling PostgreSQL RPC create_bank_statement_with_items first
         try {
           const { data: rpcData, error: rpcErr } = await client.rpc('create_bank_statement_with_items', {
@@ -240,7 +251,7 @@ export function registerStatementTools(server: McpServer, config: ServerConfig) 
             p_closing_balance: args.closing_balance ?? 0,
             p_total_items: totalItemsCount,
             p_file_path: supabaseStoragePath,
-            p_items: args.items || [],
+            p_items: preparedItems,
           });
 
           if (!rpcErr && rpcData && rpcData.statement_id) {
@@ -250,7 +261,7 @@ export function registerStatementTools(server: McpServer, config: ServerConfig) 
               total_items: rpcData.total_items ?? totalItemsCount,
               file_path: supabaseStoragePath,
               signed_file_url: signedFileUrl,
-              items: rpcData.items || [],
+              items: (rpcData.items || []).map((item: any) => ({ ...item, transaction_time: item.date })),
             });
           }
         } catch {
@@ -282,9 +293,8 @@ export function registerStatementTools(server: McpServer, config: ServerConfig) 
         }
 
         const insertedItems: any[] = [];
-        const rawItems = args.items || [];
-        if (rawItems.length > 0) {
-          const mappedItems = rawItems.map((item) => {
+        if (preparedItems.length > 0) {
+          const mappedItems = preparedItems.map((item) => {
             const isIncome = item.type === 'income' || item.type === 'CR';
             return {
               statement_id: statement.id,
@@ -328,7 +338,7 @@ export function registerStatementTools(server: McpServer, config: ServerConfig) 
           total_items: insertedItems.length,
           file_path: supabaseStoragePath,
           signed_file_url: signedFileUrl,
-          items: insertedItems,
+          items: insertedItems.map((item) => ({ ...item, transaction_time: item.date })),
         });
       } catch (err) {
         return formatErrorResponse(err);
@@ -344,7 +354,8 @@ export function registerStatementTools(server: McpServer, config: ServerConfig) 
       items: z
         .array(
           z.object({
-            date: z.string().describe('Transaction date (ISO UTC e.g. "2026-07-13T16:06:42+00:00" or "2026-07-13")'),
+            date: z.string().optional().describe('Transaction date (ISO UTC e.g. "2026-07-13T16:06:42+00:00" or "2026-07-13")'),
+            transaction_time: z.string().optional().describe('Transaction timestamp with hour/minute precision (e.g. "2026-07-13T16:06:42Z")'),
             description: z.string().min(1).describe('Transaction description / counterparty'),
             amount: z.number().positive().describe('Transaction amount (must be positive number)'),
             type: z.enum(['income', 'expense', 'CR', 'DB']).describe('Direction: income / CR or expense / DB'),
@@ -378,7 +389,7 @@ export function registerStatementTools(server: McpServer, config: ServerConfig) 
           const isIncome = item.type === 'income' || item.type === 'CR';
           return {
             statement_id: args.statement_id,
-            date: item.date,
+            date: item.transaction_time || item.date || new Date().toISOString(),
             description: item.description,
             amount: item.amount,
             type: isIncome ? 'income' : 'expense',
@@ -406,7 +417,7 @@ export function registerStatementTools(server: McpServer, config: ServerConfig) 
           message: 'Bank statement mutation items added successfully',
           statement_id: args.statement_id,
           total_items: (insertedData || []).length,
-          items: insertedData || [],
+          items: (insertedData || []).map((item) => ({ ...item, transaction_time: item.date })),
         });
       } catch (err) {
         return formatErrorResponse(err);
@@ -460,4 +471,259 @@ export function registerStatementTools(server: McpServer, config: ServerConfig) 
       }
     }
   );
+
+  server.tool(
+    'update_bank_statement',
+    'Update an existing bank statement header (bank name, statement period, opening balance, closing balance).',
+    {
+      id: z.string().uuid().describe('UUID of the bank statement to update'),
+      bank_name: z.string().min(1).optional().describe('New bank name'),
+      statement_period: z.string().optional().describe('New statement period (YYYY-MM-DD or YYYY-MM)'),
+      opening_balance: z.number().optional().describe('New opening balance'),
+      closing_balance: z.number().optional().describe('New closing balance'),
+      user_id: z.string().optional().describe('Target user_id override if in service role mode'),
+    },
+    async (args) => {
+      try {
+        const client = getSupabaseClient(config);
+        const targetUserId = resolveTargetUserId(config, args.user_id);
+
+        // 1. Verify existence and ownership
+        const { data: existing, error: existErr } = await client
+          .from('bank_statements')
+          .select('*')
+          .eq('id', args.id)
+          .eq('user_id', targetUserId)
+          .single();
+
+        if (existErr || !existing) {
+          throw new Error(`Bank statement not found or not owned by user: ${args.id}`);
+        }
+
+        // 2. Prepare update payload
+        const updatePayload: Record<string, any> = {};
+        if (args.bank_name !== undefined) updatePayload.bank_name = args.bank_name;
+        if (args.statement_period !== undefined) updatePayload.statement_period = normalizeStatementPeriod(args.statement_period);
+        if (args.opening_balance !== undefined) updatePayload.opening_balance = args.opening_balance;
+        if (args.closing_balance !== undefined) updatePayload.closing_balance = args.closing_balance;
+
+        if (Object.keys(updatePayload).length === 0) {
+          throw new Error('No update fields provided. Specify at least one field to update.');
+        }
+
+        const { data: updated, error: updateErr } = await client
+          .from('bank_statements')
+          .update(updatePayload)
+          .eq('id', args.id)
+          .eq('user_id', targetUserId)
+          .select()
+          .single();
+
+        if (updateErr) throw updateErr;
+
+        return formatSuccessResponse({
+          message: 'Bank statement header updated successfully',
+          statement: updated,
+        });
+      } catch (err) {
+        return formatErrorResponse(err);
+      }
+    }
+  );
+
+  server.tool(
+    'delete_bank_statement',
+    'Delete a bank statement, all of its mutation line items, associated cash flow records, and optional storage PDF file.',
+    {
+      id: z.string().uuid().describe('UUID of the bank statement to delete'),
+      delete_file: z.boolean().default(true).describe('Also remove statement PDF file from Supabase Storage (default: true)'),
+      user_id: z.string().optional().describe('Target user_id override if in service role mode'),
+    },
+    async (args) => {
+      try {
+        const client = getSupabaseClient(config);
+        const targetUserId = resolveTargetUserId(config, args.user_id);
+
+        // 1. Verify existence and ownership
+        const { data: statement, error: findErr } = await client
+          .from('bank_statements')
+          .select('id, user_id, bank_name, statement_period, file_path, total_items')
+          .eq('id', args.id)
+          .eq('user_id', targetUserId)
+          .single();
+
+        if (findErr || !statement) {
+          throw new Error(`Bank statement not found or not owned by user: ${args.id}`);
+        }
+
+        // 2. Delete all items for this statement
+        // Note: DB trigger sync_bank_statement_item_to_cash_flow() handles deleting linked cash_flow entries on DELETE!
+        const { data: deletedItems, error: itemsDelErr } = await client
+          .from('bank_statement_items')
+          .delete()
+          .eq('statement_id', args.id)
+          .select('id, cash_flow_id');
+
+        if (itemsDelErr) throw itemsDelErr;
+
+        // 3. Delete the bank statement record
+        const { error: stmtDelErr } = await client
+          .from('bank_statements')
+          .delete()
+          .eq('id', args.id)
+          .eq('user_id', targetUserId);
+
+        if (stmtDelErr) throw stmtDelErr;
+
+        // 4. Optionally remove PDF from storage
+        let fileRemoved = false;
+        if (args.delete_file !== false && statement.file_path) {
+          try {
+            await client.storage.from('statements').remove([statement.file_path]);
+            fileRemoved = true;
+          } catch {}
+        }
+
+        return formatSuccessResponse({
+          message: 'Bank statement and all associated mutation items deleted successfully',
+          deleted_statement_id: args.id,
+          bank_name: statement.bank_name,
+          statement_period: statement.statement_period,
+          mutations_deleted_count: (deletedItems || []).length,
+          file_removed_from_storage: fileRemoved,
+        });
+      } catch (err) {
+        return formatErrorResponse(err);
+      }
+    }
+  );
+
+  server.tool(
+    'update_statement_mutation',
+    'Update an existing bank statement mutation item (date, description, amount, type, category, balance). Changes automatically synchronize to linked cash flow.',
+    {
+      id: z.string().uuid().describe('UUID of the bank_statement_item to update'),
+      date: z.string().optional().describe('New transaction date in ISO format'),
+      transaction_time: z.string().optional().describe('New transaction time in ISO format (e.g. 2026-10-03T14:30:00Z) with hour/minute precision'),
+      description: z.string().min(1).optional().describe('New description / counterparty'),
+      amount: z.number().positive().optional().describe('New amount (must be positive number)'),
+      type: z.enum(['income', 'expense', 'CR', 'DB']).optional().describe('Direction: income / CR or expense / DB'),
+      category: z.string().optional().describe('New category classification'),
+      balance: z.number().optional().describe('New running balance after transaction'),
+      metadata: z.record(z.any()).optional().describe('New JSON metadata'),
+      user_id: z.string().optional().describe('Target user_id override if in service role mode'),
+    },
+    async (args) => {
+      try {
+        const client = getSupabaseClient(config);
+        const targetUserId = resolveTargetUserId(config, args.user_id);
+
+        // 1. Verify existence and ownership via inner join with bank_statements
+        const { data: itemData, error: itemErr } = await client
+          .from('bank_statement_items')
+          .select('*, bank_statements!inner(user_id)')
+          .eq('id', args.id)
+          .single();
+
+        if (itemErr || !itemData || (itemData as any).bank_statements?.user_id !== targetUserId) {
+          throw new Error(`Bank statement mutation item not found or not owned by user: ${args.id}`);
+        }
+
+        // 2. Prepare update payload
+        const updatePayload: Record<string, any> = {};
+        const resolvedDate = args.transaction_time || args.date;
+        if (resolvedDate !== undefined) updatePayload.date = resolvedDate;
+        if (args.description !== undefined) updatePayload.description = args.description;
+        if (args.amount !== undefined) updatePayload.amount = args.amount;
+        if (args.type !== undefined) {
+          updatePayload.type = (args.type === 'CR' || args.type === 'income') ? 'income' : 'expense';
+        }
+        if (args.category !== undefined) updatePayload.category = args.category;
+        if (args.balance !== undefined) updatePayload.balance = args.balance;
+        if (args.metadata !== undefined) updatePayload.metadata = args.metadata;
+
+        if (Object.keys(updatePayload).length === 0) {
+          throw new Error('No update fields provided. Specify at least one field to update.');
+        }
+
+        // Updating bank_statement_items will automatically trigger trg_sync_bank_statement_item_update
+        // which synchronizes changes directly to the linked cash_flow entry!
+        const { data: updatedItem, error: updateErr } = await client
+          .from('bank_statement_items')
+          .update(updatePayload)
+          .eq('id', args.id)
+          .select()
+          .single();
+
+        if (updateErr) throw updateErr;
+
+        return formatSuccessResponse({
+          message: 'Bank statement mutation item updated successfully and synchronized to cash flow',
+          item: {
+            ...updatedItem,
+            transaction_time: updatedItem.date,
+          },
+          cash_flow_id: updatedItem.cash_flow_id,
+        });
+      } catch (err) {
+        return formatErrorResponse(err);
+      }
+    }
+  );
+
+  server.tool(
+    'delete_statement_mutation',
+    'Delete a specific bank statement mutation item. Associated cash flow record is automatically cleaned up and statement item count decremented.',
+    {
+      id: z.string().uuid().describe('UUID of the bank_statement_item to delete'),
+      user_id: z.string().optional().describe('Target user_id override if in service role mode'),
+    },
+    async (args) => {
+      try {
+        const client = getSupabaseClient(config);
+        const targetUserId = resolveTargetUserId(config, args.user_id);
+
+        // 1. Verify existence and ownership
+        const { data: itemData, error: itemErr } = await client
+          .from('bank_statement_items')
+          .select('id, statement_id, cash_flow_id, description, amount, bank_statements!inner(id, user_id, total_items)')
+          .eq('id', args.id)
+          .single();
+
+        if (itemErr || !itemData || (itemData as any).bank_statements?.user_id !== targetUserId) {
+          throw new Error(`Bank statement mutation item not found or not owned by user: ${args.id}`);
+        }
+
+        const parentStmt = (itemData as any).bank_statements;
+
+        // 2. Delete mutation item
+        // DB trigger sync_bank_statement_item_to_cash_flow() handles deleting linked cash_flow entry on DELETE!
+        const { error: delErr } = await client
+          .from('bank_statement_items')
+          .delete()
+          .eq('id', args.id);
+
+        if (delErr) throw delErr;
+
+        // 3. Decrement total_items on parent statement
+        if (parentStmt && parentStmt.id) {
+          const newTotal = Math.max(0, (parentStmt.total_items || 1) - 1);
+          await client
+            .from('bank_statements')
+            .update({ total_items: newTotal })
+            .eq('id', parentStmt.id);
+        }
+
+        return formatSuccessResponse({
+          message: 'Bank statement mutation item deleted successfully and cash flow synchronized',
+          deleted_item_id: args.id,
+          statement_id: itemData.statement_id,
+          cash_flow_id: itemData.cash_flow_id,
+        });
+      } catch (err) {
+        return formatErrorResponse(err);
+      }
+    }
+  );
 }
+

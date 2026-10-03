@@ -11,6 +11,8 @@ Model Context Protocol (MCP) server yang memungkinkan LLM agents (Claude Desktop
    - `list_cash_flow`: Mengambil daftar cash flow dengan presisi waktu transaksi asli (`transaction_time`), `created_at`, pagination, rentang tanggal, filter kategori/metode bayar, dan pencarian deskripsi.
    - `create_cash_flow_entry`: Membuat catatan transaksi kas pemasukan atau pengeluaran baru dengan waktu transaksi presisi (`transaction_time`, opsional default `now()`) tanpa konversi ke tengah malam UTC (07:00 WIB).
    - `get_cash_flow_summary`: Menghitung total income, total expense, dan net balance dalam rentang tanggal tertentu langsung via PostgreSQL RPC tanpa terpotong batas 1.000 baris (dengan fallback paginasi penuh).
+   - `update_cash_flow_entry`: Mengubah transaksi kas yang ada (nominal, kategori, deskripsi, metode pembayaran, atau waktu transaksi).
+   - `delete_cash_flow_entry`: Menghapus entri transaksi kas berdasarkan UUID.
 
 3. **Bank Statement Tools**:
    - `list_bank_statements`: Melihat daftar rekening koran/mutasi bank yang sudah diunggah.
@@ -18,12 +20,18 @@ Model Context Protocol (MCP) server yang memungkinkan LLM agents (Claude Desktop
    - `create_bank_statement`: Mengimpor rekening koran beserta mutasi transaksinya secara transaksional dari integrasi eksternal (Hermes agent, CLI) tanpa antarmuka frontend, mendukung upload dokumen PDF (Base64 atau path file), dan otomatis tersinkronisasi ke `cash_flow`.
    - `create_bank_statement_item`: Menambahkan baris mutasi baru ke rekening koran yang sudah ada beserta sinkronisasi otomatis ke `cash_flow`.
    - `get_statement_file_url`: Menghasilkan signed URL sementara (1 jam) untuk melihat/mengunduh dokumen rekening koran dari Supabase Storage.
+   - `update_bank_statement`: Mengubah informasi header rekening koran (nama bank, periode, saldo awal, saldo akhir).
+   - `delete_bank_statement`: Menghapus satu set rekening koran, seluruh mutasi transaksinya, file PDF di storage, serta otomatis membersihkan entri `cash_flow` terkait.
+   - `update_statement_mutation`: Mengubah baris mutasi spesifik (nominal, tanggal, deskripsi, tipe CR/DB) yang otomatis tersinkronisasi ke `cash_flow`.
+   - `delete_statement_mutation`: Menghapus baris mutasi spesifik yang otomatis menghapus entri `cash_flow` terkait via database trigger.
 
 4. **Receipts & Image Tools**:
    - `list_receipts`: Menampilkan daftar riwayat struk belanja / penerimaan.
    - `get_receipt_details`: Mengambil informasi struk lengkap beserta rincian item barang belanja (`receipts_items`).
    - `create_receipt`: Mencatat struk/slip gaji baru lengkap dengan bukti gambar (upload file lokal atau Base64 ke Supabase Storage) dan otomatis sinkronisasi ke tabel `cash_flow`.
    - `get_receipt_image_url`: Menghasilkan signed URL sementara (1 jam) untuk melihat/mengunduh gambar struk dari Supabase Storage.
+   - `update_receipt`: Mengubah data struk (nama toko, tanggal, total belanja, metode pembayaran) dan otomatis memperbarui entri `cash_flow` terkait.
+   - `delete_receipt`: Menghapus struk, rincian barang belanjaan, file gambar di Supabase Storage, dan entri `cash_flow` terkait.
 
 5. **Analytics Tools**:
    - `get_financial_analytics`: Analitik perbandingan pemasukan vs pengeluaran sesuai filter dashboard (`TODAY`, `MTD`, `YTD`, `1W`, `1M`, `3M`, `1Y`, `ALL`) via RPC dan paginasi penuh tanpa terpotong limit 1.000 baris.
