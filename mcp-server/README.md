@@ -4,23 +4,27 @@ Model Context Protocol (MCP) server yang memungkinkan LLM agents (Claude Desktop
 
 ## Fitur & Tools yang Tersedia
 
-1. **Cash Flow Tools**:
+1. **System & Diagnostic Tools**:
+   - `check_connection`: Memeriksa status koneksi ke Supabase, memvalidasi role API key (`service_role` vs `anon`), menguji scope `FINTRACK_USER_ID`, latensi query database, ketersediaan RPC agregasi, dan akses storage bucket.
+
+2. **Cash Flow Tools**:
    - `list_cash_flow`: Mengambil daftar cash flow dengan pagination, rentang tanggal, filter kategori/metode bayar, dan pencarian deskripsi.
    - `create_cash_flow_entry`: Membuat catatan transaksi kas pemasukan atau pengeluaran baru.
-   - `get_cash_flow_summary`: Menghitung total income, total expense, dan net balance dalam rentang tanggal tertentu.
+   - `get_cash_flow_summary`: Menghitung total income, total expense, dan net balance dalam rentang tanggal tertentu langsung via PostgreSQL RPC tanpa terpotong batas 1.000 baris (dengan fallback paginasi penuh).
 
-2. **Bank Statement Tools**:
+3. **Bank Statement Tools**:
    - `list_bank_statements`: Melihat daftar rekening koran/mutasi bank yang sudah diunggah.
    - `get_statement_mutations`: Mengambil item mutasi transaksi (CR/DB) dari statement tertentu.
+   - `create_bank_statement`: Mengimpor rekening koran beserta mutasi transaksinya secara transaksional dari integrasi eksternal (CLI/agent) tanpa antarmuka frontend, dan otomatis tersinkronisasi ke `cash_flow`.
 
-3. **Receipts & Image Tools**:
+4. **Receipts & Image Tools**:
    - `list_receipts`: Menampilkan daftar riwayat struk belanja / penerimaan.
    - `get_receipt_details`: Mengambil informasi struk lengkap beserta rincian item barang belanja (`receipts_items`).
    - `create_receipt`: Mencatat struk/slip gaji baru lengkap dengan bukti gambar (upload file lokal atau Base64 ke Supabase Storage) dan otomatis sinkronisasi ke tabel `cash_flow`.
    - `get_receipt_image_url`: Menghasilkan signed URL sementara (1 jam) untuk melihat/mengunduh gambar struk dari Supabase Storage.
 
-4. **Analytics Tools**:
-   - `get_financial_analytics`: Analitik perbandingan pemasukan vs pengeluaran sesuai filter dashboard (`TODAY`, `MTD`, `YTD`, `1W`, `1M`, `3M`, `1Y`, `ALL`).
+5. **Analytics Tools**:
+   - `get_financial_analytics`: Analitik perbandingan pemasukan vs pengeluaran sesuai filter dashboard (`TODAY`, `MTD`, `YTD`, `1W`, `1M`, `3M`, `1Y`, `ALL`) via RPC dan paginasi penuh tanpa terpotong limit 1.000 baris.
 
 ---
 

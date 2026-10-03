@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { ServerConfig } from '../config.js';
-import { getSupabaseClient, ensureUserFilter } from '../db/client.js';
+import { getSupabaseClient, ensureUserFilter, resolveTargetUserId } from '../db/client.js';
 import { formatSuccessResponse, formatErrorResponse } from '../utils/errors.js';
 
 export function registerCashFlowTools(server: McpServer, config: ServerConfig) {
@@ -82,11 +82,7 @@ export function registerCashFlowTools(server: McpServer, config: ServerConfig) {
     async (args) => {
       try {
         const client = getSupabaseClient(config);
-        const targetUserId = args.user_id || config.userId;
-
-        if (!targetUserId) {
-          throw new Error('user_id must be provided or configured in FINTRACK_USER_ID environment variable');
-        }
+        const targetUserId = resolveTargetUserId(config, args.user_id);
 
         const payload = {
           user_id: targetUserId,
@@ -119,7 +115,7 @@ export function registerCashFlowTools(server: McpServer, config: ServerConfig) {
 
   server.tool(
     'get_cash_flow_summary',
-    'Calculate aggregated total income, total expense, and net balance over a given date range.',
+    'Calculate aggregated total income, total expense, and net balance over a given date range without 1000-row limits.',
     {
       date_from: z.string().optional().describe('Start date YYYY-MM-DD'),
       date_to: z.string().optional().describe('End date YYYY-MM-DD'),
@@ -128,37 +124,86 @@ export function registerCashFlowTools(server: McpServer, config: ServerConfig) {
     async (args) => {
       try {
         const client = getSupabaseClient(config);
-        let query = client.from('cash_flow').select('income, expense');
+        const targetUserId = resolveTargetUserId(config, args.user_id);
 
-        query = ensureUserFilter(query, config, args.user_id);
+        // 1. First Attempt: PostgreSQL RPC public.get_cash_flow_summary
+        // Computes directly inside Postgres (SUM, COUNT), bypassing 1000-row REST limits
+        try {
+          const { data: rpcData, error: rpcError } = await client.rpc('get_cash_flow_summary', {
+            p_user_id: targetUserId,
+            p_date_from: args.date_from ?? null,
+            p_date_to: args.date_to ?? null,
+          });
 
-        if (args.date_from) {
-          query = query.gte('date', args.date_from);
+          if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
+            const summaryRow = rpcData[0];
+            return formatSuccessResponse({
+              totalIncome: Number(summaryRow.total_income || 0),
+              totalExpense: Number(summaryRow.total_expense || 0),
+              netBalance: Number(summaryRow.net_balance || 0),
+              transactionCount: Number(summaryRow.transaction_count || 0),
+              period: {
+                from: args.date_from || 'Beginning of records',
+                to: args.date_to || 'Latest',
+              },
+              source: 'database_rpc',
+            });
+          }
+        } catch {
+          // If RPC is not found or fails, proceed to resilient client pagination fallback
         }
-        if (args.date_to) {
-          query = query.lte('date', args.date_to);
-        }
 
-        const { data, error } = await query;
-        if (error) throw error;
-
+        // 2. Fallback: Full Pagination Loop (chunks of 1000)
+        // Ensures users with >1000 records (e.g. 1,213 rows) are NEVER truncated
+        const CHUNK_SIZE = 1000;
+        let offset = 0;
         let totalIncome = 0;
         let totalExpense = 0;
+        let totalCount = 0;
+        let hasMore = true;
 
-        for (const row of data || []) {
-          totalIncome += Number(row.income || 0);
-          totalExpense += Number(row.expense || 0);
+        while (hasMore) {
+          let query = client
+            .from('cash_flow')
+            .select('income, expense')
+            .eq('user_id', targetUserId)
+            .order('id', { ascending: true })
+            .range(offset, offset + CHUNK_SIZE - 1);
+
+          if (args.date_from) {
+            query = query.gte('date', args.date_from);
+          }
+          if (args.date_to) {
+            query = query.lte('date', args.date_to);
+          }
+
+          const { data, error } = await query;
+          if (error) throw error;
+
+          const batch = data || [];
+          for (const row of batch) {
+            totalIncome += Number(row.income || 0);
+            totalExpense += Number(row.expense || 0);
+          }
+
+          totalCount += batch.length;
+          if (batch.length < CHUNK_SIZE) {
+            hasMore = false;
+          } else {
+            offset += CHUNK_SIZE;
+          }
         }
 
         return formatSuccessResponse({
           totalIncome,
           totalExpense,
           netBalance: totalIncome - totalExpense,
-          transactionCount: (data || []).length,
+          transactionCount: totalCount,
           period: {
             from: args.date_from || 'Beginning of records',
             to: args.date_to || 'Latest',
           },
+          source: 'paginated_query',
         });
       } catch (err) {
         return formatErrorResponse(err);

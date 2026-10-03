@@ -22,14 +22,26 @@ export function getSupabaseClient(config: ServerConfig): SupabaseClient {
   return supabaseClient;
 }
 
-export function ensureUserFilter<T extends { user_id?: string }>(
+export function resolveTargetUserId(config: ServerConfig, customUserId?: string): string {
+  const targetUserId = customUserId || config.userId;
+  if (!targetUserId) {
+    throw new Error(
+      'Target user_id is required: either provide "user_id" in the tool parameters or configure FINTRACK_USER_ID in your environment.'
+    );
+  }
+  if (!isValidUuid(targetUserId)) {
+    throw new Error(
+      `Invalid user UUID provided: "${targetUserId}". It must be a valid 36-character UUID (e.g. 550e8400-e29b-41d4-a716-446655440000).`
+    );
+  }
+  return targetUserId;
+}
+
+export function ensureUserFilter(
   query: any,
   config: ServerConfig,
   customUserId?: string
 ) {
-  const targetUserId = customUserId || config.userId;
-  if (targetUserId && isValidUuid(targetUserId)) {
-    return query.eq('user_id', targetUserId);
-  }
-  return query;
+  const targetUserId = resolveTargetUserId(config, customUserId);
+  return query.eq('user_id', targetUserId);
 }

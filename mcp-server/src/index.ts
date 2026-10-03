@@ -6,6 +6,7 @@ import { registerCashFlowTools } from './tools/cashflow.js';
 import { registerStatementTools } from './tools/statements.js';
 import { registerReceiptTools } from './tools/receipts.js';
 import { registerAnalyticsTools } from './tools/analytics.js';
+import { registerSystemTools } from './tools/system.js';
 
 async function main() {
   const config = loadConfig();
@@ -15,6 +16,7 @@ async function main() {
     version: '1.0.0',
   });
 
+  registerSystemTools(server, config);
   registerCashFlowTools(server, config);
   registerStatementTools(server, config);
   registerReceiptTools(server, config);
