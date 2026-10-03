@@ -1,3 +1,10 @@
+# [1.21.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.20.1...v1.21.0) (2026-10-03)
+
+
+### Features
+
+* **dashboard:** add health verdict, real spending split, trend indicators, and chart safety zones ([4c0ddca](https://github.com/Andi-IM/fintrack-saas/commit/4c0ddcae1aab97281b898b6a89d982c38d17c5ca))
+
 ## [1.20.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.20.0...v1.20.1) (2026-10-03)
 
 
