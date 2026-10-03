@@ -18,37 +18,37 @@ export type Database = {
         Row: {
           amount: number
           balance: number | null
+          cash_flow_id: string | null
           category: string | null
           date: string
           description: string
           id: string
           metadata: Json | null
           statement_id: string | null
-          cash_flow_id: string | null
           type: string | null
         }
         Insert: {
           amount: number
           balance?: number | null
+          cash_flow_id?: string | null
           category?: string | null
           date: string
           description: string
           id?: string
           metadata?: Json | null
           statement_id?: string | null
-          cash_flow_id?: string | null
           type?: string | null
         }
         Update: {
           amount?: number
           balance?: number | null
+          cash_flow_id?: string | null
           category?: string | null
           date?: string
           description?: string
           id?: string
           metadata?: Json | null
           statement_id?: string | null
-          cash_flow_id?: string | null
           type?: string | null
         }
         Relationships: [
@@ -60,10 +60,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "bank_statement_items_cash_flow_id_fkey"
+            foreignKeyName: "bank_statement_items_transaction_id_fkey"
             columns: ["cash_flow_id"]
             isOneToOne: false
             referencedRelation: "cash_flow"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_statement_items_transaction_id_fkey"
+            columns: ["cash_flow_id"]
+            isOneToOne: false
+            referencedRelation: "dashboard_cash_flow_entries"
             referencedColumns: ["id"]
           },
         ]
@@ -91,7 +98,7 @@ export type Database = {
           opening_balance?: number | null
           statement_period: string
           total_items?: number | null
-          user_id?: string
+          user_id: string
         }
         Update: {
           bank_name?: string
@@ -105,12 +112,64 @@ export type Database = {
           total_items?: number | null
           user_id?: string
         }
+        Relationships: []
+      }
+      cash_flow: {
+        Row: {
+          created_at: string | null
+          date: string
+          description: string | null
+          expense: number | null
+          id: string
+          income: number | null
+          main_category: string
+          payment_method: string | null
+          receipt_id: string | null
+          source_item_id: string | null
+          sub_category: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          expense?: number | null
+          id?: string
+          income?: number | null
+          main_category: string
+          payment_method?: string | null
+          receipt_id?: string | null
+          source_item_id?: string | null
+          sub_category?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          expense?: number | null
+          id?: string
+          income?: number | null
+          main_category?: string
+          payment_method?: string | null
+          receipt_id?: string | null
+          source_item_id?: string | null
+          sub_category?: string | null
+          user_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "bank_statements_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "cash_flow_receipt_id_fkey"
+            columns: ["receipt_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_flow_source_item_id_fkey"
+            columns: ["source_item_id"]
+            isOneToOne: false
+            referencedRelation: "bank_statement_items"
             referencedColumns: ["id"]
           },
         ]
@@ -150,7 +209,7 @@ export type Database = {
           total_price: number
           transaction_type?: string | null
           type?: string
-          user_id?: string
+          user_id: string
         }
         Update: {
           amount_paid?: number | null
@@ -176,13 +235,6 @@ export type Database = {
             columns: ["bank_statement_item_id"]
             isOneToOne: false
             referencedRelation: "bank_statement_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "receipts_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -219,108 +271,53 @@ export type Database = {
           },
         ]
       }
-      cash_flow: {
-        Row: {
-          id: string
-          created_at: string | null
-          date: string
-          main_category: string
-          sub_category: string | null
-          description: string | null
-          income: number | null
-          expense: number | null
-          payment_method: string | null
-          receipt_id: string | null
-          source_item_id: string | null
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          created_at?: string | null
-          date: string
-          main_category: string
-          sub_category?: string | null
-          description?: string | null
-          income?: number | null
-          expense?: number | null
-          payment_method?: string | null
-          receipt_id?: string | null
-          source_item_id?: string | null
-          user_id?: string
-        }
-        Update: {
-          id?: string
-          created_at?: string | null
-          date?: string
-          main_category?: string
-          sub_category?: string | null
-          description?: string | null
-          income?: number | null
-          expense?: number | null
-          payment_method?: string | null
-          receipt_id?: string | null
-          source_item_id?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cash_flow_receipt_id_fkey"
-            columns: ["receipt_id"]
-            isOneToOne: false
-            referencedRelation: "receipts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cash_flow_source_item_id_fkey"
-            columns: ["source_item_id"]
-            isOneToOne: false
-            referencedRelation: "bank_statement_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cash_flow_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       dashboard_cash_flow_entries: {
         Row: {
-          id: string
-          date: string
-          main_category: string
+          date: string | null
           description: string | null
-          income: number | null
           expense: number | null
+          id: string | null
+          income: number | null
+          main_category: string | null
           payment_method: string | null
         }
         Insert: {
-          id?: never
-          date?: never
-          main_category?: never
-          description?: never
-          income?: never
-          expense?: never
-          payment_method?: never
+          date?: string | null
+          description?: string | null
+          expense?: number | null
+          id?: string | null
+          income?: number | null
+          main_category?: string | null
+          payment_method?: string | null
         }
         Update: {
-          id?: never
-          date?: never
-          main_category?: never
-          description?: never
-          income?: never
-          expense?: never
-          payment_method?: never
+          date?: string | null
+          description?: string | null
+          expense?: number | null
+          id?: string | null
+          income?: number | null
+          main_category?: string | null
+          payment_method?: string | null
         }
         Relationships: []
       }
     }
     Functions: {
-      [_ in never]: never
+      get_cash_flow_summary: {
+        Args: { p_date_from?: string; p_date_to?: string; p_user_id: string }
+        Returns: {
+          net_balance: number
+          total_expense: number
+          total_income: number
+          transaction_count: number
+        }[]
+      }
+      get_financial_analytics: {
+        Args: { p_date_from?: string; p_date_to?: string; p_user_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
@@ -339,12 +336,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -368,11 +365,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -393,11 +390,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -418,11 +415,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -435,11 +432,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
