@@ -7,12 +7,12 @@ import { formatSuccessResponse, formatErrorResponse } from '../utils/errors.js';
 export function registerCashFlowTools(server: McpServer, config: ServerConfig) {
   server.tool(
     'list_cash_flow',
-    'List cash flow entries with pagination, date filters, and search capabilities.',
+    'List cash flow entries with precise transaction time, pagination, date filters, and search capabilities.',
     {
       page: z.number().int().min(1).default(1).describe('Page number, defaults to 1'),
       limit: z.number().int().min(1).max(100).default(20).describe('Items per page, max 100'),
-      date_from: z.string().optional().describe('Filter start date in ISO format YYYY-MM-DD'),
-      date_to: z.string().optional().describe('Filter end date in ISO format YYYY-MM-DD'),
+      date_from: z.string().optional().describe('Filter start date in ISO format YYYY-MM-DD or YYYY-MM-DDTHH:mm:ssZ'),
+      date_to: z.string().optional().describe('Filter end date in ISO format YYYY-MM-DD or YYYY-MM-DDTHH:mm:ssZ'),
       category: z.string().optional().describe('Filter by main category name'),
       payment_method: z.string().optional().describe('Filter by payment method'),
       search: z.string().optional().describe('Search in description'),
@@ -33,7 +33,9 @@ export function registerCashFlowTools(server: McpServer, config: ServerConfig) {
           query = query.gte('date', args.date_from);
         }
         if (args.date_to) {
-          query = query.lte('date', args.date_to);
+          // If YYYY-MM-DD format, extend to end of day to avoid excluding midday transactions
+          const endBoundary = args.date_to.includes('T') ? args.date_to : `${args.date_to}T23:59:59.999Z`;
+          query = query.lte('date', endBoundary);
         }
         if (args.category) {
           query = query.ilike('main_category', `%${args.category}%`);
@@ -51,8 +53,15 @@ export function registerCashFlowTools(server: McpServer, config: ServerConfig) {
 
         if (error) throw error;
 
+        // Ensure transaction_time and created_at are explicitly surfaced with exact hour & minute
+        const formattedEntries = (data || []).map((row: any) => ({
+          ...row,
+          transaction_time: row.transaction_time || row.date,
+          created_at: row.created_at || null,
+        }));
+
         return formatSuccessResponse({
-          entries: data || [],
+          entries: formattedEntries,
           pagination: {
             page: args.page,
             limit: args.limit,
@@ -68,9 +77,16 @@ export function registerCashFlowTools(server: McpServer, config: ServerConfig) {
 
   server.tool(
     'create_cash_flow_entry',
-    'Add a new income or expense cash flow transaction.',
+    'Add a new income or expense cash flow transaction with full time precision.',
     {
-      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD').describe('Transaction date'),
+      transaction_time: z
+        .string()
+        .optional()
+        .describe('Exact transaction time in ISO format (e.g. "2026-10-03T14:30:00+07:00" or "2026-10-03T07:30:00Z"). Defaults to now() if omitted.'),
+      date: z
+        .string()
+        .optional()
+        .describe('Transaction date (YYYY-MM-DD or ISO timestamp). If provided without time, current time is preserved.'),
       main_category: z.string().min(1).describe('Primary category (e.g., Food, Salary, Utilities)'),
       sub_category: z.string().optional().describe('Optional sub-category'),
       description: z.string().optional().describe('Notes or description for transaction'),
@@ -83,10 +99,43 @@ export function registerCashFlowTools(server: McpServer, config: ServerConfig) {
       try {
         const client = getSupabaseClient(config);
         const targetUserId = resolveTargetUserId(config, args.user_id);
+        const now = new Date();
+        const oneDayAhead = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-        const payload = {
+        let resolvedTime: Date;
+        if (args.transaction_time) {
+          resolvedTime = new Date(args.transaction_time);
+          if (isNaN(resolvedTime.getTime())) {
+            throw new Error(`Invalid transaction_time format: "${args.transaction_time}". Must be a valid ISO date/time.`);
+          }
+        } else if (args.date) {
+          const dateTrimmed = args.date.trim();
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateTrimmed)) {
+            // Keep current hours/mins/secs of the day instead of midnight UTC
+            const hours = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            const secs = String(now.getSeconds()).padStart(2, '0');
+            resolvedTime = new Date(`${dateTrimmed}T${hours}:${mins}:${secs}`);
+          } else {
+            resolvedTime = new Date(dateTrimmed);
+          }
+          if (isNaN(resolvedTime.getTime())) {
+            throw new Error(`Invalid date format: "${args.date}".`);
+          }
+        } else {
+          resolvedTime = now;
+        }
+
+        // Validate future date constraint (<= now() + 1 day)
+        if (resolvedTime.getTime() > oneDayAhead.getTime()) {
+          throw new Error(`transaction_time cannot be more than 1 day in the future (received: ${resolvedTime.toISOString()})`);
+        }
+
+        const isoTimestamp = resolvedTime.toISOString();
+
+        const basePayload: any = {
           user_id: targetUserId,
-          date: args.date,
+          date: isoTimestamp,
           main_category: args.main_category,
           sub_category: args.sub_category ?? null,
           description: args.description ?? null,
@@ -95,17 +144,43 @@ export function registerCashFlowTools(server: McpServer, config: ServerConfig) {
           payment_method: args.payment_method ?? null,
         };
 
-        const { data, error } = await client
+        // Try inserting with transaction_time first
+        let data: any = null;
+        const payloadWithTime = {
+          ...basePayload,
+          transaction_time: isoTimestamp,
+        };
+
+        const { data: resData, error: insertError } = await client
           .from('cash_flow')
-          .insert(payload)
+          .insert(payloadWithTime)
           .select()
           .single();
 
-        if (error) throw error;
+        if (insertError) {
+          // If transaction_time column is not yet present in DB migration, fallback to basePayload
+          if (insertError.message.includes('transaction_time')) {
+            const { data: fallbackData, error: fallbackError } = await client
+              .from('cash_flow')
+              .insert(basePayload)
+              .select()
+              .single();
+
+            if (fallbackError) throw fallbackError;
+            data = fallbackData;
+          } else {
+            throw insertError;
+          }
+        } else {
+          data = resData;
+        }
 
         return formatSuccessResponse({
-          message: 'Cash flow entry created successfully',
-          entry: data,
+          message: 'Cash flow entry created successfully with exact transaction time',
+          entry: {
+            ...data,
+            transaction_time: data.transaction_time || data.date,
+          },
         });
       } catch (err) {
         return formatErrorResponse(err);

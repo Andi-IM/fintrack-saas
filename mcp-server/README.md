@@ -8,8 +8,8 @@ Model Context Protocol (MCP) server yang memungkinkan LLM agents (Claude Desktop
    - `check_connection`: Memeriksa status koneksi ke Supabase, memvalidasi role API key (`service_role` vs `anon`), menguji scope `FINTRACK_USER_ID`, latensi query database, ketersediaan RPC agregasi, dan akses storage bucket.
 
 2. **Cash Flow Tools**:
-   - `list_cash_flow`: Mengambil daftar cash flow dengan pagination, rentang tanggal, filter kategori/metode bayar, dan pencarian deskripsi.
-   - `create_cash_flow_entry`: Membuat catatan transaksi kas pemasukan atau pengeluaran baru.
+   - `list_cash_flow`: Mengambil daftar cash flow dengan presisi waktu transaksi asli (`transaction_time`), `created_at`, pagination, rentang tanggal, filter kategori/metode bayar, dan pencarian deskripsi.
+   - `create_cash_flow_entry`: Membuat catatan transaksi kas pemasukan atau pengeluaran baru dengan waktu transaksi presisi (`transaction_time`, opsional default `now()`) tanpa konversi ke tengah malam UTC (07:00 WIB).
    - `get_cash_flow_summary`: Menghitung total income, total expense, dan net balance dalam rentang tanggal tertentu langsung via PostgreSQL RPC tanpa terpotong batas 1.000 baris (dengan fallback paginasi penuh).
 
 3. **Bank Statement Tools**:
