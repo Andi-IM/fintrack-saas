@@ -56,4 +56,5 @@ jobs:
             'cd /opt/fintrack-mcp && podman compose down --remove-orphans 2>/dev/null || true && podman compose up -d'
 
       - name: Test MCP connection
-        run: ssh -i ~/.ssh/id_vps -o StrictHostKeyChecking=accept-new ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} '/home/ubuntu/.hermes/tools/node-26.7.0-linux-x64/bin/hermes mcp test fintrack'
+        run: |
+          ssh -i ~/.ssh/id_vps -o StrictHostKeyChecking=accept-new ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} '/home/ubuntu/.local/bin/hermes mcp test fintrack'
