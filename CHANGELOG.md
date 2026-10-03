@@ -1,3 +1,10 @@
+# [1.20.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.19.2...v1.20.0) (2026-10-03)
+
+
+### Features
+
+* **mcp:** add update and delete tools with hour-level precision across all modules ([cd9b799](https://github.com/Andi-IM/fintrack-saas/commit/cd9b79935650938310046ae2fdfccbb17ba5bf87))
+
 ## [1.19.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.19.1...v1.19.2) (2026-10-03)
 
 
