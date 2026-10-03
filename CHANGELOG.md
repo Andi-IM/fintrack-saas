@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.16.2...v1.17.0) (2026-10-03)
+
+
+### Features
+
+* **mcp:** add bank statement import, sql aggregation rpc, and diagnostic tools ([a1426cf](https://github.com/Andi-IM/fintrack-saas/commit/a1426cf5d467d79228c1028cbed4b09251679a17))
+
 ## [1.16.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.16.1...v1.16.2) (2026-10-02)
 
 
