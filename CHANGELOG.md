@@ -1,3 +1,11 @@
+# [1.18.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.17.0...v1.18.0) (2026-10-03)
+
+
+### Features
+
+* add TypeScript definitions for Supabase database schema ([a8333a6](https://github.com/Andi-IM/fintrack-saas/commit/a8333a62b4d40acf4636c5b3da8e8b4b9ae36d08))
+* **mcp:** support transaction_time precision and add backfill migration ([8f1f06d](https://github.com/Andi-IM/fintrack-saas/commit/8f1f06d439f6b282cde593de50e3888fe1bb4d06))
+
 # [1.17.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.16.2...v1.17.0) (2026-10-03)
 
 
