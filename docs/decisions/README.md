@@ -75,3 +75,4 @@ Setiap keputusan desain yang signifikan dan berpengaruh besar terhadap struktur 
 - [ADR-067](067-scoped-ci-triggers-and-vps-deployment-script.md) - Scoped CI Path Triggers and VPS SSH Deployment Script
 - [ADR-068](068-mcp-server-reliability-and-statement-import.md) - MCP Server Reliability, SQL Aggregation, and Bank Statement Import
 - [ADR-069](069-cash-flow-time-precision-and-mcp-tooling.md) - Cash Flow Time Precision and MCP Tooling
+- [ADR-070](070-mcp-update-and-delete-tools.md) - MCP Server Full CRUD Capabilities (Update and Delete Tools)

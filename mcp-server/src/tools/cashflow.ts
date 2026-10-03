@@ -285,4 +285,141 @@ export function registerCashFlowTools(server: McpServer, config: ServerConfig) {
       }
     }
   );
+
+  server.tool(
+    'update_cash_flow_entry',
+    'Update an existing cash flow transaction entry (amount, category, description, payment method, or transaction time).',
+    {
+      id: z.string().uuid().describe('UUID of the cash_flow entry to update'),
+      transaction_time: z
+        .string()
+        .optional()
+        .describe('New transaction time in ISO format (e.g. "2026-10-03T14:30:00+07:00")'),
+      date: z
+        .string()
+        .optional()
+        .describe('New transaction date (YYYY-MM-DD or ISO timestamp)'),
+      main_category: z.string().min(1).optional().describe('New primary category'),
+      sub_category: z.string().nullable().optional().describe('New sub-category or null to clear'),
+      description: z.string().nullable().optional().describe('New description or null to clear'),
+      income: z.number().nonnegative().optional().describe('New income amount'),
+      expense: z.number().nonnegative().optional().describe('New expense amount'),
+      payment_method: z.string().nullable().optional().describe('New payment method or null to clear'),
+      user_id: z.string().optional().describe('Target user_id override if in service role mode'),
+    },
+    async (args) => {
+      try {
+        const client = getSupabaseClient(config);
+        const targetUserId = resolveTargetUserId(config, args.user_id);
+
+        // 1. Verify existence and ownership
+        const { data: existing, error: existErr } = await client
+          .from('cash_flow')
+          .select('id, user_id, date, transaction_time')
+          .eq('id', args.id)
+          .eq('user_id', targetUserId)
+          .single();
+
+        if (existErr || !existing) {
+          throw new Error(`Cash flow entry not found or not owned by user: ${args.id}`);
+        }
+
+        // 2. Prepare update payload
+        const updatePayload: Record<string, any> = {};
+
+        if (args.main_category !== undefined) updatePayload.main_category = args.main_category;
+        if (args.sub_category !== undefined) updatePayload.sub_category = args.sub_category;
+        if (args.description !== undefined) updatePayload.description = args.description;
+        if (args.income !== undefined) updatePayload.income = args.income;
+        if (args.expense !== undefined) updatePayload.expense = args.expense;
+        if (args.payment_method !== undefined) updatePayload.payment_method = args.payment_method;
+
+        if (args.transaction_time !== undefined || args.date !== undefined) {
+          const rawTime = args.transaction_time || args.date;
+          const resolvedTime = new Date(rawTime!);
+          if (isNaN(resolvedTime.getTime())) {
+            throw new Error(`Invalid date/time format: "${rawTime}". Must be a valid ISO date/time.`);
+          }
+
+          const oneDayAhead = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          if (resolvedTime.getTime() > oneDayAhead.getTime()) {
+            throw new Error(`Transaction time cannot be more than 1 day in the future (received: ${resolvedTime.toISOString()})`);
+          }
+
+          const isoStr = resolvedTime.toISOString();
+          updatePayload.transaction_time = isoStr;
+          updatePayload.date = isoStr;
+        }
+
+        if (Object.keys(updatePayload).length === 0) {
+          throw new Error('No update fields provided. Specify at least one field to update.');
+        }
+
+        const { data: updated, error: updateErr } = await client
+          .from('cash_flow')
+          .update(updatePayload)
+          .eq('id', args.id)
+          .eq('user_id', targetUserId)
+          .select()
+          .single();
+
+        if (updateErr) throw updateErr;
+
+        return formatSuccessResponse({
+          message: 'Cash flow entry updated successfully',
+          entry: {
+            ...updated,
+            transaction_time: updated.transaction_time || updated.date,
+          },
+        });
+      } catch (err) {
+        return formatErrorResponse(err);
+      }
+    }
+  );
+
+  server.tool(
+    'delete_cash_flow_entry',
+    'Delete a specific cash flow transaction entry by UUID.',
+    {
+      id: z.string().uuid().describe('UUID of the cash_flow entry to delete'),
+      user_id: z.string().optional().describe('Target user_id override if in service role mode'),
+    },
+    async (args) => {
+      try {
+        const client = getSupabaseClient(config);
+        const targetUserId = resolveTargetUserId(config, args.user_id);
+
+        // 1. Verify existence and ownership
+        const { data: existing, error: existErr } = await client
+          .from('cash_flow')
+          .select('id, user_id, description, income, expense, date')
+          .eq('id', args.id)
+          .eq('user_id', targetUserId)
+          .single();
+
+        if (existErr || !existing) {
+          throw new Error(`Cash flow entry not found or not owned by user: ${args.id}`);
+        }
+
+        // 2. Perform deletion
+        const { error: delErr } = await client
+          .from('cash_flow')
+          .delete()
+          .eq('id', args.id)
+          .eq('user_id', targetUserId);
+
+        if (delErr) throw delErr;
+
+        return formatSuccessResponse({
+          message: 'Cash flow entry deleted successfully',
+          deleted_id: args.id,
+          entry: existing,
+        });
+      } catch (err) {
+        return formatErrorResponse(err);
+      }
+    }
+  );
 }
+

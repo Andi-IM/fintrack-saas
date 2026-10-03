@@ -36,14 +36,43 @@ function buildStoragePath(userId: string, storeName: string, originalName: strin
   return `${userId}/${folder}/${uniqueName}`;
 }
 
+function resolveReceiptTime(transactionTime?: string, dateStr?: string): string {
+  const now = new Date();
+  if (transactionTime) {
+    const parsed = new Date(transactionTime.trim());
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toISOString();
+    }
+  }
+  if (dateStr) {
+    const trimmed = dateStr.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      // Preserve current hour, minute, second instead of truncating to midnight
+      const hours = String(now.getHours()).padStart(2, '0');
+      const mins = String(now.getMinutes()).padStart(2, '0');
+      const secs = String(now.getSeconds()).padStart(2, '0');
+      const resolved = new Date(`${trimmed}T${hours}:${mins}:${secs}`);
+      if (!isNaN(resolved.getTime())) {
+        return resolved.toISOString();
+      }
+    } else {
+      const parsed = new Date(trimmed);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toISOString();
+      }
+    }
+  }
+  return now.toISOString();
+}
+
 export function registerReceiptTools(server: McpServer, config: ServerConfig) {
   server.tool(
     'list_receipts',
-    'List uploaded receipts with store name, total price, date, and payment method.',
+    'List uploaded receipts with store name, total price, date, exact transaction time, and payment method.',
     {
       store_name: z.string().optional().describe('Filter by merchant/store name'),
-      date_from: z.string().optional().describe('Start date YYYY-MM-DD'),
-      date_to: z.string().optional().describe('End date YYYY-MM-DD'),
+      date_from: z.string().optional().describe('Start date YYYY-MM-DD or ISO timestamp'),
+      date_to: z.string().optional().describe('End date YYYY-MM-DD or ISO timestamp'),
       limit: z.number().int().min(1).max(100).default(20).describe('Max receipts to return'),
       user_id: z.string().optional().describe('Optional user_id override'),
     },
@@ -61,7 +90,8 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
           query = query.gte('date', args.date_from);
         }
         if (args.date_to) {
-          query = query.lte('date', args.date_to);
+          const endBoundary = args.date_to.includes('T') ? args.date_to : `${args.date_to}T23:59:59.999Z`;
+          query = query.lte('date', endBoundary);
         }
 
         const { data, error } = await query
@@ -70,8 +100,13 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
 
         if (error) throw error;
 
+        const formattedReceipts = (data || []).map((r: any) => ({
+          ...r,
+          transaction_time: r.date,
+        }));
+
         return formatSuccessResponse({
-          receipts: data || [],
+          receipts: formattedReceipts,
         });
       } catch (err) {
         return formatErrorResponse(err);
@@ -81,7 +116,7 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
 
   server.tool(
     'get_receipt_details',
-    'Get full receipt details including line items (product name, quantity, unit price).',
+    'Get full receipt details including exact transaction time and line items (product name, quantity, unit price).',
     {
       receipt_id: z.string().uuid().describe('The UUID of the receipt'),
       user_id: z.string().optional().describe('Optional user_id override'),
@@ -104,7 +139,10 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
         if (itemsErr) throw itemsErr;
 
         return formatSuccessResponse({
-          receipt,
+          receipt: {
+            ...receipt,
+            transaction_time: receipt.date,
+          },
           items: items || [],
         });
       } catch (err) {
@@ -115,11 +153,18 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
 
   server.tool(
     'create_receipt',
-    'Create a new receipt record (salary, shopping, ATM, etc.) with image upload to Supabase Storage (via local file path or Base64) or direct storage path, and automatic cash flow synchronization.',
+    'Create a new receipt record (salary, shopping, ATM, etc.) with exact transaction time (hours and minutes), image upload to Supabase Storage (via local file path or Base64) or direct storage path, and automatic cash flow synchronization.',
     {
       store_name: z.string().min(1).describe('Store, company, or source name (e.g. PT ABC, Indomaret, PLN, Gaji Perusahaan)'),
       total_price: z.number().nonnegative().describe('Total amount in IDR/currency'),
-      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD').describe('Receipt or transaction date (YYYY-MM-DD)'),
+      transaction_time: z
+        .string()
+        .optional()
+        .describe('Exact receipt transaction time with hour, minute, and second (ISO format e.g. "2026-10-03T14:30:00+07:00" or "2026-10-03T07:30:00Z"). Defaults to now() if omitted.'),
+      date: z
+        .string()
+        .optional()
+        .describe('Receipt date or timestamp (YYYY-MM-DD or ISO timestamp e.g. "2026-10-03T14:30:00+07:00"). If provided without time, current time is preserved.'),
       type: z.enum(['shopping', 'atm', 'salary', 'other']).default('shopping').describe('Type of receipt record'),
       payment_method: z.string().optional().describe('Payment method (e.g. Cash, BCA, Mandiri, Transfer, QRIS)'),
       store_address: z.string().optional().describe('Store or issuer address'),
@@ -248,12 +293,18 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
         }
 
         // 2. Insert receipt into database with file_path pointing to Supabase Storage
+        const resolvedTimestamp = resolveReceiptTime(args.transaction_time, args.date);
+        const oneDayAhead = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        if (new Date(resolvedTimestamp).getTime() > oneDayAhead.getTime()) {
+          throw new Error(`Receipt date/time cannot be more than 1 day in the future (received: ${resolvedTimestamp})`);
+        }
+
         const receiptPayload = {
           user_id: targetUserId,
           type: args.type,
           store_name: args.store_name,
           store_address: args.store_address ?? null,
-          date: args.date,
+          date: resolvedTimestamp,
           total_price: args.total_price,
           payment_method: args.payment_method ?? null,
           amount_paid: args.amount_paid ?? null,
@@ -271,7 +322,9 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
         if (receiptError) {
           // Cleanup storage object if database insert fails
           if (supabaseStoragePath && !args.storage_path) {
-            await client.storage.from('receipts').remove([supabaseStoragePath]).catch(() => {});
+            try {
+              await client.storage.from('receipts').remove([supabaseStoragePath]);
+            } catch {}
           }
           throw receiptError;
         }
@@ -298,7 +351,7 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
           }
         }
 
-        // 4. Optionally synchronize to cash_flow
+        // 4. Optionally synchronize to cash_flow with exact transaction time
         let cashFlowEntry: any = null;
         if (args.sync_to_cash_flow !== false) {
           const isIncome = args.is_income ?? (args.type === 'salary');
@@ -311,7 +364,8 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
 
           const cashFlowPayload = {
             user_id: targetUserId,
-            date: args.date,
+            date: resolvedTimestamp,
+            transaction_time: resolvedTimestamp,
             main_category: mainCategory,
             description: `${args.store_name} (${args.type})`,
             income: isIncome ? args.total_price : 0,
@@ -334,10 +388,16 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
         }
 
         return formatSuccessResponse({
-          message: 'Receipt created successfully',
-          receipt,
+          message: 'Receipt created successfully with exact transaction time',
+          receipt: {
+            ...receipt,
+            transaction_time: receipt.date,
+          },
           items: insertedItems,
-          cash_flow: cashFlowEntry,
+          cash_flow: cashFlowEntry ? {
+            ...cashFlowEntry,
+            transaction_time: cashFlowEntry.transaction_time || cashFlowEntry.date,
+          } : null,
           signed_image_url: signedImageUrl,
         });
       } catch (err) {
@@ -391,4 +451,222 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
       }
     }
   );
+
+  server.tool(
+    'update_receipt',
+    'Update an existing receipt record (store name, date/time, total price, payment method, etc.) and optionally sync changes to linked cash flow.',
+    {
+      id: z.string().uuid().describe('UUID of the receipt to update'),
+      store_name: z.string().min(1).optional().describe('New store or merchant name'),
+      transaction_time: z
+        .string()
+        .optional()
+        .describe('New exact receipt transaction time with hour, minute, second in ISO format (e.g. "2026-10-03T14:30:00+07:00")'),
+      date: z
+        .string()
+        .optional()
+        .describe('New receipt date or ISO timestamp (e.g. "2026-10-03T14:30:00+07:00" or "2026-10-03")'),
+      total_price: z.number().nonnegative().optional().describe('New total amount in IDR'),
+      type: z.enum(['shopping', 'atm', 'salary', 'other']).optional().describe('New receipt type'),
+      payment_method: z.string().nullable().optional().describe('New payment method or null to clear'),
+      store_address: z.string().nullable().optional().describe('New store address or null to clear'),
+      amount_paid: z.number().nonnegative().nullable().optional().describe('New amount paid or null to clear'),
+      change: z.number().nonnegative().nullable().optional().describe('New change returned or null to clear'),
+      fee: z.number().nonnegative().optional().describe('New fee amount'),
+      sync_to_cash_flow: z.boolean().default(true).describe('If true, updates the linked cash_flow entry as well'),
+      user_id: z.string().optional().describe('Target user_id override if in service role mode'),
+    },
+    async (args) => {
+      try {
+        const client = getSupabaseClient(config);
+        const targetUserId = resolveTargetUserId(config, args.user_id);
+
+        // 1. Verify existence and ownership
+        const { data: existing, error: existErr } = await client
+          .from('receipts')
+          .select('*')
+          .eq('id', args.id)
+          .eq('user_id', targetUserId)
+          .single();
+
+        if (existErr || !existing) {
+          throw new Error(`Receipt not found or not owned by user: ${args.id}`);
+        }
+
+        // 2. Prepare update payload
+        const updatePayload: Record<string, any> = {};
+        if (args.store_name !== undefined) updatePayload.store_name = args.store_name;
+
+        let resolvedTime: string | undefined = undefined;
+        if (args.transaction_time !== undefined || args.date !== undefined) {
+          resolvedTime = resolveReceiptTime(args.transaction_time, args.date);
+          const oneDayAhead = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          if (new Date(resolvedTime).getTime() > oneDayAhead.getTime()) {
+            throw new Error(`Receipt date/time cannot be more than 1 day in the future (received: ${resolvedTime})`);
+          }
+          updatePayload.date = resolvedTime;
+        }
+
+        if (args.total_price !== undefined) updatePayload.total_price = args.total_price;
+        if (args.type !== undefined) updatePayload.type = args.type;
+        if (args.payment_method !== undefined) updatePayload.payment_method = args.payment_method;
+        if (args.store_address !== undefined) updatePayload.store_address = args.store_address;
+        if (args.amount_paid !== undefined) updatePayload.amount_paid = args.amount_paid;
+        if (args.change !== undefined) updatePayload.change = args.change;
+        if (args.fee !== undefined) updatePayload.fee = args.fee;
+
+        if (Object.keys(updatePayload).length === 0) {
+          throw new Error('No update fields provided. Specify at least one field to update.');
+        }
+
+        const { data: updatedReceipt, error: updateErr } = await client
+          .from('receipts')
+          .update(updatePayload)
+          .eq('id', args.id)
+          .eq('user_id', targetUserId)
+          .select()
+          .single();
+
+        if (updateErr) throw updateErr;
+
+        // 3. Sync to linked cash_flow if requested
+        let updatedCashFlow: any = null;
+        if (args.sync_to_cash_flow !== false) {
+          const { data: cfEntry } = await client
+            .from('cash_flow')
+            .select('*')
+            .eq('receipt_id', args.id)
+            .eq('user_id', targetUserId)
+            .maybeSingle();
+
+          if (cfEntry) {
+            const cfUpdates: Record<string, any> = {};
+            if (resolvedTime) {
+              cfUpdates.date = resolvedTime;
+              cfUpdates.transaction_time = resolvedTime;
+            }
+            if (args.store_name !== undefined || args.type !== undefined) {
+              const effectiveStore = args.store_name || existing.store_name;
+              const effectiveType = args.type || existing.type;
+              cfUpdates.description = `${effectiveStore} (${effectiveType})`;
+            }
+            if (args.payment_method !== undefined) {
+              cfUpdates.payment_method = args.payment_method;
+            }
+            if (args.total_price !== undefined) {
+              const isIncome = cfEntry.income > 0;
+              if (isIncome) {
+                cfUpdates.income = args.total_price;
+              } else {
+                cfUpdates.expense = args.total_price;
+              }
+            }
+
+            if (Object.keys(cfUpdates).length > 0) {
+              const { data: cfResult } = await client
+                .from('cash_flow')
+                .update(cfUpdates)
+                .eq('id', cfEntry.id)
+                .select()
+                .single();
+              updatedCashFlow = cfResult;
+            }
+          }
+        }
+
+        return formatSuccessResponse({
+          message: 'Receipt updated successfully',
+          receipt: {
+            ...updatedReceipt,
+            transaction_time: updatedReceipt.date,
+          },
+          linked_cash_flow: updatedCashFlow ? {
+            ...updatedCashFlow,
+            transaction_time: updatedCashFlow.transaction_time || updatedCashFlow.date,
+          } : null,
+        });
+      } catch (err) {
+        return formatErrorResponse(err);
+      }
+    }
+  );
+
+  server.tool(
+    'delete_receipt',
+    'Delete a receipt record, its item breakdown, associated storage image, and optionally its linked cash flow record.',
+    {
+      id: z.string().uuid().describe('UUID of the receipt to delete'),
+      delete_image: z.boolean().default(true).describe('Also remove receipt image file from Supabase Storage (default: true)'),
+      delete_cash_flow: z.boolean().default(true).describe('Also delete linked cash_flow entry (default: true)'),
+      user_id: z.string().optional().describe('Target user_id override if in service role mode'),
+    },
+    async (args) => {
+      try {
+        const client = getSupabaseClient(config);
+        const targetUserId = resolveTargetUserId(config, args.user_id);
+
+        // 1. Verify existence and ownership
+        const { data: receipt, error: findErr } = await client
+          .from('receipts')
+          .select('id, user_id, store_name, total_price, date, file_path')
+          .eq('id', args.id)
+          .eq('user_id', targetUserId)
+          .single();
+
+        if (findErr || !receipt) {
+          throw new Error(`Receipt not found or not owned by user: ${args.id}`);
+        }
+
+        // 2. Delete linked cash_flow if requested
+        let cashFlowDeleted = false;
+        if (args.delete_cash_flow !== false) {
+          const { error: cfDelErr } = await client
+            .from('cash_flow')
+            .delete()
+            .eq('receipt_id', args.id)
+            .eq('user_id', targetUserId);
+          if (!cfDelErr) cashFlowDeleted = true;
+        }
+
+        // 3. Delete receipt line items
+        await client
+          .from('receipts_items')
+          .delete()
+          .eq('receipt_id', args.id);
+
+        // 4. Delete the receipt record itself
+        const { error: delErr } = await client
+          .from('receipts')
+          .delete()
+          .eq('id', args.id)
+          .eq('user_id', targetUserId);
+
+        if (delErr) throw delErr;
+
+        // 5. Remove image from storage if requested
+        let storageRemoved = false;
+        if (args.delete_image !== false && receipt.file_path) {
+          try {
+            await client.storage.from('receipts').remove([receipt.file_path]);
+            storageRemoved = true;
+          } catch {}
+        }
+
+        return formatSuccessResponse({
+          message: 'Receipt and related data deleted successfully',
+          deleted_id: args.id,
+          receipt_summary: {
+            store_name: receipt.store_name,
+            total_price: receipt.total_price,
+            date: receipt.date,
+          },
+          cash_flow_deleted: cashFlowDeleted,
+          image_removed_from_storage: storageRemoved,
+        });
+      } catch (err) {
+        return formatErrorResponse(err);
+      }
+    }
+  );
 }
+
