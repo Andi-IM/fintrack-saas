@@ -6,11 +6,17 @@ import { DashboardSkeleton } from '@/components/ui/dashboard-skeleton'
 import Link from 'next/link'
 
 async function DashboardData({ range }: { range: string }) {
-  const transactions = await getDashboardCashFlow({ range })
+  const [transactions, previousTransactions] = await Promise.all([
+    getDashboardCashFlow({ range }),
+    getDashboardCashFlow({ range, previous: true }),
+  ])
 
   return (
     <div className="space-y-8">
-      <OverviewCards transactions={transactions} />
+      <OverviewCards 
+        transactions={transactions} 
+        previousTransactions={previousTransactions} 
+      />
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <section aria-label="Grafik Transaksi" className="min-w-0">
           <TransactionChartLazy transactions={transactions} />

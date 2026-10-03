@@ -5,9 +5,9 @@ import { FakeCashFlowRepository } from './fake-cash-flow'
 
 // Concrete implementation using Supabase client
 export class SupabaseCashFlowRepository implements CashFlowRepository {
-  private applyDateFilters<T extends { gte: (column: string, value: string) => T; lte: (column: string, value: string) => T }>(
+  private applyDateFilters<T extends { gte: (column: string, value: string) => T; lte: (column: string, value: string) => T; lt: (column: string, value: string) => T }>(
     query: T,
-    options?: Pick<CashFlowFilterOptions, 'date'> & { range?: DashboardRange }
+    options?: Pick<CashFlowFilterOptions, 'date'> & { range?: DashboardRange; previous?: boolean }
   ): T {
     if (options?.date) {
       const dateStart = new Date(options.date)
@@ -20,6 +20,38 @@ export class SupabaseCashFlowRepository implements CashFlowRepository {
 
     if (options?.range && options.range !== 'ALL') {
       const now = new Date()
+
+      if (options.previous) {
+        if (options.range === 'TODAY') {
+          const yesterdayStart = new Date(now)
+          yesterdayStart.setDate(yesterdayStart.getDate() - 1)
+          yesterdayStart.setHours(0, 0, 0, 0)
+          const yesterdayEnd = new Date(yesterdayStart)
+          yesterdayEnd.setHours(23, 59, 59, 999)
+          return query.gte('date', yesterdayStart.toISOString()).lte('date', yesterdayEnd.toISOString())
+        }
+        if (options.range === 'MTD') {
+          const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+          const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999)
+          return query.gte('date', prevMonthStart.toISOString()).lte('date', prevMonthEnd.toISOString())
+        }
+        if (options.range === 'YTD') {
+          const prevYearStart = new Date(now.getFullYear() - 1, 0, 1)
+          const prevYearEnd = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999)
+          return query.gte('date', prevYearStart.toISOString()).lte('date', prevYearEnd.toISOString())
+        }
+        let days = 30
+        if (options.range === '1W') days = 7
+        if (options.range === '3M') days = 90
+        if (options.range === '1Y') days = 365
+
+        const prevEnd = new Date(now)
+        prevEnd.setDate(prevEnd.getDate() - days)
+        const prevStart = new Date(prevEnd)
+        prevStart.setDate(prevStart.getDate() - days)
+        return query.gte('date', prevStart.toISOString()).lt('date', prevEnd.toISOString())
+      }
+
       let daysToSubtract = 0
 
       switch (options.range) {
@@ -97,7 +129,7 @@ export class SupabaseCashFlowRepository implements CashFlowRepository {
     return { data: data || [], count: count || 0 }
   }
 
-  async findDashboardEntries(options?: { range?: DashboardRange }): Promise<DashboardCashFlowEntry[]> {
+  async findDashboardEntries(options?: { range?: DashboardRange; previous?: boolean }): Promise<DashboardCashFlowEntry[]> {
     const supabase = await createClient()
     const validatedRange = parseDashboardRange(options?.range)
     let query = supabase
@@ -105,7 +137,7 @@ export class SupabaseCashFlowRepository implements CashFlowRepository {
       .select('id,date,main_category,description,income,expense,payment_method')
       .order('date', { ascending: false })
 
-    query = this.applyDateFilters(query, { range: validatedRange })
+    query = this.applyDateFilters(query, { range: validatedRange, previous: options?.previous })
 
     const { data, error } = await query
 

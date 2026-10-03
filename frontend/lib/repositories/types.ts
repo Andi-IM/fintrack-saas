@@ -15,6 +15,7 @@ export interface CashFlowFilterOptions {
   source?: string
   page?: number
   limit?: number
+  previous?: boolean
 }
 
 export interface PaginatedResult<T> {
@@ -40,8 +41,8 @@ export function parseDashboardRange(value: string | undefined, fallback: Dashboa
 
 // Interface representing the cash flow database access layer
 export interface CashFlowRepository {
-  findAll(options?: CashFlowFilterOptions): Promise<PaginatedResult<Tables<'cash_flow'>>>
-  findDashboardEntries(options?: { range?: DashboardRange }): Promise<DashboardCashFlowEntry[]>
+  findAll(options?: CashFlowFilterOptions & { previous?: boolean }): Promise<PaginatedResult<Tables<'cash_flow'>>>
+  findDashboardEntries(options?: { range?: DashboardRange; previous?: boolean }): Promise<DashboardCashFlowEntry[]>
   findById(id: string): Promise<Tables<'cash_flow'> | null>
   create(data: Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id' | 'source_item_id' | 'transaction_time'> & { source_item_id?: string | null; transaction_time?: string | null }): Promise<Tables<'cash_flow'>>
   update(id: string, data: Partial<Omit<Tables<'cash_flow'>, 'id' | 'created_at' | 'user_id'>>): Promise<void>

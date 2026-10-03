@@ -4,9 +4,9 @@ import { CashFlowRepository, CashFlowFilterOptions, DashboardCashFlowEntry, Pagi
 import { MOCK_USER_ID, readDB, writeDB } from './fs-mock-db'
 
 export class FakeCashFlowRepository implements CashFlowRepository {
-  async findDashboardEntries(options?: { range?: DashboardRange }): Promise<DashboardCashFlowEntry[]> {
+  async findDashboardEntries(options?: { range?: DashboardRange; previous?: boolean }): Promise<DashboardCashFlowEntry[]> {
     const validatedRange = parseDashboardRange(options?.range)
-    const result = await this.findAll({ range: validatedRange })
+    const result = await this.findAll({ range: validatedRange, previous: options?.previous })
     return result.data.map((entry) => ({
       id: entry.id,
       date: entry.date,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { 
   Sparkles, 
@@ -8,15 +8,14 @@ import {
   
   AlertTriangle, 
   CheckCircle2, 
-  HelpCircle,
   PiggyBank,
   Wallet,
-  ArrowRight,
   ShieldAlert,
   Info
 } from "lucide-react"
 import { DashboardCashFlowEntry } from "@/lib/repositories/types"
 import { formatCurrency } from "@/lib/utils/transaction"
+import { summarizeEntries, emergencyFundRange } from "@/lib/utils/dashboard-summary"
 import { cn } from "@/lib/utils"
 
 function formatMonthName(monthStr: string) {
@@ -32,19 +31,17 @@ function formatMonthName(monthStr: string) {
 
 export function FinancialInsights({ transactions }: { transactions: DashboardCashFlowEntry[] }) {
   const [activeTab, setActiveTab] = useState<'summary' | 'leak' | 'recommendations'>('summary')
-  const [completedRecommendations, setCompletedRecommendations] = useState<Record<string, boolean>>({})
-
-  // Load checklist state from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('fintrack_advisor_checklist')
-    if (saved) {
-      try {
-        setCompletedRecommendations(JSON.parse(saved))
-      } catch (e) {
-        console.error(e)
-      }
+  // Load checklist state from localStorage (component is client-only via ssr:false)
+  const [completedRecommendations, setCompletedRecommendations] = useState<Record<string, boolean>>(() => {
+    if (typeof window === 'undefined') return {}
+    try {
+      const saved = localStorage.getItem('fintrack_advisor_checklist')
+      return saved ? JSON.parse(saved) : {}
+    } catch (e) {
+      console.error(e)
+      return {}
     }
-  }, [])
+  })
 
   const toggleRecommendation = (id: string) => {
     const updated = {
@@ -137,15 +134,15 @@ export function FinancialInsights({ transactions }: { transactions: DashboardCas
     }
   }, [transactions])
 
-  const overallNet = useMemo(() => {
-    const totalInc = transactions.reduce((acc, t) => acc + Number(t.income || 0), 0)
-    return totalInc - needsStats.totalExp
-  }, [transactions, needsStats])
+  const emergencyFund = useMemo(() => {
+    const { avgMonthlyRealExpense } = summarizeEntries(transactions)
+    return { avg: avgMonthlyRealExpense, ...emergencyFundRange(avgMonthlyRealExpense) }
+  }, [transactions])
 
   return (
     <Card className="shadow-md border-slate-200 rounded-xl bg-white overflow-hidden mt-6">
       {/* Header */}
-      <CardHeader className="bg-gradient-to-r from-indigo-50/80 via-indigo-50/30 to-white border-b border-slate-100 py-5 px-6">
+      <CardHeader className="bg-linear-to-r from-indigo-50/80 via-indigo-50/30 to-white border-b border-slate-100 py-5 px-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-indigo-600 rounded-lg text-white shadow-sm shadow-indigo-200">
@@ -215,8 +212,12 @@ export function FinancialInsights({ transactions }: { transactions: DashboardCas
                   <div className="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider mb-2">
                     <TrendingUp className="w-4 h-4" /> Volatilitas Bulanan
                   </div>
-                  <p className="text-slate-600 text-xs leading-relaxed">
-                    Arus kas bulanan Anda menunjukkan volatilitas pendapatan yang tinggi. Hal ini wajar bagi pemilik bisnis/freelancer, namun membutuhkan cadangan likuiditas yang kuat.
+                  <p className="text-slate-700 text-xs leading-relaxed font-semibold">
+                    ⚠️ Pendapatan Anda naik-turun.
+                  </p>
+                  <p className="text-slate-600 text-xs leading-relaxed mt-1" data-testid="actionable-insight">
+                    👉 Saran: Simpan {formatCurrency(emergencyFund.min)} – {formatCurrency(emergencyFund.max)} sebagai dana darurat
+                    (6–12 bulan × pengeluaran rata-rata {formatCurrency(Math.round(emergencyFund.avg))}).
                   </p>
                 </div>
                 <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs">
