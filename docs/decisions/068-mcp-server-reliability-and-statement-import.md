@@ -35,8 +35,12 @@ Additionally, handling base64 uploads in `create_receipt` required hardening to 
    - Updated `private.sync_bank_statement_item_to_cash_flow()` to query `user_id` from the parent `public.bank_statements` record and pass it explicitly in the `INSERT INTO public.cash_flow` statement.
    - Because `user_id` is supplied, `private.set_user_id()` bypasses the `auth.uid()` null check, allowing `service_role` and background processes to import statement items seamlessly.
 
-4. **New `create_bank_statement` Tool**:
-   - Added `create_bank_statement` to `mcp-server/src/tools/statements.ts`. It accepts `bank_name`, `statement_period`, opening/closing balances, file references, and an array of mutation items (`CR`/`DB`/`income`/`expense`), inserting them transactionally and triggering automated cash flow sync.
+4. **Bank Statement Import & Management Tools**:
+   - Added `create_bank_statement` to `mcp-server/src/tools/statements.ts`. It accepts `bank_name`, `statement_period`, opening/closing balances, PDF uploads (`pdf_base64`, `file_base64`, `local_file_path`, or existing `storage_path`), and an array of mutation items (`CR`/`DB`/`income`/`expense`).
+   - Supports direct upload of statement PDFs to Supabase Storage bucket `statements` with standard path scoping (`${userId}/${bankName}/${timestamp}-${random}.pdf`), automatic signed URL generation, and rollback cleanup if DB insert fails.
+   - Leverages transactional RPC `public.create_bank_statement_with_items` with graceful fallback to batch client insert, returning `statement_id` and all `items[]` populated with their auto-generated `cash_flow_id`.
+   - Added `create_bank_statement_item` to append mutation items to existing statements and update total item counts.
+   - Added `get_statement_file_url` to generate temporary signed download/view URLs for stored statement PDFs.
 
 5. **Diagnostic Tool & Base64 Image Upload Hardening**:
    - Added `check_connection` in `mcp-server/src/tools/system.ts` to test Supabase reachability, key role, user scoping, DB query latency, RPC readiness, and storage bucket access.
@@ -58,7 +62,9 @@ Additionally, handling base64 uploads in `create_receipt` required hardening to 
 - Database migration `20261003100000_fix_mcp_statement_sync_and_cash_flow_rpc.sql` must be applied to Supabase to enable the new RPCs and trigger fix.
 
 ## Related Notes
-- Migration: `supabase/migrations/20261003100000_fix_mcp_statement_sync_and_cash_flow_rpc.sql`
+- Migrations:
+  - `supabase/migrations/20261003100000_fix_mcp_statement_sync_and_cash_flow_rpc.sql`
+  - `supabase/migrations/20261003120000_add_create_bank_statement_rpc.sql`
 - MCP Config: `mcp-server/src/config.ts`
 - DB Client: `mcp-server/src/db/client.ts`
 - Tools: `mcp-server/src/tools/cashflow.ts`, `analytics.ts`, `statements.ts`, `receipts.ts`, `system.ts`

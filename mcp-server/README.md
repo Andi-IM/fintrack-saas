@@ -15,7 +15,9 @@ Model Context Protocol (MCP) server yang memungkinkan LLM agents (Claude Desktop
 3. **Bank Statement Tools**:
    - `list_bank_statements`: Melihat daftar rekening koran/mutasi bank yang sudah diunggah.
    - `get_statement_mutations`: Mengambil item mutasi transaksi (CR/DB) dari statement tertentu.
-   - `create_bank_statement`: Mengimpor rekening koran beserta mutasi transaksinya secara transaksional dari integrasi eksternal (CLI/agent) tanpa antarmuka frontend, dan otomatis tersinkronisasi ke `cash_flow`.
+   - `create_bank_statement`: Mengimpor rekening koran beserta mutasi transaksinya secara transaksional dari integrasi eksternal (Hermes agent, CLI) tanpa antarmuka frontend, mendukung upload dokumen PDF (Base64 atau path file), dan otomatis tersinkronisasi ke `cash_flow`.
+   - `create_bank_statement_item`: Menambahkan baris mutasi baru ke rekening koran yang sudah ada beserta sinkronisasi otomatis ke `cash_flow`.
+   - `get_statement_file_url`: Menghasilkan signed URL sementara (1 jam) untuk melihat/mengunduh dokumen rekening koran dari Supabase Storage.
 
 4. **Receipts & Image Tools**:
    - `list_receipts`: Menampilkan daftar riwayat struk belanja / penerimaan.
@@ -139,6 +141,36 @@ Pada Cursor settings (`Cursor Settings -> Features -> MCP`):
 - **Type**: `command`
 - **Command**: `node D:/01_Projects/fintrack-saas/mcp-server/dist/index.js`
 - Masukkan env variables yang sesuai di file `.env` direktori `mcp-server/`.
+
+### 4. Hermes Agent CLI (Podman / Stdio)
+Contoh pemanggilan tool via Hermes Agent CLI:
+```bash
+hermes mcp call fintrack create_bank_statement '{
+  "bank_name": "BNI",
+  "statement_period": "2026-07-01",
+  "opening_balance": 34095,
+  "closing_balance": 19025,
+  "total_items": 2,
+  "items": [
+    {
+      "date": "2026-07-13T16:06:42+00:00",
+      "description": "QRIS PT MITRACOMM",
+      "amount": 10070,
+      "type": "expense",
+      "category": "Transfer",
+      "balance": 24025
+    },
+    {
+      "date": "2026-07-31T16:59:59+00:00",
+      "description": "Biaya Admin",
+      "amount": 5000,
+      "type": "expense",
+      "category": "Admin Fee",
+      "balance": 19025
+    }
+  ]
+}'
+```
 
 ---
 
