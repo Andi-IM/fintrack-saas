@@ -1,3 +1,10 @@
+# [1.19.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.18.0...v1.19.0) (2026-10-03)
+
+
+### Features
+
+* **mcp:** support bank statement import with items and pdf upload ([982d8ef](https://github.com/Andi-IM/fintrack-saas/commit/982d8efa40077c48bb18b1d8c1fd31057372d884))
+
 # [1.18.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.17.0...v1.18.0) (2026-10-03)
 
 
