@@ -21,6 +21,11 @@ chrome.runtime.onStartup.addListener(async () => {
   updateBadge('loading')
 })
 
+// Launch independent web app investment feature when toolbar icon is clicked
+chrome.action.onClicked.addListener(async () => {
+  await chrome.tabs.create({ url: 'https://fintrek.web.id/investments' })
+})
+
 // Alarm setup
 async function setupAlarms(): Promise<void> {
   const settings = await apiClient.getSettings()

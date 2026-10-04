@@ -5,7 +5,7 @@ import { formatCurrency } from '@/lib/utils/transaction'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
-import { TrendingUp, TrendingDown, Minus, Wallet, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, ArrowUpRight } from 'lucide-react'
 
 interface InvestmentOverview {
   totalValue: number

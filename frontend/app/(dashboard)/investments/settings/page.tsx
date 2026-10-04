@@ -3,13 +3,12 @@
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { AlertCircle, CheckCircle, RefreshCw, Database, Shield, Palette, Bell, Trash2, Download, Upload, Settings } from 'lucide-react'
+import { AlertCircle, RefreshCw, Database, Shield, Palette, Bell, Trash2, Download, Upload, Settings } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function InvestmentsSettingsPage() {
@@ -39,7 +38,7 @@ export default function InvestmentsSettingsPage() {
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
       toast.success('Investment data exported successfully')
-    } catch (error) {
+    } catch {
       toast.error('Failed to export data')
     } finally {
       setIsExporting(false)
@@ -61,7 +60,7 @@ export default function InvestmentsSettingsPage() {
       if (!response.ok) throw new Error('Import failed')
       toast.success('Investment data imported successfully')
       window.location.reload()
-    } catch (error) {
+    } catch {
       toast.error('Failed to import data')
     } finally {
       setIsImporting(false)
@@ -74,7 +73,7 @@ export default function InvestmentsSettingsPage() {
       const response = await fetch('/api/investments/refresh-prices', { method: 'POST' })
       if (!response.ok) throw new Error('Refresh failed')
       toast.success('Prices refreshed successfully')
-    } catch (error) {
+    } catch {
       toast.error('Failed to refresh prices')
     }
   }

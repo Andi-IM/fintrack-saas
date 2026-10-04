@@ -1,15 +1,20 @@
 import { Suspense } from 'react'
 import { getDashboardCashFlow } from '@/features/cash-flow/actions/cash_flow'
+import { getInvestmentOverview } from '@/features/investments/actions/investments'
 import { OverviewCards } from '@/components/dashboard/OverviewCards'
+import { DashboardInvestmentCard } from '@/components/dashboard/DashboardInvestmentCard'
 import { TransactionChartLazy, FinancialInsightsLazy } from '@/components/dashboard/DynamicCharts'
 import { DashboardSkeleton } from '@/components/ui/dashboard-skeleton'
 import Link from 'next/link'
 
 async function DashboardData({ range }: { range: string }) {
-  const [transactions, previousTransactions] = await Promise.all([
+  const [transactions, previousTransactions, investmentRes] = await Promise.all([
     getDashboardCashFlow({ range }),
     getDashboardCashFlow({ range, previous: true }),
+    getInvestmentOverview().catch(() => ({ success: false as const, data: null })),
   ])
+
+  const investmentOverview = investmentRes?.success ? investmentRes.data : null
 
   return (
     <div className="space-y-8">
@@ -17,6 +22,9 @@ async function DashboardData({ range }: { range: string }) {
         transactions={transactions} 
         previousTransactions={previousTransactions} 
       />
+      <section aria-label="Portofolio Investasi">
+        <DashboardInvestmentCard overview={investmentOverview} />
+      </section>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <section aria-label="Grafik Transaksi" className="min-w-0">
           <TransactionChartLazy transactions={transactions} />

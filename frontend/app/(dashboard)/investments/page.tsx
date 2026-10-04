@@ -1,24 +1,16 @@
 import { Suspense } from 'react'
 import { PortfolioSummaryCards, PortfolioSummaryCardsSkeleton, HoldingsTable, AccountSummaryCard } from '@/features/investments/components/PortfolioComponents'
+import { getInvestmentOverview } from '@/features/investments/actions/investments'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Plus, ExternalLink, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import { Plus, ExternalLink } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-async function getInvestmentOverview() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-  const response = await fetch(`${baseUrl}/api/investments/overview`, {
-    headers: { 'Content-Type': 'application/json' },
-  })
-  if (!response.ok) throw new Error('Failed to fetch')
-  const result = await response.json()
-  return result.success ? result.data : null
-}
-
 export default async function InvestmentsOverviewPage() {
-  const overview = await getInvestmentOverview()
+  const result = await getInvestmentOverview()
+  const overview = result.success ? result.data : null
 
   return (
     <div className="space-y-6">

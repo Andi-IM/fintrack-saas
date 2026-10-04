@@ -1,9 +1,6 @@
 "use client"
 
 import * as React from "react"
-import * as AlertPrimitive from "@radix-ui/react-alert-dialog"
-import { cva, type VariantProps } from "class-variance-authority"
-import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const Alert = React.forwardRef<

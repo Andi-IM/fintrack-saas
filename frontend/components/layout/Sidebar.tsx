@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { LayoutDashboard, FileText, Camera, Building2 } from 'lucide-react'
+import { LayoutDashboard, FileText, Camera, Building2, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getNavigationContext } from './navigation'
 
@@ -12,7 +12,7 @@ export function Sidebar() {
   const { activeSection } = getNavigationContext(pathname, searchParams)
 
   return (
-    <aside className="w-20 lg:w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col p-4 z-10 hidden md:flex transition-all duration-300">
+    <aside className="w-20 lg:w-64 bg-white border-r border-slate-200 shrink-0 flex flex-col p-4 z-10 md:flex transition-all duration-300">
       <nav className="flex flex-col gap-2 flex-1">
         <Link 
           href="/" 
@@ -37,6 +37,14 @@ export function Sidebar() {
         >
           <Building2 className="w-6 h-6 lg:w-5 lg:h-5" />
           <span className="hidden lg:block">Bank Statements</span>
+        </Link>
+        <Link 
+          href="/investments" 
+          title="Investments"
+          className={cn("flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", activeSection === "investments" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700")}
+        >
+          <TrendingUp className="w-6 h-6 lg:w-5 lg:h-5" />
+          <span className="hidden lg:block">Investments</span>
         </Link>
         <Link 
           href="/receipts" 

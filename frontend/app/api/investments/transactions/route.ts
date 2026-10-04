@@ -18,15 +18,8 @@ export async function GET(request: Request): Promise<Response> {
       })
     }
 
-    // If no holdingId, we can't easily fetch all transactions without pagination
-    // Return empty for now, or fetch from all holdings
-    const overview = await repo.getInvestmentOverview()
-    const allTransactions: any[] = []
+    // If no holdingId, return empty - the frontend filters by holdingId
 
-    for (const account of overview.accounts) {
-      // We'd need to fetch holdings and then transactions for each
-      // For now return empty - the frontend filters by holdingId
-    }
 
     const response: ActionResponse<any[]> = {
       success: true,

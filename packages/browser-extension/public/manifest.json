@@ -11,8 +11,7 @@
     "128": "icons/icon-128.png"
   },
   "action": {
-    "default_popup": "popup.html",
-    "default_title": "FinTrack Portfolio",
+    "default_title": "Open FinTrack Investments",
     "default_icon": {
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png",
@@ -24,14 +23,6 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "content_scripts": [
-    {
-      "matches": ["https://fintrek.web.id/*", "https://*.fintrek.web.id/*"],
-      "js": ["content.js"],
-      "css": ["content.css"],
-      "run_at": "document_idle"
-    }
-  ],
   "permissions": [
     "storage",
     "alarms",

@@ -14,13 +14,12 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { Plus, Edit, Trash2, Loader2, ArrowUpRight, ArrowDownRight, Search, Calendar, DollarSign, Coins } from 'lucide-react'
+import { Plus, Edit, Trash2, Loader2, Search, Coins } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption } from '@/components/ui/table'
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 
 interface Transaction {
   id: string
@@ -466,6 +465,7 @@ function TransactionForm({
   isLoading: boolean
   defaultHoldingId?: string
 }) {
+  const [today] = useState(() => new Date().toISOString().split('T')[0])
   const form = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema) as any,
     defaultValues: initialData
@@ -488,7 +488,7 @@ function TransactionForm({
           price: 0,
           fees: 0,
           taxes: 0,
-          transactionDate: new Date().toISOString().split('T')[0],
+          transactionDate: today,
           settlementDate: '',
           notes: '',
           externalId: '',

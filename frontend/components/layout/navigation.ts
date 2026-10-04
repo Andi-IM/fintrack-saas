@@ -1,4 +1,4 @@
-export type NavigationSection = 'dashboard' | 'transactions' | 'statements' | 'receipts'
+export type NavigationSection = 'dashboard' | 'transactions' | 'statements' | 'investments' | 'receipts'
 
 export interface BreadcrumbItem {
   label: string
@@ -56,6 +56,41 @@ export function getNavigationContext(
     return {
       activeSection: 'receipts',
       breadcrumbs: [root, { label: 'Receipts', href: '/receipts' }, { label: 'Scan Receipt' }],
+    }
+  }
+
+  if (pathname?.startsWith('/investments')) {
+    if (pathname === '/investments') {
+      return {
+        activeSection: 'investments',
+        breadcrumbs: [root, { label: 'Investments' }],
+      }
+    }
+
+    const isNewAccount = pathname === '/investments/accounts/new'
+    const isAccounts = pathname.startsWith('/investments/accounts')
+    const isHoldings = pathname.startsWith('/investments/holdings')
+    const isTransactions = pathname.startsWith('/investments/transactions')
+    const isSettings = pathname.startsWith('/investments/settings')
+
+    const breadcrumbs: BreadcrumbItem[] = [root, { label: 'Investments', href: '/investments' }]
+
+    if (isNewAccount) {
+      breadcrumbs.push({ label: 'Accounts', href: '/investments/accounts' })
+      breadcrumbs.push({ label: 'New Account' })
+    } else if (isAccounts) {
+      breadcrumbs.push({ label: 'Accounts' })
+    } else if (isHoldings) {
+      breadcrumbs.push({ label: 'Holdings' })
+    } else if (isTransactions) {
+      breadcrumbs.push({ label: 'Transactions' })
+    } else if (isSettings) {
+      breadcrumbs.push({ label: 'Settings' })
+    }
+
+    return {
+      activeSection: 'investments',
+      breadcrumbs,
     }
   }
 

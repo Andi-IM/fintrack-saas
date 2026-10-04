@@ -1,5 +1,4 @@
 import { Tables } from '@/lib/database.types'
-import { Json } from '@/lib/database.types'
 import { createClient } from '@/lib/supabase/server'
 import type {
   InvestmentRepository,

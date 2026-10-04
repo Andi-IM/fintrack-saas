@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { LayoutDashboard, FileText, Camera, Building2 } from 'lucide-react'
+import { LayoutDashboard, FileText, Camera, Building2, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getNavigationContext } from './navigation'
 
@@ -29,6 +29,12 @@ export function BottomNav() {
       href: '/statements',
       icon: Building2,
       active: activeSection === 'statements'
+    },
+    {
+      label: 'Investasi',
+      href: '/investments',
+      icon: TrendingUp,
+      active: activeSection === 'investments'
     },
     {
       label: 'Struk',

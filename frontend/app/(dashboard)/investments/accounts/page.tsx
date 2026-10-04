@@ -6,7 +6,6 @@ import { formatCurrency } from '@/lib/utils/transaction'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form'
@@ -15,7 +14,6 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { Plus, Edit, Trash2, Loader2, Wallet, Building2, Coins, Gem, Banknote, ArrowUpRight, ArrowDownRight } from 'lucide-react'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 
@@ -150,10 +148,6 @@ export default function InvestmentsAccountsPage() {
     }
   }
 
-  const TypeIcon = ({ type }: { type: string }) => {
-    const Icon = TYPE_ICONS[type as keyof typeof TYPE_ICONS] || Wallet
-    return <Icon className="w-5 h-5" />
-  }
 
   return (
     <div className="space-y-6">

@@ -34,4 +34,43 @@ describe('getNavigationContext', () => {
       { label: 'Transactions' },
     ])
   })
+
+  it('keeps investments section and nested breadcrumbs under Investments navigation', () => {
+    expect(getNavigationContext('/investments').activeSection).toBe('investments')
+    expect(getNavigationContext('/investments').breadcrumbs).toEqual([
+      { label: 'Dashboard', href: '/' },
+      { label: 'Investments' },
+    ])
+
+    expect(getNavigationContext('/investments/accounts').breadcrumbs).toEqual([
+      { label: 'Dashboard', href: '/' },
+      { label: 'Investments', href: '/investments' },
+      { label: 'Accounts' },
+    ])
+
+    expect(getNavigationContext('/investments/accounts/new').breadcrumbs).toEqual([
+      { label: 'Dashboard', href: '/' },
+      { label: 'Investments', href: '/investments' },
+      { label: 'Accounts', href: '/investments/accounts' },
+      { label: 'New Account' },
+    ])
+
+    expect(getNavigationContext('/investments/holdings').breadcrumbs).toEqual([
+      { label: 'Dashboard', href: '/' },
+      { label: 'Investments', href: '/investments' },
+      { label: 'Holdings' },
+    ])
+
+    expect(getNavigationContext('/investments/transactions').breadcrumbs).toEqual([
+      { label: 'Dashboard', href: '/' },
+      { label: 'Investments', href: '/investments' },
+      { label: 'Transactions' },
+    ])
+
+    expect(getNavigationContext('/investments/settings').breadcrumbs).toEqual([
+      { label: 'Dashboard', href: '/' },
+      { label: 'Investments', href: '/investments' },
+      { label: 'Settings' },
+    ])
+  })
 })
