@@ -118,7 +118,7 @@ export default function InvestmentsSettingsPage() {
               </p>
             </div>
             <Select value={refreshInterval.toString()} onValueChange={e => setRefreshInterval(Number(e))}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

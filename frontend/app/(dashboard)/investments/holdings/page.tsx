@@ -223,7 +223,7 @@ export default function InvestmentsHoldingsPage() {
                 onValueChange={setSelectedAccountId}
                 disabled={accountsLoading}
               >
-                <SelectTrigger id="account-select" className="w-[250px]">
+                <SelectTrigger id="account-select" className="w-62.5">
                   <SelectValue placeholder="Select an account" />
                 </SelectTrigger>
                 <SelectContent>

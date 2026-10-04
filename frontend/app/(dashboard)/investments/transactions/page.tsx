@@ -273,7 +273,7 @@ export default function InvestmentsTransactionsPage() {
                 onValueChange={setSelectedHoldingId}
                 disabled={holdingsLoading}
               >
-                <SelectTrigger id="holding-filter" className="w-[300px]">
+                <SelectTrigger id="holding-filter" className="w-75">
                   <SelectValue placeholder="All holdings" />
                 </SelectTrigger>
                 <SelectContent>
@@ -291,7 +291,7 @@ export default function InvestmentsTransactionsPage() {
                 value={typeFilter}
                 onValueChange={setTypeFilter}
               >
-                <SelectTrigger id="type-filter" className="w-[180px]">
+                <SelectTrigger id="type-filter" className="w-45">
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
