@@ -12,13 +12,21 @@ const BADGE_COLORS = {
 chrome.runtime.onInstalled.addListener(async () => {
   await apiClient.initialize()
   await setupAlarms()
-  updateBadge('loading')
+  if (apiClient.isAuthenticated()) {
+    await refreshPortfolioData()
+  } else {
+    updateBadge('neutral', '')
+  }
 })
 
 chrome.runtime.onStartup.addListener(async () => {
   await apiClient.initialize()
   await setupAlarms()
-  updateBadge('loading')
+  if (apiClient.isAuthenticated()) {
+    await refreshPortfolioData()
+  } else {
+    updateBadge('neutral', '')
+  }
 })
 
 // Launch independent web app investment feature when toolbar icon is clicked
@@ -61,7 +69,7 @@ function updateBadge(status: 'loading' | 'error' | 'positive' | 'negative' | 'ne
 // Portfolio data refresh
 async function refreshPortfolioData(): Promise<void> {
   if (!apiClient.isAuthenticated()) {
-    updateBadge('neutral', '!')
+    updateBadge('neutral', '')
     return
   }
 

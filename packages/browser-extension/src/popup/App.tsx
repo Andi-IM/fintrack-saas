@@ -1,112 +1,80 @@
-import { useState, useEffect, useCallback } from 'react'
-import { apiClient } from '../shared/api'
-import type { InvestmentOverview, InvestmentAccountSummary, HoldingWithValue } from '../shared/types'
-import { PortfolioHeader } from './components/PortfolioHeader'
-import { PortfolioSummary } from './components/PortfolioSummary'
-import { AccountsList } from './components/AccountsList'
-import { TopHoldingsList } from './components/TopHoldingsList'
-import { LoadingState } from './components/LoadingState'
-import { ErrorState } from './components/ErrorState'
-import { EmptyState } from './components/EmptyState'
-import { SettingsButton, RefreshButton, SignOutButton, OpenAppButton } from './components/ToolbarButtons'
-
 export function App() {
-  const [overview, setOverview] = useState<InvestmentOverview | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [cached, setCached] = useState(false)
-
-  const fetchPortfolio = useCallback(async () => {
-    try {
-      setError(null)
-      const response = await chrome.runtime.sendMessage({ type: 'GET_PORTFOLIO' })
-      if (response.success) {
-        setOverview(response.data)
-        setCached(response.cached)
-      } else {
-        setError(response.error || 'Failed to load portfolio')
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchPortfolio()
-  }, [fetchPortfolio])
-
-  const handleRefresh = async () => {
-    setLoading(true)
-    try {
-      await chrome.runtime.sendMessage({ type: 'REFRESH_PORTFOLIO' })
-      await fetchPortfolio()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Refresh failed')
-      setLoading(false)
-    }
-  }
-
-  const handleSignOut = async () => {
-    try {
-      await chrome.runtime.sendMessage({ type: 'SIGN_OUT' })
-      setOverview(null)
-      setError('Signed out. Click to sign in again.')
-    } catch (err) {
-      setError('Sign out failed')
-    }
-  }
-
   const handleOpenApp = () => {
     chrome.tabs.create({ url: 'https://fintrek.web.id/investments' })
   }
 
-  if (loading && !overview) {
-    return <LoadingState />
-  }
-
-  if (error && !overview) {
-    return <ErrorState message={error} onRetry={fetchPortfolio} onSignIn={handleOpenApp} />
-  }
-
-  if (!overview) {
-    return <EmptyState onSignIn={handleOpenApp} />
-  }
-
   return (
-    <div className="app">
-      <PortfolioHeader 
-        totalValue={overview.totalValue}
-        totalGainLoss={overview.totalGainLoss}
-        totalGainLossPct={overview.totalGainLossPct}
-        dayChange={overview.dayChange}
-        dayChangePct={overview.dayChangePct}
-        cached={cached}
-      />
-      
-      <PortfolioSummary 
-        totalValue={overview.totalValue}
-        totalCost={overview.totalCost}
-        totalGainLoss={overview.totalGainLoss}
-        totalGainLossPct={overview.totalGainLossPct}
-        dayChange={overview.dayChange}
-        dayChangePct={overview.dayChangePct}
-      />
-
-      <div className="section">
-        <AccountsList accounts={overview.accounts} />
+    <div style={{
+      width: '320px',
+      padding: '24px 20px',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      textAlign: 'center',
+      backgroundColor: '#ffffff',
+      color: '#0f172a'
+    }}>
+      <div style={{
+        width: '48px',
+        height: '48px',
+        margin: '0 auto 16px',
+        borderRadius: '12px',
+        background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#ffffff',
+        boxShadow: '0 8px 16px rgba(79, 70, 229, 0.25)'
+      }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+          <polyline points="16 7 22 7 22 13" />
+        </svg>
       </div>
 
-      <div className="section">
-        <TopHoldingsList holdings={overview.topHoldings} />
-      </div>
+      <h2 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px', color: '#1e1b4b' }}>
+        FinTrack Investasi
+      </h2>
 
-      <div className="toolbar">
-        <SettingsButton />
-        <RefreshButton onClick={handleRefresh} disabled={loading} />
-        <SignOutButton onClick={handleSignOut} />
-        <OpenAppButton onClick={handleOpenApp} />
+      <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 20px', lineHeight: '1.5' }}>
+        Fitur portofolio investasi kini telah menjadi <b>fitur independen</b> langsung di dalam Web App FinTrack.
+      </p>
+
+      <button
+        onClick={handleOpenApp}
+        style={{
+          width: '100%',
+          padding: '11px 16px',
+          backgroundColor: '#4f46e5',
+          color: '#ffffff',
+          border: 'none',
+          borderRadius: '10px',
+          fontWeight: '600',
+          fontSize: '13px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          transition: 'all 0.15s ease'
+        }}
+      >
+        <span>Buka Fitur Investasi</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M5 12h14" />
+          <path d="M12 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      <div style={{
+        marginTop: '16px',
+        padding: '10px 12px',
+        borderRadius: '8px',
+        backgroundColor: '#f8fafc',
+        border: '1px solid #e2e8f0',
+        fontSize: '11px',
+        color: '#64748b',
+        lineHeight: '1.4'
+      }}>
+        💡 <b>Tips</b>: Klik tombol <b>Reload (⟳)</b> di halaman <code>chrome://extensions</code> agar klik icon extension langsung membuka Web App tanpa popup ini.
       </div>
     </div>
   )
