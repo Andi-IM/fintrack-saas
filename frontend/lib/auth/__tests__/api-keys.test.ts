@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { hashApiKey, generateApiKey, verifyApiKey, listApiKeys, revokeApiKey, API_KEY_PREFIX } from '../api-keys'
 
-// Mock createAdminClient
+// Mock createAnonClient
 vi.mock('@/lib/supabase/admin', () => ({
-  createAdminClient: vi.fn(),
+  createAnonClient: vi.fn(),
 }))
 
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createAnonClient } from '@/lib/supabase/admin'
 
 describe('API Keys Authentication', () => {
   beforeEach(() => {
@@ -45,7 +45,7 @@ describe('API Keys Authentication', () => {
         insert: mockInsert,
       }),
     }
-    vi.mocked(createAdminClient).mockReturnValue(mockSupabase as any)
+    vi.mocked(createAnonClient).mockReturnValue(mockSupabase as any)
 
     const result = await generateApiKey('user-456', 'Bibit Extension')
 
@@ -68,7 +68,7 @@ describe('API Keys Authentication', () => {
     })
 
     const mockSupabase = { rpc: mockRpc }
-    vi.mocked(createAdminClient).mockReturnValue(mockSupabase as any)
+    vi.mocked(createAnonClient).mockReturnValue(mockSupabase as any)
 
     const rawKey = `${API_KEY_PREFIX}1234567890abcdef1234567890abcdef`
     const result = await verifyApiKey(rawKey, 'investments:sync')
@@ -88,7 +88,7 @@ describe('API Keys Authentication', () => {
     })
 
     const mockSupabase = { rpc: mockRpc }
-    vi.mocked(createAdminClient).mockReturnValue(mockSupabase as any)
+    vi.mocked(createAnonClient).mockReturnValue(mockSupabase as any)
 
     const rawKey = `${API_KEY_PREFIX}1234567890abcdef1234567890abcdef`
     const result = await verifyApiKey(rawKey, 'investments:sync')
@@ -123,7 +123,7 @@ describe('API Keys Authentication', () => {
     const mockSupabase = {
       from: vi.fn().mockReturnValue({ select: mockSelect }),
     }
-    vi.mocked(createAdminClient).mockReturnValue(mockSupabase as any)
+    vi.mocked(createAnonClient).mockReturnValue(mockSupabase as any)
 
     const keys = await listApiKeys('user-1')
     expect(keys).toHaveLength(1)
@@ -140,7 +140,7 @@ describe('API Keys Authentication', () => {
     const mockSupabase = {
       from: vi.fn().mockReturnValue({ update: mockUpdate }),
     }
-    vi.mocked(createAdminClient).mockReturnValue(mockSupabase as any)
+    vi.mocked(createAnonClient).mockReturnValue(mockSupabase as any)
 
     const success = await revokeApiKey('user-1', 'key-1')
     expect(success).toBe(true)
