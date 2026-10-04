@@ -1,3 +1,10 @@
+## [1.22.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.22.0...v1.22.1) (2026-10-04)
+
+
+### Bug Fixes
+
+* **extension:** add browser extension icons ([7cfb61a](https://github.com/Andi-IM/fintrack-saas/commit/7cfb61a712f5182d9c99e3d11a259bae046d9e25))
+
 # [1.22.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.21.0...v1.22.0) (2026-10-04)
 
 
