@@ -26,7 +26,7 @@ async function main() {
   await server.connect(transport);
 }
 
-main().catch((err) => {
-  console.error('Fatal MCP Server error:', err);
+main().catch(() => {
+  console.error('Fatal MCP Server error during startup. Check configuration and retry.');
   process.exit(1);
 });
