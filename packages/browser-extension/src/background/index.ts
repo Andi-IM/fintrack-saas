@@ -22,7 +22,7 @@ async function handleGetAuthToken(sendResponse: (response: unknown) => void): Pr
       const storage = await chrome.storage.local.get(['fintrack_api_key'])
       const storedApiKey = storage?.fintrack_api_key?.trim()
       if (storedApiKey && storedApiKey.startsWith('ft_sync_')) {
-        console.log('[FinTrack Background] Using configured Personal Sync API Key:', storedApiKey.slice(0, 16) + '...')
+        console.log('[FinTrack Background] Using configured Personal Sync API Key from extension storage')
         sendResponse({
           success: true,
           apiKey: storedApiKey,
