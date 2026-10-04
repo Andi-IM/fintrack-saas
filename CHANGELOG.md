@@ -1,3 +1,10 @@
+## [1.30.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.30.2...v1.30.3) (2026-10-04)
+
+
+### Bug Fixes
+
+* **api:** ensure API key creation uses user session client for RLS compliance ([4a0c086](https://github.com/Andi-IM/fintrack-saas/commit/4a0c08666dff481052779ab5c4ddb1612722e852))
+
 ## [1.30.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.30.1...v1.30.2) (2026-10-04)
 
 
