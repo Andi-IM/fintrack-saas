@@ -10,6 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AlertCircle, RefreshCw, Database, Shield, Palette, Bell, Trash2, Download, Upload, Settings } from 'lucide-react'
 import { toast } from 'sonner'
+import { ExtensionApiKeyManager } from '@/components/investments/ExtensionApiKeyManager'
 
 export default function InvestmentsSettingsPage() {
   const [autoRefresh, setAutoRefresh] = useState(true)
@@ -84,6 +85,9 @@ export default function InvestmentsSettingsPage() {
         <h1 className="text-2xl font-bold tracking-tight">Investment Settings</h1>
         <p className="text-muted-foreground">Configure your investment tracking preferences</p>
       </div>
+
+      {/* Browser Extension Sync Key */}
+      <ExtensionApiKeyManager />
 
       {/* General Settings */}
       <Card>

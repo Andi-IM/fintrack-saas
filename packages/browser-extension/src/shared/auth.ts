@@ -1,6 +1,4 @@
 const FINTRACK_DOMAIN = 'fintrek.web.id'
-const SUPABASE_AUTH_COOKIE_PREFIX = 'sb-'
-const SUPABASE_AUTH_COOKIE_SUFFIX = '-auth-token'
 const BASE64_PREFIX = 'base64-'
 
 export interface FinTrackSession {

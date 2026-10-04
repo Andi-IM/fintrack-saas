@@ -89,437 +89,452 @@ function toPortfolioSnapshot(row: Tables<'portfolio_snapshots'>): PortfolioSnaps
   }
 }
 
-export const investmentRepository: InvestmentRepository = {
-  // ─── Accounts ───
-  async findAccounts(): Promise<InvestmentAccount[]> {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('investment_accounts')
-      .select('*')
-      .order('created_at', { ascending: true })
-    
-    if (error) throw error
-    return (data || []).map(toInvestmentAccount)
-  },
+export function createInvestmentRepository(customClient?: any, explicitUserId?: string): InvestmentRepository {
+  async function getDb() {
+    return customClient || (await createClient())
+  }
 
-  async findAccountById(id: string): Promise<InvestmentAccount | null> {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('investment_accounts')
-      .select('*')
-      .eq('id', id)
-      .single()
-    
-    if (error) {
-      if (error.code === 'PGRST116') return null
-      throw error
-    }
-    return toInvestmentAccount(data)
-  },
-
-  async createAccount(data: Omit<InvestmentAccount, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<InvestmentAccount> {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+  async function resolveUserId(): Promise<string> {
+    if (explicitUserId) return explicitUserId
+    const db = await getDb()
+    const { data: { user } } = await db.auth.getUser()
     if (!user) throw new Error('Unauthorized')
+    return user.id
+  }
 
-    const { data: row, error } = await supabase
-      .from('investment_accounts')
-      .insert({ ...data, user_id: user.id })
-      .select()
-      .single()
-    
-    if (error) throw error
-    return toInvestmentAccount(row)
-  },
+  return {
+    // ─── Accounts ───
+    async findAccounts(): Promise<InvestmentAccount[]> {
+      const db = await getDb()
+      let query = db.from('investment_accounts').select('*').order('created_at', { ascending: true })
+      if (explicitUserId) {
+        query = query.eq('user_id', explicitUserId)
+      }
+      const { data, error } = await query
+      if (error) throw error
+      return (data || []).map(toInvestmentAccount)
+    },
 
-  async updateAccount(id: string, data: Partial<Omit<InvestmentAccount, 'id' | 'created_at' | 'updated_at' | 'user_id'>>): Promise<void> {
-    const supabase = await createClient()
-    const { error } = await supabase
-      .from('investment_accounts')
-      .update({ ...data, updated_at: new Date().toISOString() })
-      .eq('id', id)
-    
-    if (error) throw error
-  },
+    async findAccountById(id: string): Promise<InvestmentAccount | null> {
+      const db = await getDb()
+      let query = db.from('investment_accounts').select('*').eq('id', id)
+      if (explicitUserId) {
+        query = query.eq('user_id', explicitUserId)
+      }
+      const { data, error } = await query.single()
 
-  async deleteAccount(id: string): Promise<void> {
-    const supabase = await createClient()
-    const { error } = await supabase
-      .from('investment_accounts')
-      .delete()
-      .eq('id', id)
-    
-    if (error) throw error
-  },
+      if (error) {
+        if (error.code === 'PGRST116') return null
+        throw error
+      }
+      return toInvestmentAccount(data)
+    },
 
-  // ─── Holdings ───
-  async findHoldingsByAccount(accountId: string): Promise<InvestmentHolding[]> {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('investment_holdings')
-      .select('*')
-      .eq('account_id', accountId)
-      .order('created_at', { ascending: true })
-    
-    if (error) throw error
-    return (data || []).map(toInvestmentHolding)
-  },
+    async createAccount(data: Omit<InvestmentAccount, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<InvestmentAccount> {
+      const db = await getDb()
+      const userId = await resolveUserId()
 
-  async findHoldingById(id: string): Promise<InvestmentHolding | null> {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('investment_holdings')
-      .select('*')
-      .eq('id', id)
-      .single()
-    
-    if (error) {
-      if (error.code === 'PGRST116') return null
-      throw error
-    }
-    return toInvestmentHolding(data)
-  },
+      const { data: row, error } = await db
+        .from('investment_accounts')
+        .insert({ ...data, user_id: userId })
+        .select()
+        .single()
 
-  async createHolding(data: Omit<InvestmentHolding, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<InvestmentHolding> {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Unauthorized')
+      if (error) throw error
+      return toInvestmentAccount(row)
+    },
 
-    const { data: row, error } = await supabase
-      .from('investment_holdings')
-      .insert({ ...data, user_id: user.id })
-      .select()
-      .single()
-    
-    if (error) throw error
-    return toInvestmentHolding(row)
-  },
+    async updateAccount(id: string, data: Partial<Omit<InvestmentAccount, 'id' | 'created_at' | 'updated_at' | 'user_id'>>): Promise<void> {
+      const db = await getDb()
+      let query = db.from('investment_accounts').update({ ...data, updated_at: new Date().toISOString() }).eq('id', id)
+      if (explicitUserId) {
+        query = query.eq('user_id', explicitUserId)
+      }
+      const { error } = await query
+      if (error) throw error
+    },
 
-  async updateHolding(id: string, data: Partial<Omit<InvestmentHolding, 'id' | 'created_at' | 'updated_at' | 'user_id'>>): Promise<void> {
-    const supabase = await createClient()
-    const { error } = await supabase
-      .from('investment_holdings')
-      .update({ ...data, updated_at: new Date().toISOString() })
-      .eq('id', id)
-    
-    if (error) throw error
-  },
+    async deleteAccount(id: string): Promise<void> {
+      const db = await getDb()
+      let query = db.from('investment_accounts').delete().eq('id', id)
+      if (explicitUserId) {
+        query = query.eq('user_id', explicitUserId)
+      }
+      const { error } = await query
+      if (error) throw error
+    },
 
-  async deleteHolding(id: string): Promise<void> {
-    const supabase = await createClient()
-    const { error } = await supabase
-      .from('investment_holdings')
-      .delete()
-      .eq('id', id)
-    
-    if (error) throw error
-  },
+    // ─── Holdings ───
+    async findHoldingsByAccount(accountId: string): Promise<InvestmentHolding[]> {
+      const db = await getDb()
+      let query = db.from('investment_holdings').select('*').eq('account_id', accountId).order('created_at', { ascending: true })
+      if (explicitUserId) {
+        query = query.eq('user_id', explicitUserId)
+      }
+      const { data, error } = await query
+      if (error) throw error
+      return (data || []).map(toInvestmentHolding)
+    },
 
-  // ─── Transactions ───
-  async findTransactionsByHolding(holdingId: string, limit = 50, offset = 0): Promise<InvestmentTransaction[]> {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('investment_transactions')
-      .select('*')
-      .eq('holding_id', holdingId)
-      .order('transaction_date', { ascending: false })
-      .range(offset, offset + limit - 1)
-    
-    if (error) throw error
-    return (data || []).map(toInvestmentTransaction)
-  },
+    async findHoldingById(id: string): Promise<InvestmentHolding | null> {
+      const db = await getDb()
+      let query = db.from('investment_holdings').select('*').eq('id', id)
+      if (explicitUserId) {
+        query = query.eq('user_id', explicitUserId)
+      }
+      const { data, error } = await query.single()
 
-  async findTransactionById(id: string): Promise<InvestmentTransaction | null> {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('investment_transactions')
-      .select('*')
-      .eq('id', id)
-      .single()
-    
-    if (error) {
-      if (error.code === 'PGRST116') return null
-      throw error
-    }
-    return toInvestmentTransaction(data)
-  },
+      if (error) {
+        if (error.code === 'PGRST116') return null
+        throw error
+      }
+      return toInvestmentHolding(data)
+    },
 
-  async createTransaction(data: Omit<InvestmentTransaction, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'total_amount'>): Promise<InvestmentTransaction> {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Unauthorized')
+    async createHolding(data: Omit<InvestmentHolding, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<InvestmentHolding> {
+      const db = await getDb()
+      const userId = await resolveUserId()
 
-    const { data: row, error } = await supabase
-      .from('investment_transactions')
-      .insert({ ...data, user_id: user.id })
-      .select()
-      .single()
-    
-    if (error) throw error
-    return toInvestmentTransaction(row)
-  },
+      const { data: row, error } = await db
+        .from('investment_holdings')
+        .insert({ ...data, user_id: userId })
+        .select()
+        .single()
 
-  async updateTransaction(id: string, data: Partial<Omit<InvestmentTransaction, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'total_amount'>>): Promise<void> {
-    const supabase = await createClient()
-    const { error } = await supabase
-      .from('investment_transactions')
-      .update({ ...data, updated_at: new Date().toISOString() })
-      .eq('id', id)
-    
-    if (error) throw error
-  },
+      if (error) throw error
+      return toInvestmentHolding(row)
+    },
 
-  async deleteTransaction(id: string): Promise<void> {
-    const supabase = await createClient()
-    const { error } = await supabase
-      .from('investment_transactions')
-      .delete()
-      .eq('id', id)
-    
-    if (error) throw error
-  },
+    async updateHolding(id: string, data: Partial<Omit<InvestmentHolding, 'id' | 'created_at' | 'updated_at' | 'user_id'>>): Promise<void> {
+      const db = await getDb()
+      let query = db.from('investment_holdings').update({ ...data, updated_at: new Date().toISOString() }).eq('id', id)
+      if (explicitUserId) {
+        query = query.eq('user_id', explicitUserId)
+      }
+      const { error } = await query
+      if (error) throw error
+    },
 
-  // ─── Price Snapshots ───
-  async findLatestPrice(symbol: string, assetClass: string): Promise<InvestmentPriceSnapshot | null> {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('investment_price_snapshots')
-      .select('*')
-      .eq('symbol', symbol)
-      .eq('asset_class', assetClass)
-      .order('timestamp', { ascending: false })
-      .limit(1)
-      .single()
-    
-    if (error) {
-      if (error.code === 'PGRST116') return null
-      throw error
-    }
-    return toInvestmentPriceSnapshot(data)
-  },
+    async deleteHolding(id: string): Promise<void> {
+      const db = await getDb()
+      let query = db.from('investment_holdings').delete().eq('id', id)
+      if (explicitUserId) {
+        query = query.eq('user_id', explicitUserId)
+      }
+      const { error } = await query
+      if (error) throw error
+    },
 
-  async findPriceHistory(symbol: string, assetClass: string, limit = 100): Promise<InvestmentPriceSnapshot[]> {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('investment_price_snapshots')
-      .select('*')
-      .eq('symbol', symbol)
-      .eq('asset_class', assetClass)
-      .order('timestamp', { ascending: false })
-      .limit(limit)
-    
-    if (error) throw error
-    return (data || []).map(toInvestmentPriceSnapshot)
-  },
+    // ─── Transactions ───
+    async findTransactionsByHolding(holdingId: string, limit = 50, offset = 0): Promise<InvestmentTransaction[]> {
+      const db = await getDb()
+      let query = db
+        .from('investment_transactions')
+        .select('*')
+        .eq('holding_id', holdingId)
+        .order('transaction_date', { ascending: false })
+        .range(offset, offset + limit - 1)
+      if (explicitUserId) {
+        query = query.eq('user_id', explicitUserId)
+      }
+      const { data, error } = await query
+      if (error) throw error
+      return (data || []).map(toInvestmentTransaction)
+    },
 
-  async upsertPriceSnapshot(data: Omit<InvestmentPriceSnapshot, 'id'>): Promise<void> {
-    const supabase = await createClient()
-    const { error } = await supabase
-      .from('investment_price_snapshots')
-      .upsert(data, { onConflict: 'symbol,asset_class,source,timestamp' })
-    
-    if (error) throw error
-  },
+    async findTransactionById(id: string): Promise<InvestmentTransaction | null> {
+      const db = await getDb()
+      let query = db.from('investment_transactions').select('*').eq('id', id)
+      if (explicitUserId) {
+        query = query.eq('user_id', explicitUserId)
+      }
+      const { data, error } = await query.single()
 
-  // ─── Portfolio Snapshots ───
-  async findLatestPortfolioSnapshot(userId: string): Promise<PortfolioSnapshot | null> {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('portfolio_snapshots')
-      .select('*')
-      .eq('user_id', userId)
-      .order('snapshot_date', { ascending: false })
-      .limit(1)
-      .single()
-    
-    if (error) {
-      if (error.code === 'PGRST116') return null
-      throw error
-    }
-    return toPortfolioSnapshot(data)
-  },
+      if (error) {
+        if (error.code === 'PGRST116') return null
+        throw error
+      }
+      return toInvestmentTransaction(data)
+    },
 
-  async findPortfolioSnapshots(userId: string, limit = 365): Promise<PortfolioSnapshot[]> {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('portfolio_snapshots')
-      .select('*')
-      .eq('user_id', userId)
-      .order('snapshot_date', { ascending: false })
-      .limit(limit)
-    
-    if (error) throw error
-    return (data || []).map(toPortfolioSnapshot)
-  },
+    async createTransaction(data: Omit<InvestmentTransaction, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'total_amount'>): Promise<InvestmentTransaction> {
+      const db = await getDb()
+      const userId = await resolveUserId()
 
-  async upsertPortfolioSnapshot(data: Omit<PortfolioSnapshot, 'id' | 'total_gain_loss' | 'total_gain_loss_pct'>): Promise<PortfolioSnapshot> {
-    const supabase = await createClient()
-    const { data: row, error } = await supabase
-      .from('portfolio_snapshots')
-      .upsert(data, { onConflict: 'user_id,snapshot_date' })
-      .select()
-      .single()
-    
-    if (error) throw error
-    return toPortfolioSnapshot(row)
-  },
+      const { data: row, error } = await db
+        .from('investment_transactions')
+        .insert({ ...data, user_id: userId })
+        .select()
+        .single()
 
-  // ─── Analytics ───
-  async getInvestmentOverview(): Promise<InvestmentOverview> {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Unauthorized')
+      if (error) throw error
+      return toInvestmentTransaction(row)
+    },
 
-    // Fetch accounts with holdings. Prices live in a separate table keyed by
-    // (symbol, asset_class) with no FK to holdings, so we match them in memory.
-    const { data: accountsData, error: accountsError } = await supabase
-      .from('investment_accounts')
-      .select(`
-        *,
-        investment_holdings!inner(*)
-      `)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: true })
+    async updateTransaction(id: string, data: Partial<Omit<InvestmentTransaction, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'total_amount'>>): Promise<void> {
+      const db = await getDb()
+      let query = db.from('investment_transactions').update({ ...data, updated_at: new Date().toISOString() }).eq('id', id)
+      if (explicitUserId) {
+        query = query.eq('user_id', explicitUserId)
+      }
+      const { error } = await query
+      if (error) throw error
+    },
 
-    if (accountsError) throw accountsError
+    async deleteTransaction(id: string): Promise<void> {
+      const db = await getDb()
+      let query = db.from('investment_transactions').delete().eq('id', id)
+      if (explicitUserId) {
+        query = query.eq('user_id', explicitUserId)
+      }
+      const { error } = await query
+      if (error) throw error
+    },
 
-    // Fetch latest price snapshot per (symbol, asset_class) for the user's holdings
-    const symbols = [
-      ...new Set(
-        (accountsData || []).flatMap((account) =>
-          (account.investment_holdings || []).map(
-            (holding: Tables<'investment_holdings'>) => holding.symbol
-          )
-        )
-      ),
-    ]
-
-    const latestPriceBySymbol = new Map<string, number>()
-    if (symbols.length > 0) {
-      const { data: priceRows, error: priceError } = await supabase
+    // ─── Price Snapshots ───
+    async findLatestPrice(symbol: string, assetClass: string): Promise<InvestmentPriceSnapshot | null> {
+      const db = await getDb()
+      const { data, error } = await db
         .from('investment_price_snapshots')
-        .select('symbol, asset_class, price, timestamp')
-        .in('symbol', symbols)
+        .select('*')
+        .eq('symbol', symbol)
+        .eq('asset_class', assetClass)
         .order('timestamp', { ascending: false })
+        .limit(1)
+        .single()
 
-      if (priceError) throw priceError
+      if (error) {
+        if (error.code === 'PGRST116') return null
+        throw error
+      }
+      return toInvestmentPriceSnapshot(data)
+    },
 
-      for (const row of priceRows || []) {
-        const key = `${row.symbol}:${row.asset_class}`
-        if (!latestPriceBySymbol.has(key)) {
-          latestPriceBySymbol.set(key, row.price)
+    async findPriceHistory(symbol: string, assetClass: string, limit = 100): Promise<InvestmentPriceSnapshot[]> {
+      const db = await getDb()
+      const { data, error } = await db
+        .from('investment_price_snapshots')
+        .select('*')
+        .eq('symbol', symbol)
+        .eq('asset_class', assetClass)
+        .order('timestamp', { ascending: false })
+        .limit(limit)
+
+      if (error) throw error
+      return (data || []).map(toInvestmentPriceSnapshot)
+    },
+
+    async upsertPriceSnapshot(data: Omit<InvestmentPriceSnapshot, 'id'>): Promise<void> {
+      const db = await getDb()
+      const { error } = await db
+        .from('investment_price_snapshots')
+        .upsert(data, { onConflict: 'symbol,asset_class,source,timestamp' })
+
+      if (error) throw error
+    },
+
+    // ─── Portfolio Snapshots ───
+    async findLatestPortfolioSnapshot(userId: string): Promise<PortfolioSnapshot | null> {
+      const db = await getDb()
+      const targetUserId = explicitUserId || userId
+      const { data, error } = await db
+        .from('portfolio_snapshots')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .order('snapshot_date', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') return null
+        throw error
+      }
+      return toPortfolioSnapshot(data)
+    },
+
+    async findPortfolioSnapshots(userId: string, limit = 365): Promise<PortfolioSnapshot[]> {
+      const db = await getDb()
+      const targetUserId = explicitUserId || userId
+      const { data, error } = await db
+        .from('portfolio_snapshots')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .order('snapshot_date', { ascending: false })
+        .limit(limit)
+
+      if (error) throw error
+      return (data || []).map(toPortfolioSnapshot)
+    },
+
+    async upsertPortfolioSnapshot(data: Omit<PortfolioSnapshot, 'id' | 'total_gain_loss' | 'total_gain_loss_pct'>): Promise<PortfolioSnapshot> {
+      const db = await getDb()
+      const targetUserId = explicitUserId || data.user_id
+      const { data: row, error } = await db
+        .from('portfolio_snapshots')
+        .upsert({ ...data, user_id: targetUserId }, { onConflict: 'user_id,snapshot_date' })
+        .select()
+        .single()
+
+      if (error) throw error
+      return toPortfolioSnapshot(row)
+    },
+
+    // ─── Analytics ───
+    async getInvestmentOverview(): Promise<InvestmentOverview> {
+      const db = await getDb()
+      const userId = await resolveUserId()
+
+      const { data: accountsData, error: accountsError } = await db
+        .from('investment_accounts')
+        .select(`
+          *,
+          investment_holdings!inner(*)
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true })
+
+      if (accountsError) throw accountsError
+
+      const symbols = [
+        ...new Set(
+          (accountsData || []).flatMap((account: any) =>
+            (account.investment_holdings || []).map(
+              (holding: Tables<'investment_holdings'>) => holding.symbol
+            )
+          )
+        ),
+      ]
+
+      const latestPriceBySymbol = new Map<string, number>()
+      if (symbols.length > 0) {
+        const { data: priceRows, error: priceError } = await db
+          .from('investment_price_snapshots')
+          .select('symbol, asset_class, price, timestamp')
+          .in('symbol', symbols)
+          .order('timestamp', { ascending: false })
+
+        if (priceError) throw priceError
+
+        for (const row of priceRows || []) {
+          const key = `${row.symbol}:${row.asset_class}`
+          if (!latestPriceBySymbol.has(key)) {
+            latestPriceBySymbol.set(key, row.price)
+          }
         }
       }
-    }
 
-    // Fetch latest portfolio snapshot
-    const latestSnapshot = await this.findLatestPortfolioSnapshot(user.id)
+      const latestSnapshot = await this.findLatestPortfolioSnapshot(userId)
 
-    const accounts: InvestmentAccountSummary[] = []
-    const allHoldings: HoldingWithValue[] = []
-    let totalValue = 0
-    let totalCost = 0
+      const accounts: InvestmentAccountSummary[] = []
+      const allHoldings: HoldingWithValue[] = []
+      let totalValue = 0
+      let totalCost = 0
 
-    for (const account of accountsData || []) {
-      const holdings = account.investment_holdings || []
-      let accountValue = 0
-      let accountCost = 0
+      for (const account of accountsData || []) {
+        const holdings = account.investment_holdings || []
+        let accountValue = 0
+        let accountCost = 0
 
-      for (const holding of holdings) {
-        const latestPrice = latestPriceBySymbol.get(`${holding.symbol}:${holding.asset_class}`) ?? null
-        const marketValue = holding.quantity * (latestPrice ?? holding.avg_buy_price ?? 0)
-        const costBasis = holding.quantity * (holding.avg_buy_price ?? 0)
-        const gainLoss = marketValue - costBasis
-        const gainLossPct = costBasis > 0 ? (gainLoss / costBasis) * 100 : 0
+        for (const holding of holdings) {
+          const latestPrice = latestPriceBySymbol.get(`${holding.symbol}:${holding.asset_class}`) ?? null
+          const marketValue = holding.quantity * (latestPrice ?? holding.avg_buy_price ?? 0)
+          const costBasis = holding.quantity * (holding.avg_buy_price ?? 0)
+          const gainLoss = marketValue - costBasis
+          const gainLossPct = costBasis > 0 ? (gainLoss / costBasis) * 100 : 0
 
-        const holdingWithValue: HoldingWithValue = {
-          id: holding.id,
-          accountId: account.id,
-          accountName: account.name,
-          symbol: holding.symbol,
-          name: holding.name,
-          assetClass: holding.asset_class,
-          quantity: holding.quantity,
-          avgBuyPrice: holding.avg_buy_price,
-          currentPrice: latestPrice,
-          currency: holding.currency,
-          marketValue,
-          costBasis,
+          const holdingWithValue: HoldingWithValue = {
+            id: holding.id,
+            accountId: account.id,
+            accountName: account.name,
+            symbol: holding.symbol,
+            name: holding.name,
+            assetClass: holding.asset_class,
+            quantity: holding.quantity,
+            avgBuyPrice: holding.avg_buy_price,
+            currentPrice: latestPrice,
+            currency: holding.currency,
+            marketValue,
+            costBasis,
+            gainLoss,
+            gainLossPct,
+          }
+
+          allHoldings.push(holdingWithValue)
+          accountValue += marketValue
+          accountCost += costBasis
+        }
+
+        const gainLoss = accountValue - accountCost
+        const gainLossPct = accountCost > 0 ? (gainLoss / accountCost) * 100 : 0
+
+        accounts.push({
+          id: account.id,
+          name: account.name,
+          type: account.type,
+          broker: account.broker,
+          currency: account.currency,
+          totalValue: accountValue,
+          totalCost: accountCost,
           gainLoss,
           gainLossPct,
-        }
+          holdingsCount: holdings.length,
+        })
 
-        allHoldings.push(holdingWithValue)
-        accountValue += marketValue
-        accountCost += costBasis
+        totalValue += accountValue
+        totalCost += accountCost
       }
 
-      const gainLoss = accountValue - accountCost
-      const gainLossPct = accountCost > 0 ? (gainLoss / accountCost) * 100 : 0
+      const totalGainLoss = totalValue - totalCost
+      const totalGainLossPct = totalCost > 0 ? (totalGainLoss / totalCost) * 100 : 0
 
-      accounts.push({
-        id: account.id,
-        name: account.name,
-        type: account.type,
-        broker: account.broker,
-        currency: account.currency,
-        totalValue: accountValue,
-        totalCost: accountCost,
-        gainLoss,
-        gainLossPct,
-        holdingsCount: holdings.length,
+      const dayChange = latestSnapshot?.day_change ?? 0
+      const dayChangePct = latestSnapshot?.day_change_pct ?? 0
+
+      const topHoldings = [...allHoldings]
+        .sort((a, b) => b.marketValue - a.marketValue)
+        .slice(0, 5)
+
+      return {
+        totalValue,
+        totalCost,
+        totalGainLoss,
+        totalGainLossPct,
+        dayChange,
+        dayChangePct,
+        accounts,
+        topHoldings,
+      }
+    },
+
+    // ─── RPC Functions ───
+    async recalculateHoldingAvgPrice(holdingId: string): Promise<number> {
+      const db = await getDb()
+      const { data, error } = await db.rpc('recalculate_holding_avg_price', {
+        p_holding_id: holdingId,
       })
 
-      totalValue += accountValue
-      totalCost += accountCost
-    }
+      if (error) throw error
+      return data as number
+    },
 
-    const totalGainLoss = totalValue - totalCost
-    const totalGainLossPct = totalCost > 0 ? (totalGainLoss / totalCost) * 100 : 0
+    async refreshPortfolioSnapshot(userId: string): Promise<PortfolioSnapshot> {
+      const db = await getDb()
+      const targetUserId = explicitUserId || userId
+      const { data, error } = await db.rpc('refresh_portfolio_snapshot', {
+        p_user_id: targetUserId,
+      })
 
-    // Day change from latest snapshot
-    const dayChange = latestSnapshot?.day_change ?? 0
-    const dayChangePct = latestSnapshot?.day_change_pct ?? 0
-
-    // Top 5 holdings by market value
-    const topHoldings = [...allHoldings]
-      .sort((a, b) => b.marketValue - a.marketValue)
-      .slice(0, 5)
-
-    return {
-      totalValue,
-      totalCost,
-      totalGainLoss,
-      totalGainLossPct,
-      dayChange,
-      dayChangePct,
-      accounts,
-      topHoldings,
-    }
-  },
-
-  // ─── RPC Functions ───
-  async recalculateHoldingAvgPrice(holdingId: string): Promise<number> {
-    const supabase = await createClient()
-    const { data, error } = await supabase.rpc('recalculate_holding_avg_price', {
-      p_holding_id: holdingId,
-    })
-    
-    if (error) throw error
-    return data as number
-  },
-
-  async refreshPortfolioSnapshot(userId: string): Promise<PortfolioSnapshot> {
-    const supabase = await createClient()
-    const { data, error } = await supabase.rpc('refresh_portfolio_snapshot', {
-      p_user_id: userId,
-    })
-    
-    if (error) throw error
-    return toPortfolioSnapshot(data)
-  },
+      if (error) throw error
+      return toPortfolioSnapshot(data)
+    },
+  }
 }
 
-export function getInvestmentRepository(): InvestmentRepository {
+export const investmentRepository: InvestmentRepository = createInvestmentRepository()
+
+export function getInvestmentRepository(context?: { client?: any; userId?: string }): InvestmentRepository {
+  if (context?.client || context?.userId) {
+    return createInvestmentRepository(context.client, context.userId)
+  }
   return investmentRepository
 }

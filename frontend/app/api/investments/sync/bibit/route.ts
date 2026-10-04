@@ -62,39 +62,66 @@ function isValidPayload(body: unknown): body is BibitSyncPayload {
   )
 }
 
+import { verifyApiKey } from '@/lib/auth/api-keys'
+import { createAdminClient } from '@/lib/supabase/admin'
+
 export async function POST(req: Request) {
   const corsHeaders = buildCorsHeaders(req.headers.get('origin'))
   try {
-    const supabase = await createClient()
-    const authHeader = req.headers.get('authorization')
-    const bearerToken = authHeader?.toLowerCase().startsWith('bearer ')
-      ? authHeader.slice(7).trim()
-      : null
-    const refreshToken = req.headers.get('x-refresh-token')?.trim() || null
+    const apiKey = req.headers.get('x-api-key')?.trim()
+    let userId: string | null = null
+    let repo = getInvestmentRepository()
 
-    let user: any = null
-
-    if (bearerToken) {
-      const authResult = await supabase.auth.getUser(bearerToken)
-      user = authResult.data?.user || null
-    } else {
-      const authResult = await supabase.auth.getUser()
-      user = authResult.data?.user || null
-    }
-
-    // Auto-refresh: If bearer token is expired/invalid, attempt refresh using refreshToken
-    if (!user && refreshToken) {
-      try {
-        const refreshResult = await supabase.auth.refreshSession({ refresh_token: refreshToken })
-        user = refreshResult.data?.user || refreshResult.data?.session?.user || null
-      } catch {
-        // Refresh token failed or expired
+    if (apiKey) {
+      const verifyResult = await verifyApiKey(apiKey, 'investments:sync')
+      if (!verifyResult.valid || !verifyResult.userId) {
+        return NextResponse.json(
+          { success: false, error: verifyResult.error || 'Invalid or revoked FinTrack Sync API key.' },
+          { status: 401, headers: corsHeaders }
+        )
       }
+      userId = verifyResult.userId
+      repo = getInvestmentRepository({ client: createAdminClient(), userId })
+    } else {
+      const supabase = await createClient()
+      const authHeader = req.headers.get('authorization')
+      const bearerToken = authHeader?.toLowerCase().startsWith('bearer ')
+        ? authHeader.slice(7).trim()
+        : null
+      const refreshToken = req.headers.get('x-refresh-token')?.trim() || null
+
+      let user: any = null
+
+      if (bearerToken) {
+        const authResult = await supabase.auth.getUser(bearerToken)
+        user = authResult.data?.user || null
+      } else {
+        const authResult = await supabase.auth.getUser()
+        user = authResult.data?.user || null
+      }
+
+      // Auto-refresh: If bearer token is expired/invalid, attempt refresh using refreshToken
+      if (!user && refreshToken) {
+        try {
+          const refreshResult = await supabase.auth.refreshSession({ refresh_token: refreshToken })
+          user = refreshResult.data?.user || refreshResult.data?.session?.user || null
+        } catch {
+          // Refresh token failed or expired
+        }
+      }
+
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Unauthorized. Please login to FinTrack or configure your FinTrack Sync Key in the extension.' },
+          { status: 401, headers: corsHeaders }
+        )
+      }
+      userId = user.id
     }
 
-    if (!user) {
+    if (!userId) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized. Please login to FinTrack first.' },
+        { success: false, error: 'Unauthorized user' },
         { status: 401, headers: corsHeaders }
       )
     }
@@ -107,7 +134,6 @@ export async function POST(req: Request) {
       )
     }
 
-    const repo = getInvestmentRepository()
     const existingAccounts = await repo.findAccounts()
 
     // 1. Process each portfolio bucket in result
@@ -251,7 +277,7 @@ export async function POST(req: Request) {
     }
 
     // 3. Refresh daily portfolio snapshot
-    await repo.refreshPortfolioSnapshot(user.id)
+    await repo.refreshPortfolioSnapshot(userId)
     invalidateCache(['/investments'])
 
     return NextResponse.json({

@@ -119,8 +119,8 @@ function showToast(payload: BibitPayload) {
       const tokenResult = await chrome.runtime.sendMessage({ type: 'GET_AUTH_TOKEN' })
       console.log('[FinTrack Sync] Respon auth token:', tokenResult)
 
-      if (!tokenResult?.success || !tokenResult.token) {
-        throw new Error(tokenResult?.error || 'Belum login di FinTrack. Buka fintrek.web.id dan login dulu.')
+      if (!tokenResult?.success || (!tokenResult.token && !tokenResult.apiKey)) {
+        throw new Error(tokenResult?.error || 'Belum terhubung ke FinTrack. Buka popup FinTrack Extension untuk memasukkan Sync API Key atau login di fintrek.web.id.')
       }
 
       const syncUrl = tokenResult.apiUrl || 'https://fintrek.web.id/api/investments/sync/bibit'
@@ -129,14 +129,21 @@ function showToast(payload: BibitPayload) {
         marketValue,
         profitLoss,
         itemCount: payload.data?.result?.length,
+        authType: tokenResult.authType || 'cookie',
       })
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${tokenResult.token}`,
       }
-      if (tokenResult.refreshToken) {
-        headers['x-refresh-token'] = tokenResult.refreshToken
+      if (tokenResult.apiKey) {
+        headers['x-api-key'] = tokenResult.apiKey
+      } else {
+        if (tokenResult.token) {
+          headers['Authorization'] = `Bearer ${tokenResult.token}`
+        }
+        if (tokenResult.refreshToken) {
+          headers['x-refresh-token'] = tokenResult.refreshToken
+        }
       }
 
       const response = await fetch(syncUrl, {
@@ -160,7 +167,10 @@ function showToast(payload: BibitPayload) {
         }, 3000)
       } else {
         if (response.status === 401) {
-          throw new Error('Sesi FinTrack telah kadaluarsa di server (401 Unauthorized). Silakan buka fintrek.web.id untuk login kembali.')
+          const errorMsg = tokenResult.apiKey
+            ? 'API Key FinTrack tidak valid atau telah dicabut (401 Unauthorized). Silakan periksa FinTrack Sync Key di popup extension.'
+            : 'Sesi FinTrack telah kadaluarsa di server (401 Unauthorized). Buka popup extension untuk memasukkan Sync Key atau login ulang di fintrek.web.id.'
+          throw new Error(errorMsg)
         }
         throw new Error(result.error || `HTTP ${response.status}: Gagal menyimpan portofolio`)
       }

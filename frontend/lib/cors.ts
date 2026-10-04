@@ -23,7 +23,7 @@ export function buildCorsHeaders(requestOrigin: string | null): Record<string, s
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-refresh-token',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-refresh-token, x-api-key',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   }

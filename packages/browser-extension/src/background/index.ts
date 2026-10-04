@@ -17,6 +17,25 @@ async function ensureSessionStorageAccess(): Promise<void> {
 async function handleGetAuthToken(sendResponse: (response: unknown) => void): Promise<void> {
   console.log('[FinTrack Background] Handling GET_AUTH_TOKEN request...')
   try {
+    // 1. Check if user configured a persistent FinTrack Sync API Key (Recommended)
+    try {
+      const storage = await chrome.storage.local.get(['fintrack_api_key'])
+      const storedApiKey = storage?.fintrack_api_key?.trim()
+      if (storedApiKey && storedApiKey.startsWith('ft_sync_')) {
+        console.log('[FinTrack Background] Using configured Personal Sync API Key:', storedApiKey.slice(0, 16) + '...')
+        sendResponse({
+          success: true,
+          apiKey: storedApiKey,
+          authType: 'api_key',
+          apiUrl: 'https://fintrek.web.id/api/investments/sync/bibit',
+        })
+        return
+      }
+    } catch (storageErr) {
+      console.warn('[FinTrack Background] Error reading API key from storage:', storageErr)
+    }
+
+    // 2. Fallback to Supabase cookie session if no API Key is configured
     const authResult = await getFinTrackSessionWithDiagnostics()
     let session = authResult.session
 
