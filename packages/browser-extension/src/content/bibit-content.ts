@@ -15,6 +15,14 @@ function formatRupiah(amount: number): string {
   }).format(amount)
 }
 
+function isExtensionContextValid(): boolean {
+  try {
+    return Boolean(typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id && chrome.runtime.sendMessage)
+  } catch {
+    return false
+  }
+}
+
 function showToast(payload: BibitPayload) {
   if (toastElement) {
     toastElement.remove()
@@ -97,41 +105,104 @@ function showToast(payload: BibitPayload) {
     syncBtn.disabled = true
     syncBtn.textContent = 'Menyinkronkan...'
     statusEl.style.display = 'block'
-    statusEl.textContent = 'Mengirim data ke FinTrack...'
+    statusEl.style.color = '#94a3b8'
+    statusEl.textContent = 'Meminta autentikasi FinTrack...'
+
+    console.log('[FinTrack Sync] Memulai proses sinkronisasi...')
 
     try {
-      const tokenResult = await chrome.runtime.sendMessage({ type: 'GET_AUTH_TOKEN' })
-      if (!tokenResult?.success || !tokenResult.token) {
-        throw new Error('Belum login di FinTrack. Buka fintrek.web.id dan login dulu')
+      if (!isExtensionContextValid()) {
+        throw new Error('Extension baru saja di-reload. Halaman Bibit perlu di-refresh agar terhubung kembali.')
       }
 
-      const response = await fetch('https://fintrek.web.id/api/investments/sync/bibit', {
+      console.log('[FinTrack Sync] Meminta token auth dari extension background...')
+      const tokenResult = await chrome.runtime.sendMessage({ type: 'GET_AUTH_TOKEN' })
+      console.log('[FinTrack Sync] Respon auth token:', tokenResult)
+
+      if (!tokenResult?.success || !tokenResult.token) {
+        throw new Error(tokenResult?.error || 'Belum login di FinTrack. Buka fintrek.web.id dan login dulu.')
+      }
+
+      const syncUrl = tokenResult.apiUrl || 'https://fintrek.web.id/api/investments/sync/bibit'
+      statusEl.textContent = 'Mengirim data ke FinTrack...'
+      console.log('[FinTrack Sync] Mengirim payload ke:', syncUrl, {
+        marketValue,
+        profitLoss,
+        itemCount: payload.data?.result?.length,
+      })
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tokenResult.token}`,
+      }
+      if (tokenResult.refreshToken) {
+        headers['x-refresh-token'] = tokenResult.refreshToken
+      }
+
+      const response = await fetch(syncUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${tokenResult.token}`,
-        },
+        headers,
         body: JSON.stringify(payload),
       })
 
+      console.log('[FinTrack Sync] HTTP response status:', response.status)
       const result = await response.json().catch(() => ({}))
+      console.log('[FinTrack Sync] HTTP response data:', result)
 
       if (response.ok && result.success) {
         statusEl.style.color = '#34d399'
         statusEl.textContent = '✓ Berhasil disinkronkan ke FinTrack!'
         syncBtn.textContent = 'Tersinkron'
+        console.log('[FinTrack Sync] Sinkronisasi berhasil!')
         setTimeout(() => {
           toastElement?.remove()
           toastElement = null
         }, 3000)
       } else {
-        throw new Error(result.error || `HTTP ${response.status}`)
+        if (response.status === 401) {
+          throw new Error('Sesi FinTrack telah kadaluarsa di server (401 Unauthorized). Silakan buka fintrek.web.id untuk login kembali.')
+        }
+        throw new Error(result.error || `HTTP ${response.status}: Gagal menyimpan portofolio`)
       }
     } catch (err: any) {
+      console.error('[FinTrack Sync] Gagal sinkron:', err)
+      const stackTrace = err?.stack ? String(err.stack) : ''
+      if (stackTrace) {
+        console.error('[FinTrack Sync] Stack trace:\n' + stackTrace)
+      }
+
+      const errorMsg = String(err?.message || err)
+      const isContextInvalidated =
+        !isExtensionContextValid() ||
+        errorMsg.includes('Extension context invalidated') ||
+        errorMsg.includes('sendMessage') ||
+        errorMsg.includes('terputus')
+
       statusEl.style.color = '#f87171'
-      statusEl.textContent = `Gagal sinkron: ${err.message}. Pastikan sudah login di FinTrack.`
       syncBtn.disabled = false
-      syncBtn.textContent = 'Coba Lagi'
+
+      const escapedStack = stackTrace
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+
+      const stackTraceHtml = escapedStack
+        ? `<details style="margin-top: 6px; text-align: left; font-size: 10px; color: #94a3b8; cursor: pointer;">
+             <summary style="outline: none;">Lihat Stacktrace</summary>
+             <pre style="white-space: pre-wrap; word-break: break-all; font-family: monospace; font-size: 9px; margin-top: 4px; max-height: 90px; overflow-y: auto; background: rgba(0, 0, 0, 0.4); padding: 6px; border-radius: 4px; color: #fca5a5;">${escapedStack}</pre>
+           </details>`
+        : ''
+
+      if (isContextInvalidated) {
+        statusEl.innerHTML = `<div>Extension baru di-reload. Halaman Bibit perlu di-refresh agar terhubung kembali.</div>${stackTraceHtml}`
+        syncBtn.textContent = 'Refresh Halaman'
+        syncBtn.onclick = () => {
+          window.location.reload()
+        }
+      } else {
+        statusEl.innerHTML = `<div>Gagal sinkron: ${errorMsg}</div>${stackTraceHtml}`
+        syncBtn.textContent = 'Coba Lagi'
+      }
     }
   })
 }
@@ -144,7 +215,16 @@ window.addEventListener('message', (event) => {
 
   if (event.data.type === 'FINTRACK_BIBIT_PORTFOLIO_CAPTURED') {
     const payload = event.data.payload as BibitPayload
-    if (!isValidBibitPayload(payload)) return
+    if (!isValidBibitPayload(payload)) {
+      console.warn('[FinTrack Sync] Payload Bibit tidak valid atau tidak lengkap:', event.data.payload)
+      return
+    }
+
+    console.log('[FinTrack Sync] Portofolio Bibit terdeteksi & tervalidasi:', {
+      marketValue: payload.data?.marketvalue,
+      profitLoss: payload.data?.profitloss,
+      portfoliosCount: payload.data?.result?.length,
+    })
 
     // Save locally in extension session storage (cleared when browser closes)
     try {

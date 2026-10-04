@@ -1,4 +1,4 @@
-import { getFinTrackSession, isSessionExpired } from '../shared/auth'
+import { getFinTrackSession, getFinTrackSessionWithDiagnostics, isSessionExpired } from '../shared/auth'
 
 // Content scripts run in an untrusted context; they need explicit access to
 // session storage to cache the captured Bibit portfolio payload.
@@ -15,19 +15,58 @@ async function ensureSessionStorageAccess(): Promise<void> {
 }
 
 async function handleGetAuthToken(sendResponse: (response: unknown) => void): Promise<void> {
+  console.log('[FinTrack Background] Handling GET_AUTH_TOKEN request...')
   try {
-    const session = await getFinTrackSession()
+    const authResult = await getFinTrackSessionWithDiagnostics()
+    let session = authResult.session
+
     if (!session) {
-      sendResponse({ success: false, error: 'Not authenticated' })
+      console.warn('[FinTrack Background] No session found. Discovered cookies:', authResult.discoveredCookies)
+      const detailMsg = authResult.discoveredCookies.length > 0
+        ? `Belum login di FinTrack. Cookie yang terdeteksi: ${authResult.discoveredCookies.join('; ')}`
+        : 'Belum login di FinTrack. Tidak ada cookie FinTrack yang ditemukan di browser ini. Buka fintrek.web.id dan login di profil browser yang sama.'
+      sendResponse({
+        success: false,
+        error: detailMsg,
+      })
       return
     }
     if (isSessionExpired(session)) {
-      sendResponse({ success: false, error: 'Session expired' })
-      return
+      console.warn('[FinTrack Background] Session expired at', session.expiresAt, '- attempting background refresh...')
+      try {
+        const refreshTarget = 'https://fintrek.web.id/investments'
+        await fetch(refreshTarget, { method: 'GET', credentials: 'include' })
+        const refreshed = await getFinTrackSession()
+        if (refreshed && !isSessionExpired(refreshed)) {
+          console.log('[FinTrack Background] Session refreshed successfully in background!')
+          session = refreshed
+        }
+      } catch (refreshErr) {
+        console.warn('[FinTrack Background] Background session refresh failed:', refreshErr)
+      }
     }
-    sendResponse({ success: true, token: session.accessToken })
+
+    if (isSessionExpired(session)) {
+      console.warn(
+        `[FinTrack Background] Token appears expired (expiresAt: ${session.expiresAt}, now: ${Math.floor(Date.now() / 1000)}), forwarding to backend for server-side verification...`
+      )
+    }
+
+    const apiUrl = 'https://fintrek.web.id/api/investments/sync/bibit'
+
+    console.log('[FinTrack Background] Auth token obtained successfully from', session.domain, 'for sync target:', apiUrl)
+    sendResponse({
+      success: true,
+      token: session.accessToken,
+      refreshToken: session.refreshToken,
+      apiUrl,
+      cookieSource: session.domain,
+      discoveredCookies: authResult.discoveredCookies,
+    })
   } catch (error) {
-    sendResponse({ success: false, error: error instanceof Error ? error.message : 'Token lookup failed' })
+    const message = error instanceof Error ? error.message : 'Token lookup failed'
+    console.error('[FinTrack Background] Error while obtaining auth token:', error)
+    sendResponse({ success: false, error: message })
   }
 }
 

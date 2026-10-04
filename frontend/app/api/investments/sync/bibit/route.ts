@@ -70,10 +70,28 @@ export async function POST(req: Request) {
     const bearerToken = authHeader?.toLowerCase().startsWith('bearer ')
       ? authHeader.slice(7).trim()
       : null
-    const authResult = bearerToken
-      ? await supabase.auth.getUser(bearerToken)
-      : await supabase.auth.getUser()
-    const user = authResult.data.user
+    const refreshToken = req.headers.get('x-refresh-token')?.trim() || null
+
+    let user: any = null
+
+    if (bearerToken) {
+      const authResult = await supabase.auth.getUser(bearerToken)
+      user = authResult.data?.user || null
+    } else {
+      const authResult = await supabase.auth.getUser()
+      user = authResult.data?.user || null
+    }
+
+    // Auto-refresh: If bearer token is expired/invalid, attempt refresh using refreshToken
+    if (!user && refreshToken) {
+      try {
+        const refreshResult = await supabase.auth.refreshSession({ refresh_token: refreshToken })
+        user = refreshResult.data?.user || refreshResult.data?.session?.user || null
+      } catch {
+        // Refresh token failed or expired
+      }
+    }
+
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized. Please login to FinTrack first.' },

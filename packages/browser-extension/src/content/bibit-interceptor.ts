@@ -16,6 +16,7 @@
         const clone = response.clone()
         clone.json().then((data) => {
           if (data && data.data && Array.isArray(data.data.result)) {
+            console.log('[FinTrack Interceptor] Intercepted Bibit portfolios from fetch:', url)
             window.postMessage(
               {
                 type: 'FINTRACK_BIBIT_PORTFOLIO_CAPTURED',
@@ -50,6 +51,7 @@
         if (url.includes('/portfolios') && url.includes('bibit.id')) {
           const data = JSON.parse(this.responseText)
           if (data && data.data && Array.isArray(data.data.result)) {
+            console.log('[FinTrack Interceptor] Intercepted Bibit portfolios from XHR:', url)
             window.postMessage(
               {
                 type: 'FINTRACK_BIBIT_PORTFOLIO_CAPTURED',
