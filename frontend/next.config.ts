@@ -21,6 +21,15 @@ const getLocalDevOrigins = (): string[] => {
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   allowedDevOrigins: getLocalDevOrigins(),
+  async redirects() {
+    return [
+      {
+        source: '/settings',
+        destination: '/investments/settings',
+        permanent: false,
+      },
+    ];
+  },
   // Use webpack-based build (Turbopack default in Next.js 16 is incompatible
   // with the custom webpack config needed for Codecov bundle analysis).
   turbopack: {

@@ -51,7 +51,7 @@ export function App() {
   }
 
   const handleOpenSettings = () => {
-    chrome.tabs.create({ url: 'https://fintrek.web.id/settings' })
+    chrome.tabs.create({ url: 'https://fintrek.web.id/investments/settings' })
   }
 
   if (isLoading) {
