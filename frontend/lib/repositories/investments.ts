@@ -370,22 +370,47 @@ export const investmentRepository: InvestmentRepository = {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Unauthorized')
 
-    // Fetch accounts with holdings and latest prices
+    // Fetch accounts with holdings. Prices live in a separate table keyed by
+    // (symbol, asset_class) with no FK to holdings, so we match them in memory.
     const { data: accountsData, error: accountsError } = await supabase
       .from('investment_accounts')
       .select(`
         *,
-        investment_holdings!inner(
-          *,
-          investment_price_snapshots!investment_price_snapshots_symbol_asset_class_source_timestamp_key(
-            price
-          )
-        )
+        investment_holdings!inner(*)
       `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: true })
 
     if (accountsError) throw accountsError
+
+    // Fetch latest price snapshot per (symbol, asset_class) for the user's holdings
+    const symbols = [
+      ...new Set(
+        (accountsData || []).flatMap((account) =>
+          (account.investment_holdings || []).map(
+            (holding: Tables<'investment_holdings'>) => holding.symbol
+          )
+        )
+      ),
+    ]
+
+    const latestPriceBySymbol = new Map<string, number>()
+    if (symbols.length > 0) {
+      const { data: priceRows, error: priceError } = await supabase
+        .from('investment_price_snapshots')
+        .select('symbol, asset_class, price, timestamp')
+        .in('symbol', symbols)
+        .order('timestamp', { ascending: false })
+
+      if (priceError) throw priceError
+
+      for (const row of priceRows || []) {
+        const key = `${row.symbol}:${row.asset_class}`
+        if (!latestPriceBySymbol.has(key)) {
+          latestPriceBySymbol.set(key, row.price)
+        }
+      }
+    }
 
     // Fetch latest portfolio snapshot
     const latestSnapshot = await this.findLatestPortfolioSnapshot(user.id)
@@ -401,7 +426,7 @@ export const investmentRepository: InvestmentRepository = {
       let accountCost = 0
 
       for (const holding of holdings) {
-        const latestPrice = holding.investment_price_snapshots?.[0]?.price ?? null
+        const latestPrice = latestPriceBySymbol.get(`${holding.symbol}:${holding.asset_class}`) ?? null
         const marketValue = holding.quantity * (latestPrice ?? holding.avg_buy_price ?? 0)
         const costBasis = holding.quantity * (holding.avg_buy_price ?? 0)
         const gainLoss = marketValue - costBasis
