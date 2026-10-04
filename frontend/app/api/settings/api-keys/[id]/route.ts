@@ -19,7 +19,7 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: 'Key ID is required' }, { status: 400 })
     }
 
-    await revokeApiKey(user.id, params.id)
+    await revokeApiKey(user.id, params.id, supabase)
 
     return NextResponse.json({
       success: true,

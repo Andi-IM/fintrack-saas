@@ -11,7 +11,7 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const keys = await listApiKeys(user.id)
+    const keys = await listApiKeys(user.id, supabase)
     return NextResponse.json({ success: true, data: keys })
   } catch (error: any) {
     console.error('Error fetching API keys:', error)
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
       // Body is optional
     }
 
-    const newKey = await generateApiKey(user.id, name)
+    const newKey = await generateApiKey(user.id, name, undefined, supabase)
 
     return NextResponse.json({
       success: true,

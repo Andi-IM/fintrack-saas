@@ -1,4 +1,5 @@
 import crypto from 'crypto'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const API_KEY_PREFIX = 'ft_sync_'
@@ -31,6 +32,18 @@ export function hashApiKey(rawKey: string): string {
   return crypto.createHash('sha256').update(rawKey).digest('hex')
 }
 
+function getFallbackClient(): any {
+  try {
+    return createAdminClient()
+  } catch {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    return createSupabaseClient(supabaseUrl, anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
+  }
+}
+
 /**
  * Generate a cryptographically secure API key for a user.
  * The plaintext key is returned ONLY once and never stored in the database.
@@ -38,14 +51,15 @@ export function hashApiKey(rawKey: string): string {
 export async function generateApiKey(
   userId: string,
   name: string = 'Browser Extension Sync',
-  scopes: string[] = [DEFAULT_KEY_SCOPE]
+  scopes: string[] = [DEFAULT_KEY_SCOPE],
+  client?: any
 ): Promise<GeneratedApiKey> {
   const entropy = crypto.randomBytes(32).toString('hex')
   const rawKey = `${API_KEY_PREFIX}${entropy}`
   const keyHash = hashApiKey(rawKey)
   const keyPrefix = `${rawKey.slice(0, 16)}...`
 
-  const supabase = createAdminClient()
+  const supabase = client || getFallbackClient()
   const { data, error } = await supabase
     .from('api_keys')
     .insert({
@@ -82,7 +96,8 @@ export async function generateApiKey(
  */
 export async function verifyApiKey(
   providedKey: string,
-  requiredScope: string = DEFAULT_KEY_SCOPE
+  requiredScope: string = DEFAULT_KEY_SCOPE,
+  client?: any
 ): Promise<VerifyApiKeyResult> {
   const trimmed = providedKey.trim()
   if (!trimmed.startsWith(API_KEY_PREFIX)) {
@@ -90,7 +105,7 @@ export async function verifyApiKey(
   }
 
   const keyHash = hashApiKey(trimmed)
-  const supabase = createAdminClient()
+  const supabase = client || getFallbackClient()
 
   // Call atomic security-definer function
   const { data, error } = await supabase.rpc('verify_and_use_api_key', {
@@ -119,8 +134,8 @@ export async function verifyApiKey(
 /**
  * List all active API keys for a user (without exposing secret hashes or plaintext keys).
  */
-export async function listApiKeys(userId: string): Promise<ApiKeyRecord[]> {
-  const supabase = createAdminClient()
+export async function listApiKeys(userId: string, client?: any): Promise<ApiKeyRecord[]> {
+  const supabase = client || getFallbackClient()
   const { data, error } = await supabase
     .from('api_keys')
     .select('id, user_id, name, key_prefix, scopes, last_used_at, is_active, created_at')
@@ -132,7 +147,7 @@ export async function listApiKeys(userId: string): Promise<ApiKeyRecord[]> {
     throw new Error(error.message || 'Failed to list API keys')
   }
 
-  return (data || []).map((row) => ({
+  return (data || []).map((row: any) => ({
     id: row.id,
     userId: row.user_id,
     name: row.name,
@@ -147,8 +162,8 @@ export async function listApiKeys(userId: string): Promise<ApiKeyRecord[]> {
 /**
  * Revoke an API key immediately.
  */
-export async function revokeApiKey(userId: string, keyId: string): Promise<boolean> {
-  const supabase = createAdminClient()
+export async function revokeApiKey(userId: string, keyId: string, client?: any): Promise<boolean> {
+  const supabase = client || getFallbackClient()
   const { error } = await supabase
     .from('api_keys')
     .update({ is_active: false, updated_at: new Date().toISOString() })
