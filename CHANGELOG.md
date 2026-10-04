@@ -1,3 +1,10 @@
+## [1.28.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.28.0...v1.28.1) (2026-10-04)
+
+
+### Bug Fixes
+
+* **nav:** hide sidebar rail on mobile and unify nav labels ([fde8c39](https://github.com/Andi-IM/fintrack-saas/commit/fde8c39e2d1cedc96107404fa44fbc93bb9a7aef))
+
 # [1.28.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.27.0...v1.28.0) (2026-10-04)
 
 
