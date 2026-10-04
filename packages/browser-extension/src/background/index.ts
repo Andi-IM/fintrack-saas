@@ -1,4 +1,5 @@
 import { apiClient } from '../shared/api'
+import { getFinTrackSession, isSessionExpired } from '../shared/auth'
 
 const ALARM_NAME = 'portfolio-refresh'
 const BADGE_COLORS = {
@@ -180,7 +181,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     apiClient.signOut().then(() => sendResponse({ success: true }))
     return true
   }
+  if (message.type === 'GET_AUTH_TOKEN') {
+    handleGetAuthToken(sendResponse)
+    return true
+  }
 })
+
+async function handleGetAuthToken(sendResponse: (response: any) => void): Promise<void> {
+  try {
+    const session = await getFinTrackSession()
+    if (!session) {
+      sendResponse({ success: false, error: 'Not authenticated' })
+      return
+    }
+    if (isSessionExpired(session)) {
+      sendResponse({ success: false, error: 'Session expired' })
+      return
+    }
+    sendResponse({ success: true, token: session.accessToken })
+  } catch (error) {
+    sendResponse({ success: false, error: error instanceof Error ? error.message : 'Token lookup failed' })
+  }
+}
 
 async function handleGetPortfolio(sendResponse: (response: any) => void): Promise<void> {
   try {

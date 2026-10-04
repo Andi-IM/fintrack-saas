@@ -66,7 +66,14 @@ export async function POST(req: Request) {
   const corsHeaders = buildCorsHeaders(req.headers.get('origin'))
   try {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const authHeader = req.headers.get('authorization')
+    const bearerToken = authHeader?.toLowerCase().startsWith('bearer ')
+      ? authHeader.slice(7).trim()
+      : null
+    const authResult = bearerToken
+      ? await supabase.auth.getUser(bearerToken)
+      : await supabase.auth.getUser()
+    const user = authResult.data.user
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized. Please login to FinTrack first.' },

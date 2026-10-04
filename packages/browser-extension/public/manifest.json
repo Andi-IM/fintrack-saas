@@ -39,7 +39,8 @@
   "permissions": [
     "storage",
     "alarms",
-    "identity"
+    "identity",
+    "cookies"
   ],
   "host_permissions": [
     "https://fintrek.web.id/*",

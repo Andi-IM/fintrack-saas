@@ -100,10 +100,17 @@ function showToast(payload: BibitPayload) {
     statusEl.textContent = 'Mengirim data ke FinTrack...'
 
     try {
+      const tokenResult = await chrome.runtime.sendMessage({ type: 'GET_AUTH_TOKEN' })
+      if (!tokenResult?.success || !tokenResult.token) {
+        throw new Error('Belum login di FinTrack. Buka fintrek.web.id dan login dulu')
+      }
+
       const response = await fetch('https://fintrek.web.id/api/investments/sync/bibit', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tokenResult.token}`,
+        },
         body: JSON.stringify(payload),
       })
 
