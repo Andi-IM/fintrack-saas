@@ -1,3 +1,10 @@
+## [1.30.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.30.1...v1.30.2) (2026-10-04)
+
+
+### Bug Fixes
+
+* **auth:** pass user supabase client to api-keys routes to prevent 500 error on Vercel ([61c8d9f](https://github.com/Andi-IM/fintrack-saas/commit/61c8d9f7297af0b23d7980a101a879be102dcb53))
+
 ## [1.30.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.30.0...v1.30.1) (2026-10-04)
 
 
