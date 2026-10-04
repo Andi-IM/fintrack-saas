@@ -1,6 +1,6 @@
 import type { InvestmentOverview, ExtensionSettings, StoredAuth } from './types'
 
-const API_BASE_URL = 'https://app.fintrack-saas.vercel.app/api/extension'
+const API_BASE_URL = 'https://fintrek.web.id/api/extension'
 
 class ExtensionApiClient {
   private accessToken: string | null = null

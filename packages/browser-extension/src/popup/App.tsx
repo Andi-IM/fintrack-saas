@@ -59,7 +59,7 @@ export function App() {
   }
 
   const handleOpenApp = () => {
-    chrome.tabs.create({ url: 'https://app.fintrack-saas.vercel.app/investments' })
+    chrome.tabs.create({ url: 'https://fintrek.web.id/investments' })
   }
 
   if (loading && !overview) {

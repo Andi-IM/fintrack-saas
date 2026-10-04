@@ -1,5 +1,5 @@
 // Content script for injecting portfolio widget into FinTrack web app
-// Runs on https://app.fintrack-saas.vercel.app/*
+// Runs on https://fintrek.web.id/*
 
 interface InvestmentOverview {
   totalValue: number

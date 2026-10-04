@@ -26,7 +26,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://app.fintrack-saas.vercel.app/*", "https://*.fintrack-saas.vercel.app/*"],
+      "matches": ["https://fintrek.web.id/*", "https://*.fintrek.web.id/*"],
       "js": ["content.js"],
       "css": ["content.css"],
       "run_at": "document_idle"
@@ -38,11 +38,11 @@
     "identity"
   ],
   "host_permissions": [
-    "https://*.fintrack-saas.vercel.app/*",
+    "https://*.fintrek.web.id/*",
     "https://*.supabase.co/*"
   ],
   "optional_host_permissions": [
-    "https://app.fintrack-saas.vercel.app/*"
+    "https://fintrek.web.id/*"
   ],
   "web_accessible_resources": [
     {
