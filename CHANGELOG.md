@@ -1,3 +1,10 @@
+# [1.24.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.23.1...v1.24.0) (2026-10-04)
+
+
+### Features
+
+* add investment holdings and settings pages with reusable UI components ([b011977](https://github.com/Andi-IM/fintrack-saas/commit/b0119771841eab4dbfad22a6a5c19616bf4b20a6))
+
 ## [1.23.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.23.0...v1.23.1) (2026-10-04)
 
 
