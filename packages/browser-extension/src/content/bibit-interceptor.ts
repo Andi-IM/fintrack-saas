@@ -28,7 +28,7 @@
           }
         }).catch(() => {})
       }
-    } catch (e) {
+    } catch {
       // Passive interception should never break host app
     }
     return response
@@ -61,7 +61,7 @@
             )
           }
         }
-      } catch (e) {
+      } catch {
         // Passive
       }
     })

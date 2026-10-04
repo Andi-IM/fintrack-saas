@@ -1,5 +1,4 @@
 import { apiClient } from '../shared/api'
-import type { ExtensionSettings } from '../shared/types'
 
 const ALARM_NAME = 'portfolio-refresh'
 const BADGE_COLORS = {
@@ -201,7 +200,7 @@ async function handleGetPortfolio(sendResponse: (response: any) => void): Promis
     const overview = await apiClient.getPortfolioSummary()
     sendResponse({ success: true, data: overview, cached: false })
   } catch (error) {
-    sendResponse({ success: false, error: error.message })
+    sendResponse({ success: false, error: error instanceof Error ? error.message : 'Request failed' })
   }
 }
 

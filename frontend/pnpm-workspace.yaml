@@ -1,7 +1,7 @@
 packages:
   - '.'
   - 'e2e'
-  - '../../packages/*'
+  - '../packages/*'
 
 # Reject packages published within the last 6 hours (default in pnpm 11 is 24h).
 # Prevents supply-chain attacks via freshly-published malicious versions while

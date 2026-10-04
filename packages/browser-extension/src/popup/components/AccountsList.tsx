@@ -4,7 +4,7 @@ interface AccountsListProps {
   accounts: InvestmentAccountSummary[]
 }
 
-const TYPE_ICONS = {
+const TYPE_ICONS: Record<string, string> = {
   stock: '🏢',
   mutual_fund: '📊',
   crypto: '₿',
@@ -12,7 +12,7 @@ const TYPE_ICONS = {
   other: '💼',
 }
 
-const TYPE_CLASSES = {
+const TYPE_CLASSES: Record<string, string> = {
   stock: 'stock',
   mutual_fund: 'mutual_fund',
   crypto: 'crypto',

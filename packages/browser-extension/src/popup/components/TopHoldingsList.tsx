@@ -12,7 +12,7 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
-const ASSET_BADGE_CLASSES = {
+const ASSET_BADGE_CLASSES: Record<string, string> = {
   equity: 'equity',
   fixed_income: 'fixed_income',
   crypto: 'crypto',

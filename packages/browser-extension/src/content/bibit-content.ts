@@ -1,23 +1,9 @@
 // Content script running in ISOLATED world on https://app.bibit.id/*
 // Receives intercepted portfolio data from bibit-interceptor.ts
 
-interface BibitPayload {
-  message: string
-  data: {
-    marketvalue: number
-    invested: number
-    profitloss: number
-    trading_balance: number
-    result: Array<{
-      id: number
-      name: string
-      marketvalue: number
-      invested: number
-      profitloss: number
-      type: { name: string }
-    }>
-  }
-}
+import { isValidBibitPayload, type BibitPayload } from '../shared/validation'
+
+const TARGET_ORIGIN = 'https://app.bibit.id'
 
 let toastElement: HTMLElement | null = null
 
@@ -146,7 +132,7 @@ function showToast(payload: BibitPayload) {
 // Listen for captured payload from main-world interceptor
 window.addEventListener('message', (event) => {
   if (event.source !== window) return
-  if (event.origin !== 'https://app.bibit.id') return
+  if (event.origin !== TARGET_ORIGIN) return
   if (!event.data) return
 
   if (event.data.type === 'FINTRACK_BIBIT_PORTFOLIO_CAPTURED') {
@@ -177,30 +163,3 @@ window.addEventListener('message', (event) => {
     showToast(payload)
   }
 })
-
-const MAX_RESULT_ITEMS = 200
-
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value)
-}
-
-function isValidBibitPayload(payload: unknown): payload is BibitPayload {
-  if (!payload || typeof payload !== 'object') return false
-  const data = (payload as BibitPayload).data
-  if (!data || typeof data !== 'object') return false
-  if (!Array.isArray(data.result)) return false
-  if (data.result.length > MAX_RESULT_ITEMS) return false
-  if (!isFiniteNumber(data.marketvalue)) return false
-  if (!isFiniteNumber(data.invested)) return false
-  if (!isFiniteNumber(data.profitloss)) return false
-  return data.result.every(
-    (item) =>
-      item &&
-      typeof item === 'object' &&
-      isFiniteNumber(item.id) &&
-      typeof item.name === 'string' &&
-      isFiniteNumber(item.marketvalue) &&
-      isFiniteNumber(item.invested) &&
-      isFiniteNumber(item.profitloss)
-  )
-}

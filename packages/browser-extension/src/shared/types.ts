@@ -55,11 +55,4 @@ export interface StoredAuth {
   userId: string
 }
 
-export const DEFAULT_SETTINGS: ExtensionSettings = {
-  autoRefresh: true,
-  refreshInterval: 300000, // 5 minutes
-  showGainLossColors: true,
-  notificationsEnabled: true,
-  priceAlerts: false,
-  dividendAlerts: true,
-}
+export { DEFAULT_SETTINGS } from './constants'

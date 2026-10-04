@@ -1,4 +1,5 @@
 import type { InvestmentOverview, ExtensionSettings, StoredAuth } from './types'
+import { DEFAULT_SETTINGS } from './constants'
 
 const API_BASE_URL = 'https://fintrek.web.id/api/extension'
 
