@@ -1,3 +1,10 @@
+# [1.28.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.27.0...v1.28.0) (2026-10-04)
+
+
+### Features
+
+* **extension:** authenticate Bibit sync via Supabase session cookie ([cbed029](https://github.com/Andi-IM/fintrack-saas/commit/cbed02933ab44d1bfe59306785ee4ef292fa1dad))
+
 # [1.27.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.26.1...v1.27.0) (2026-10-04)
 
 
