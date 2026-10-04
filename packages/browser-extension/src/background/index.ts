@@ -10,6 +10,7 @@ const BADGE_COLORS = {
 
 // Initialize
 chrome.runtime.onInstalled.addListener(async () => {
+  await ensureSessionStorageAccess()
   await apiClient.initialize()
   await setupAlarms()
   if (apiClient.isAuthenticated()) {
@@ -20,6 +21,7 @@ chrome.runtime.onInstalled.addListener(async () => {
 })
 
 chrome.runtime.onStartup.addListener(async () => {
+  await ensureSessionStorageAccess()
   await apiClient.initialize()
   await setupAlarms()
   if (apiClient.isAuthenticated()) {
@@ -28,6 +30,20 @@ chrome.runtime.onStartup.addListener(async () => {
     updateBadge('neutral', '')
   }
 })
+
+// Content scripts run in an untrusted context; they need explicit access to
+// session storage to cache the captured Bibit portfolio payload.
+async function ensureSessionStorageAccess(): Promise<void> {
+  try {
+    if (chrome.storage?.session?.setAccessLevel) {
+      await chrome.storage.session.setAccessLevel({
+        accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS',
+      })
+    }
+  } catch {
+    // Older browsers may not support session storage access levels
+  }
+}
 
 // Launch independent web app investment feature when toolbar icon is clicked
 chrome.action.onClicked.addListener(async () => {

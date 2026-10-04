@@ -23,17 +23,27 @@
     "service_worker": "background.js",
     "type": "module"
   },
+  "content_scripts": [
+    {
+      "matches": ["https://app.bibit.id/*"],
+      "js": ["bibit-interceptor.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://app.bibit.id/*"],
+      "js": ["bibit-content.js"],
+      "run_at": "document_start"
+    }
+  ],
   "permissions": [
     "storage",
     "alarms",
     "identity"
   ],
   "host_permissions": [
-    "https://*.fintrek.web.id/*",
-    "https://*.supabase.co/*"
-  ],
-  "optional_host_permissions": [
-    "https://fintrek.web.id/*"
+    "https://fintrek.web.id/*",
+    "https://app.bibit.id/*"
   ],
   "web_accessible_resources": [
     {
