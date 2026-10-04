@@ -1,9 +1,23 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import fs from 'fs'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'copy-built-popup',
+      closeBundle() {
+        // Copy built popup.html to dist root for extension manifest
+        const src = path.resolve(__dirname, 'dist/src/popup/index.html')
+        const dest = path.resolve(__dirname, 'dist/popup.html')
+        if (fs.existsSync(src)) {
+          fs.copyFileSync(src, dest)
+        }
+      },
+    },
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
