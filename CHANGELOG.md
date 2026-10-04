@@ -1,3 +1,10 @@
+# [1.25.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.24.0...v1.25.0) (2026-10-04)
+
+
+### Features
+
+* implement investment repository with supabase data access methods ([b1ae3cf](https://github.com/Andi-IM/fintrack-saas/commit/b1ae3cfc98a3c5d56f8ba758c6725a91479da9ac))
+
 # [1.24.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.23.1...v1.24.0) (2026-10-04)
 
 
