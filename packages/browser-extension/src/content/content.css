@@ -1,0 +1,26 @@
+/* Content script styles */
+#fintrack-extension-widget {
+  animation: fintrack-slide-in 0.3s ease-out;
+}
+
+@keyframes fintrack-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+#fintrack-widget-close:hover {
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+#fintrack-widget-refresh:hover {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}

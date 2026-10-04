@@ -306,6 +306,217 @@ export type Database = {
         }
         Relationships: []
       }
+      investment_accounts: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          type: "stock" | "mutual_fund" | "crypto" | "gold" | "other"
+          broker: string | null
+          currency: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          type: "stock" | "mutual_fund" | "crypto" | "gold" | "other"
+          broker?: string | null
+          currency?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          type?: "stock" | "mutual_fund" | "crypto" | "gold" | "other"
+          broker?: string | null
+          currency?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      investment_holdings: {
+        Row: {
+          id: string
+          account_id: string
+          user_id: string
+          symbol: string
+          name: string
+          asset_class: "equity" | "fixed_income" | "crypto" | "commodity" | "cash" | "other"
+          quantity: number
+          avg_buy_price: number | null
+          currency: string
+          metadata: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          account_id: string
+          user_id: string
+          symbol: string
+          name: string
+          asset_class: "equity" | "fixed_income" | "crypto" | "commodity" | "cash" | "other"
+          quantity?: number
+          avg_buy_price?: number | null
+          currency?: string
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          account_id?: string
+          user_id?: string
+          symbol?: string
+          name?: string
+          asset_class?: "equity" | "fixed_income" | "crypto" | "commodity" | "cash" | "other"
+          quantity?: number
+          avg_buy_price?: number | null
+          currency?: string
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_holdings_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "investment_accounts"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      investment_transactions: {
+        Row: {
+          id: string
+          holding_id: string
+          user_id: string
+          type: "buy" | "sell" | "dividend" | "split" | "merge" | "transfer_in" | "transfer_out" | "fee" | "interest" | "staking_reward" | "airdrop"
+          quantity: number
+          price: number
+          fees: number
+          taxes: number
+          total_amount: number
+          transaction_date: string
+          settlement_date: string | null
+          notes: string | null
+          external_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          holding_id: string
+          user_id: string
+          type: "buy" | "sell" | "dividend" | "split" | "merge" | "transfer_in" | "transfer_out" | "fee" | "interest" | "staking_reward" | "airdrop"
+          quantity: number
+          price: number
+          fees?: number
+          taxes?: number
+          transaction_date: string
+          settlement_date?: string | null
+          notes?: string | null
+          external_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          holding_id?: string
+          user_id?: string
+          type?: "buy" | "sell" | "dividend" | "split" | "merge" | "transfer_in" | "transfer_out" | "fee" | "interest" | "staking_reward" | "airdrop"
+          quantity?: number
+          price?: number
+          fees?: number
+          taxes?: number
+          transaction_date?: string
+          settlement_date?: string | null
+          notes?: string | null
+          external_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_transactions_holding_id_fkey"
+            columns: ["holding_id"]
+            isOneToOne: false
+            referencedRelation: "investment_holdings"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      investment_price_snapshots: {
+        Row: {
+          id: string
+          symbol: string
+          asset_class: string
+          price: number
+          currency: string
+          source: string
+          timestamp: string
+        }
+        Insert: {
+          id?: string
+          symbol: string
+          asset_class: string
+          price: number
+          currency?: string
+          source: string
+          timestamp?: string
+        }
+        Update: {
+          id?: string
+          symbol?: string
+          asset_class?: string
+          price?: number
+          currency?: string
+          source?: string
+          timestamp?: string
+        }
+        Relationships: []
+      }
+      portfolio_snapshots: {
+        Row: {
+          id: string
+          user_id: string
+          total_value: number
+          total_cost: number
+          total_gain_loss: number
+          total_gain_loss_pct: number
+          day_change: number | null
+          day_change_pct: number | null
+          snapshot_date: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          total_value: number
+          total_cost: number
+          day_change?: number | null
+          day_change_pct?: number | null
+          snapshot_date?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          total_value?: number
+          total_cost?: number
+          day_change?: number | null
+          day_change_pct?: number | null
+          snapshot_date?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Functions: {
       create_bank_statement_with_items: {
@@ -333,6 +544,25 @@ export type Database = {
       get_financial_analytics: {
         Args: { p_date_from?: string; p_date_to?: string; p_user_id: string }
         Returns: Json
+      }
+      recalculate_holding_avg_price: {
+        Args: { p_holding_id: string }
+        Returns: number
+      }
+      refresh_portfolio_snapshot: {
+        Args: { p_user_id: string }
+        Returns: {
+          id: string
+          user_id: string
+          total_value: number
+          total_cost: number
+          total_gain_loss: number
+          total_gain_loss_pct: number
+          day_change: number | null
+          day_change_pct: number | null
+          snapshot_date: string
+          created_at: string
+        }
       }
     }
     Enums: {

@@ -1,0 +1,86 @@
+name: Deploy Price Ingestion Edge Functions
+
+on:
+  workflow_dispatch:
+  schedule:
+    # IDX Stocks: Every 15 minutes during trading hours (09:00-15:00 WIB = 02:00-08:00 UTC)
+    - cron: '*/15 2-8 * * 1-5'  # Mon-Fri, every 15 min 02:00-08:00 UTC
+    # Mutual Funds: Daily at 17:00 WIB = 10:00 UTC
+    - cron: '0 10 * * 1-5'      # Mon-Fri at 10:00 UTC
+    # Crypto: Every 5 minutes
+    - cron: '*/5 * * * *'
+    # Gold: Hourly
+    - cron: '0 * * * *'
+
+jobs:
+  deploy-and-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Login to Supabase
+        run: supabase login --token ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Link Project
+        run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+
+      - name: Deploy Edge Functions
+        run: |
+          supabase functions deploy price-ingestion-idx --no-verify-jwt
+          supabase functions deploy price-ingestion-mutual-funds --no-verify-jwt
+          supabase functions deploy price-ingestion-crypto --no-verify-jwt
+          supabase functions deploy price-ingestion-gold --no-verify-jwt
+          supabase functions deploy refresh-portfolio-snapshots --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+
+      - name: Invoke Price Ingestion Functions
+        run: |
+          # Determine which functions to run based on schedule
+          CURRENT_HOUR_UTC=$(date -u +%H)
+          CURRENT_MIN_UTC=$(date -u +%M)
+          DAY_OF_WEEK=$(date -u +%u)  # 1=Mon, 7=Sun
+          
+          # Always run crypto (every 5 min)
+          echo "Running crypto price ingestion..."
+          curl -X POST "https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co/functions/v1/price-ingestion-crypto" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" || true
+          
+          # Run gold hourly
+          echo "Running gold price ingestion..."
+          curl -X POST "https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co/functions/v1/price-ingestion-gold" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" || true
+          
+          # Run IDX stocks during trading hours (Mon-Fri, 02:00-08:00 UTC)
+          if [ "$DAY_OF_WEEK" -le 5 ] && [ "$CURRENT_HOUR_UTC" -ge 2 ] && [ "$CURRENT_HOUR_UTC" -le 8 ]; then
+            echo "Running IDX stock price ingestion (trading hours)..."
+            curl -X POST "https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co/functions/v1/price-ingestion-idx" \
+              -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+              -H "Content-Type: application/json" || true
+          fi
+          
+          # Run mutual funds at 10:00 UTC (17:00 WIB) on weekdays
+          if [ "$DAY_OF_WEEK" -le 5 ] && [ "$CURRENT_HOUR_UTC" = "10" ] && [ "$CURRENT_MIN_UTC" -lt 15 ]; then
+            echo "Running mutual fund NAV ingestion..."
+            curl -X POST "https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co/functions/v1/price-ingestion-mutual-funds" \
+              -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+              -H "Content-Type: application/json" || true
+          fi
+
+          # Always refresh portfolio snapshots at the end
+          echo "Refreshing portfolio snapshots..."
+          curl -X POST "https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co/functions/v1/refresh-portfolio-snapshots" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" || true
+        env:
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
