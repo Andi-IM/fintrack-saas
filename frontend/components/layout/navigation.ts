@@ -1,4 +1,26 @@
+import type { LucideIcon } from 'lucide-react'
+import { LayoutDashboard, FileText, Camera, Building2, TrendingUp } from 'lucide-react'
+
 export type NavigationSection = 'dashboard' | 'transactions' | 'statements' | 'investments' | 'receipts'
+
+export interface NavigationItem {
+  section: NavigationSection
+  label: string
+  href: string
+  icon: LucideIcon
+}
+
+export const NAV_ITEMS: NavigationItem[] = [
+  { section: 'dashboard', label: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { section: 'transactions', label: 'Transaksi', href: '/transactions', icon: FileText },
+  { section: 'statements', label: 'Bank', href: '/statements', icon: Building2 },
+  { section: 'investments', label: 'Investasi', href: '/investments', icon: TrendingUp },
+  { section: 'receipts', label: 'Struk', href: '/receipts', icon: Camera },
+]
+
+export function getNavigationItem(section: NavigationSection): NavigationItem {
+  return NAV_ITEMS.find((item) => item.section === section) ?? NAV_ITEMS[0]
+}
 
 export interface BreadcrumbItem {
   label: string
@@ -34,28 +56,28 @@ export function getNavigationContext(
   if (pathname?.startsWith('/statements')) {
     return {
       activeSection: 'statements',
-      breadcrumbs: [root, { label: 'Bank Statements' }],
+      breadcrumbs: [root, { label: 'Bank' }],
     }
   }
 
   if (pathname?.startsWith('/receipts')) {
     return {
       activeSection: 'receipts',
-      breadcrumbs: [root, { label: 'Receipts' }],
+      breadcrumbs: [root, { label: 'Struk' }],
     }
   }
 
   if (pathname === '/add' && scan === 'BankStatement') {
     return {
       activeSection: 'statements',
-      breadcrumbs: [root, { label: 'Bank Statements', href: '/statements' }, { label: 'Upload Statement' }],
+      breadcrumbs: [root, { label: 'Bank', href: '/statements' }, { label: 'Unggah Mutasi' }],
     }
   }
 
   if (pathname === '/add' && scan === 'Receipt') {
     return {
       activeSection: 'receipts',
-      breadcrumbs: [root, { label: 'Receipts', href: '/receipts' }, { label: 'Scan Receipt' }],
+      breadcrumbs: [root, { label: 'Struk', href: '/receipts' }, { label: 'Pindai Struk' }],
     }
   }
 
@@ -63,7 +85,7 @@ export function getNavigationContext(
     if (pathname === '/investments') {
       return {
         activeSection: 'investments',
-        breadcrumbs: [root, { label: 'Investments' }],
+        breadcrumbs: [root, { label: 'Investasi' }],
       }
     }
 
@@ -73,19 +95,19 @@ export function getNavigationContext(
     const isTransactions = pathname.startsWith('/investments/transactions')
     const isSettings = pathname.startsWith('/investments/settings')
 
-    const breadcrumbs: BreadcrumbItem[] = [root, { label: 'Investments', href: '/investments' }]
+    const breadcrumbs: BreadcrumbItem[] = [root, { label: 'Investasi', href: '/investments' }]
 
     if (isNewAccount) {
-      breadcrumbs.push({ label: 'Accounts', href: '/investments/accounts' })
-      breadcrumbs.push({ label: 'New Account' })
+      breadcrumbs.push({ label: 'Akun', href: '/investments/accounts' })
+      breadcrumbs.push({ label: 'Akun Baru' })
     } else if (isAccounts) {
-      breadcrumbs.push({ label: 'Accounts' })
+      breadcrumbs.push({ label: 'Akun' })
     } else if (isHoldings) {
-      breadcrumbs.push({ label: 'Holdings' })
+      breadcrumbs.push({ label: 'Kepemilikan' })
     } else if (isTransactions) {
-      breadcrumbs.push({ label: 'Transactions' })
+      breadcrumbs.push({ label: 'Transaksi' })
     } else if (isSettings) {
-      breadcrumbs.push({ label: 'Settings' })
+      breadcrumbs.push({ label: 'Pengaturan' })
     }
 
     return {
@@ -97,14 +119,14 @@ export function getNavigationContext(
   if (pathname?.startsWith('/transactions')) {
     return {
       activeSection: 'transactions',
-      breadcrumbs: [root, { label: 'Transactions' }],
+      breadcrumbs: [root, { label: 'Transaksi' }],
     }
   }
 
   if (pathname === '/add') {
     return {
       activeSection: 'transactions',
-      breadcrumbs: [root, { label: 'Transactions', href: '/transactions' }, { label: edit ? 'Edit Transaction' : 'Add Transaction' }],
+      breadcrumbs: [root, { label: 'Transaksi', href: '/transactions' }, { label: edit ? 'Ubah Transaksi' : 'Tambah Transaksi' }],
     }
   }
 

@@ -1,6 +1,7 @@
 ---
 timestamp: 2026-06-19T02-55-50Z
 slug: frontend-components-layout-sidebar-tsx
+closed: true
 ---
 # Critique: Navigation in Mobile Mode
 

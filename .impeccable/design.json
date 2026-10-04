@@ -1,77 +1,66 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-06-19T09:54:00Z",
+  "generatedAt": "2026-10-04T00:00:00.000Z",
   "title": "Design System: FinTrack SaaS",
   "extensions": {
     "colorMeta": {
       "primary": {
         "role": "primary",
         "displayName": "Clean Indigo",
-        "canonical": "oklch(0.585 0.233 277.117)",
-        "tonalRamp": [
-          "oklch(0.25 0.23 277.117)",
-          "oklch(0.35 0.23 277.117)",
-          "oklch(0.45 0.23 277.117)",
-          "oklch(0.585 0.233 277.117)",
-          "oklch(0.68 0.20 277.117)",
-          "oklch(0.78 0.15 277.117)",
-          "oklch(0.88 0.10 277.117)",
-          "oklch(0.95 0.05 277.117)"
-        ]
+        "canonical": "#4f46e5",
+        "tonalRamp": ["#1e1b4b", "#312e81", "#3730a3", "#4338ca", "#4f46e5", "#6366f1", "#a5b4fc", "#eef2ff"]
       },
-      "neutral-bg": {
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Deep Indigo",
+        "canonical": "#4338ca",
+        "tonalRamp": ["#1e1b4b", "#312e81", "#3730a3", "#4338ca", "#4f46e5", "#6366f1", "#a5b4fc", "#eef2ff"]
+      },
+      "primary-active-surface": {
+        "role": "primary",
+        "displayName": "Indigo Tint Surface",
+        "canonical": "#eef2ff",
+        "tonalRamp": ["#1e1b4b", "#312e81", "#3730a3", "#4338ca", "#4f46e5", "#6366f1", "#a5b4fc", "#eef2ff"]
+      },
+      "canvas": {
         "role": "neutral",
-        "displayName": "Pure Canvas",
-        "canonical": "oklch(1 0 0)",
-        "tonalRamp": [
-          "oklch(0.15 0 0)",
-          "oklch(0.30 0 0)",
-          "oklch(0.50 0 0)",
-          "oklch(0.70 0 0)",
-          "oklch(0.85 0 0)",
-          "oklch(0.90 0 0)",
-          "oklch(0.95 0 0)",
-          "oklch(1.00 0 0)"
-        ]
-      }
+        "displayName": "Cool Canvas",
+        "canonical": "#f8fafc",
+        "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#f8fafc"]
+      },
+      "surface": { "role": "neutral", "displayName": "Pure Surface", "canonical": "#ffffff", "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#cbd5e1", "#e2e8f0", "#ffffff"] },
+      "foreground": { "role": "neutral", "displayName": "Deep Slate Ink", "canonical": "#0f172a", "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#f8fafc"] },
+      "muted-foreground": { "role": "neutral", "displayName": "Muted Slate", "canonical": "#64748b", "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#f8fafc"] },
+      "border": { "role": "neutral", "displayName": "Hairline Border", "canonical": "#e2e8f0", "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0"] },
+      "border-subtle": { "role": "neutral", "displayName": "Subtle Divider", "canonical": "#f1f5f9", "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#f1f5f9"] },
+      "status-positive": { "role": "tertiary", "displayName": "Gain Emerald", "canonical": "#059669", "tonalRamp": ["#022c22", "#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#6ee7b7", "#ecfdf5"] },
+      "status-negative": { "role": "tertiary", "displayName": "Loss Rose", "canonical": "#e11d48", "tonalRamp": ["#4c0519", "#881337", "#9f1239", "#be123c", "#e11d48", "#f43f5e", "#fda4af", "#fff1f2"] },
+      "status-warning": { "role": "tertiary", "displayName": "Caution Amber", "canonical": "#d97706", "tonalRamp": ["#451a03", "#78350f", "#92400e", "#b45309", "#d97706", "#f59e0b", "#fcd34d", "#fffbeb"] },
+      "ink-vault": { "role": "neutral", "displayName": "Vault Ink", "canonical": "#1e1b4b", "tonalRamp": ["#1e1b4b", "#312e81", "#3730a3", "#4338ca", "#4f46e5", "#6366f1", "#a5b4fc", "#eef2ff"] }
     },
     "typographyMeta": {
-      "display": {
-        "displayName": "Display Hero Title",
-        "purpose": "Big headlines on landing pages only."
-      },
-      "body": {
-        "displayName": "Standard Body Text",
-        "purpose": "Main content font, forms, cells, and finance tables."
-      }
+      "display": { "displayName": "Display", "purpose": "Hero brand statement (login 'Private Vault'). Poppins only." },
+      "headline": { "displayName": "Headline", "purpose": "Route page titles. Poppins + tracking-tight." },
+      "title": { "displayName": "Title", "purpose": "Card titles and dialog headers via font-heading." },
+      "body": { "displayName": "Body", "purpose": "Prose, table cells, form fields. Inter. id-ID currency." },
+      "label": { "displayName": "Label", "purpose": "Table headers, kickers, field labels. Inter, uppercase." }
     },
     "shadows": [
-      {
-        "name": "interactive-rise",
-        "value": "0 4px 12px rgba(79, 70, 229, 0.08)",
-        "purpose": "Subtle interactive feedback shadow on card containers and primary buttons."
-      }
+      { "name": "interactive-rise", "value": "0 1px 2px 0 rgba(0,0,0,0.05)", "purpose": "Subtle hover lift on cards and the active sidebar item." },
+      { "name": "primary-action", "value": "0 4px 6px -1px rgba(99,102,241,0.35)", "purpose": "Seats the indigo primary button above the plane." },
+      { "name": "floating-overlay", "value": "0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)", "purpose": "Dialogs, popovers, login card, investment hero." },
+      { "name": "bottom-nav-edge", "value": "0 -4px 10px rgba(0,0,0,0.05)", "purpose": "Upward-only marker on the fixed mobile bottom nav." }
     ],
     "motion": [
-      {
-        "name": "ease-out-expo",
-        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
-        "purpose": "Snappy, professional easing for UI element transitions."
-      }
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Default easing for state and layout transitions." },
+      { "name": "duration-fast", "value": "150ms", "purpose": "Hover/focus color and transform transitions." },
+      { "name": "skeleton-pulse", "value": "2s cubic-bezier(0.4, 0, 0.6, 1) infinite", "purpose": "animate-pulse loop on loading skeletons; disabled under reduced-motion." }
     ],
     "breakpoints": [
-      {
-        "name": "sm",
-        "value": "640px"
-      },
-      {
-        "name": "md",
-        "value": "768px"
-      },
-      {
-        "name": "lg",
-        "value": "1024px"
-      }
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
     ]
   },
   "components": [
@@ -79,47 +68,107 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Clean primary action button.",
+      "description": "Indigo action button; the single most saturated element on a screen.",
       "html": "<button class=\"ds-btn-primary\">Add Transaction</button>",
-      "css": ".ds-btn-primary { background-color: #4f46e5; color: #ffffff; padding: 10px 16px; font-family: 'Poppins', sans-serif; font-size: 0.875rem; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; transition: background-color 0.2s ease, box-shadow 0.2s ease; } .ds-btn-primary:hover { background-color: #4338ca; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08); }"
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 12px 16px; background: #4f46e5; color: #ffffff; font-family: Inter, sans-serif; font-size: 14px; font-weight: 500; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(99,102,241,0.35); cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1), transform 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { background: #4338ca; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(79,70,229,0.3); } .ds-btn-primary:active { transform: translateY(1px); }"
     },
     {
-      "name": "Financial Card",
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Neutral bordered action for secondary affordances.",
+      "html": "<button class=\"ds-btn-outline\">Cancel</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 12px 16px; background: #ffffff; color: #0f172a; font-family: Inter, sans-serif; font-size: 14px; font-weight: 500; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-outline:hover { background: #f8fafc; } .ds-btn-outline:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(79,70,229,0.3); }"
+    },
+    {
+      "name": "Ghost Icon Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Icon-only action (logout, dialog close); low emphasis.",
+      "html": "<button class=\"ds-btn-ghost\" aria-label=\"Close\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"/><line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"/></svg></button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: transparent; color: #64748b; border: none; border-radius: 8px; cursor: pointer; transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-ghost:hover { background: #f1f5f9; color: #334155; } .ds-btn-ghost:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(79,70,229,0.3); }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Standard financial form field with indigo focus ring and rose error state.",
+      "html": "<input class=\"ds-input\" placeholder=\"0\" />",
+      "css": ".ds-input { width: 100%; height: 40px; padding: 8px 12px; background: #ffffff; color: #0f172a; font-family: Inter, sans-serif; font-size: 14px; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; transition: border-color 150ms, box-shadow 150ms; } .ds-input::placeholder { color: #64748b; } .ds-input:focus-visible { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.2); } .ds-input:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Card",
       "kind": "card",
-      "description": "Dashboard container card at rest.",
-      "html": "<div class=\"ds-card\"><h4 class=\"ds-card-title\">Total Assets</h4><p class=\"ds-card-value\">Rp 12.500.000</p></div>",
-      "css": ".ds-card { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; font-family: 'Inter', sans-serif; transition: box-shadow 0.2s ease; } .ds-card:hover { box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08); } .ds-card-title { font-family: 'Poppins', sans-serif; font-size: 0.875rem; font-weight: 500; color: #64748b; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.05em; } .ds-card-value { font-size: 1.5rem; font-weight: 600; color: #0f172a; margin: 0; }"
+      "refersTo": "card",
+      "description": "White bordered surface; flat at rest, lifts subtly on hover.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">Financial Overview</div><div class=\"ds-card-body\">Saldo Rp 12.340.000</div></div>",
+      "css": ".ds-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; color: #0f172a; font-family: Inter, sans-serif; transition: box-shadow 150ms cubic-bezier(0.4,0,0.2,1); } .ds-card:hover { box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); } .ds-card-title { font-family: Poppins, sans-serif; font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 8px; } .ds-card-body { font-family: Inter, sans-serif; font-size: 14px; color: #334155; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge-status",
+      "description": "Pill status chip encoding gain/loss/warning; never decorative.",
+      "html": "<span class=\"ds-badge-gain\">+2.41%</span><span class=\"ds-badge-loss\" style=\"margin-left:8px\">-1.08%</span>",
+      "css": ".ds-badge-gain { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; border-radius: 9999px; font-family: Inter, sans-serif; font-size: 12px; font-weight: 600; } .ds-badge-loss { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; background: #fff1f2; color: #e11d48; border: 1px solid #ffe4e6; border-radius: 9999px; font-family: Inter, sans-serif; font-size: 12px; font-weight: 600; }"
+    },
+    {
+      "name": "Sidebar Nav Item",
+      "kind": "nav",
+      "refersTo": "card",
+      "description": "Indigo-tinted active nav row against a white rail.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-active\">Dashboard</a><a class=\"ds-nav-item\">Transactions</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 8px; width: 240px; padding: 16px; background: #ffffff; border-right: 1px solid #e2e8f0; } .ds-nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 14px; font-family: Inter, sans-serif; font-size: 14px; font-weight: 700; color: #64748b; text-decoration: none; cursor: pointer; transition: background 150ms, color 150ms; } .ds-nav-item:hover { background: #f8fafc; color: #334155; } .ds-nav-active { background: #eef2ff; color: #4338ca; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); }"
+    },
+    {
+      "name": "Investment Vault Hero",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Signature dark gradient panel; the product's premium/owned-money surface.",
+      "html": "<div class=\"ds-vault\"><span class=\"ds-vault-kicker\">Portofolio Investasi</span><span class=\"ds-vault-value\">Rp 128.450.000</span></div>",
+      "css": ".ds-vault { position: relative; overflow: hidden; padding: 24px; border-radius: 18px; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); border: 1px solid rgba(55,48,163,0.4); box-shadow: 0 20px 25px -5px rgba(30,27,75,0.2); color: #ffffff; } .ds-vault-kicker { display: block; font-family: Inter, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #a5b4fc; margin-bottom: 4px; } .ds-vault-value { display: block; font-family: Poppins, sans-serif; font-size: 30px; font-weight: 800; letter-spacing: -0.025em; }"
     }
   ],
   "narrative": {
     "northStar": "The Clean Indigo Vault",
-    "overview": "A sleek, highly structured financial workspace built around precision, density, and localized trust. It rejects ambient shadows and warm-cream templates in favor of sharp boundaries, clean typography, and excellent contrast.",
+    "overview": "FinTrack's visual identity is a dense, high-contrast financial workspace with a single indigo voice: a light slate canvas, crisp white surfaces, 1px boundaries, and one saturated accent that marks where the user acts and where money is brand-owned. It is built for Indonesian individuals and freelancers who scan numbers all day, so readability of tabular data outranks decoration. The system rejects warm SaaS-cream neutrals and ambient-shadow card stacks; depth comes from borders and contrast, and shadows are reserved for state. The identity is deliberately dual-material: the operational surface (dashboard, transactions, statements, receipts) is light, flat, and neutral with indigo carried only by the active nav item, the primary action, and brand marks; the vault surface (login, investment hero) flips to a deep slate-to-indigo gradient to signal a premium protected space. Because the product displays money, color is meaningful: emerald reads as gain, rose as loss, amber as caution, and indigo as neutral brand action.",
     "keyCharacteristics": [
-      "Focused Indigo visual identity with dark slate/blue depth.",
-      "Low-elevation, boundary-driven layouts utilizing 1px borders.",
-      "High typographic readability separating numbers (Inter) from branding/headings (Poppins)."
+      "Single indigo accent (#4f46e5 / indigo-600) on a slate canvas; indigo never exceeds ~10% of an operational screen.",
+      "Poppins for headings and brand; Inter for all numbers, tables, and body copy.",
+      "Flat-by-default with 1px borders (slate-200) as the primary depth cue.",
+      "Semantic money color: emerald (positive), rose (negative), amber (warning).",
+      "One radius ladder driven by the shadcn --radius token (10px base, scaling to 18-24px surfaces).",
+      "Immediate in-page skeleton feedback instead of blocking spinners."
     ],
     "rules": [
-      {
-        "name": "The Indigo Constraint Rule",
-        "body": "The primary clean indigo color (#4f46e5) is used selectively on <=10% of any given screen. Primary actions and brand markers carry the accent.",
-        "section": "colors"
-      },
-      {
-        "name": "The Boundary Rule",
-        "body": "Depth must always be created using solid borders (1px) in combination with layout changes. Ambient drop shadows are prohibited unless explicitly triggered by interactive states.",
-        "section": "elevation"
-      }
+      { "name": "The One Indigo Voice Rule", "body": "Indigo (#4f46e5) is the only saturated brand color and appears on <=10% of any operational screen: the primary action, the active nav item, and brand marks. Everything else is slate, white, or a semantic status color. Its rarity is what makes it read as the thing to click.", "section": "colors" },
+      { "name": "The Money-Is-Not-Decoration Rule", "body": "Emerald, rose, and amber exist only to encode financial state (gain/loss/warning). They never appear as arbitrary fills, backgrounds, or accent flourishes.", "section": "colors" },
+      { "name": "The Numbers-Are-Inter Rule", "body": "Every monetary value, percentage, and tabular cell uses Inter (and font-mono for aligned figures where columns must line up). Poppins is forbidden in any numeric context.", "section": "typography" },
+      { "name": "The Poppins-Headings Rule", "body": "All page and card headings opt in explicitly with the font-poppins (or font-heading) utility; body text inherits Inter from <html> and never needs a font class.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. A shadow is only legitimate as a response to state (hover, focus, overlay, elevation), never as a resting decoration on a standard card.", "section": "elevation" },
+      { "name": "The No-Ghost-Card Rule", "body": "A resting card never combines a 1px border with a large blurred shadow. Boundary or float - not both.", "section": "elevation" },
+      { "name": "The Ladder Rule", "body": "Radius is never hand-picked per component. It is chosen from the --radius-derived ladder (lg / xl / 2xl / 3xl) so every surface stays in one family.", "section": "shapes" },
+      { "name": "The Capsule Exception", "body": "rounded-full is permitted only on badges, status chips, and circular avatars/icons; it is never used for buttons, cards, or inputs.", "section": "shapes" }
     ],
     "dos": [
-      "Do format all currency amounts explicitly via Intl.NumberFormat('id-ID').",
-      "Do use a Calendar-based date picker for manual transactions instead of simple text inputs.",
-      "Do provide in-page skeleton loading animations for fields while OCR processing is active."
+      "Do format all currency via Intl.NumberFormat('id-ID') with the rupiah symbol and correct thousands separators.",
+      "Do set every page/card heading in Poppins (font-poppins/font-heading) and leave body/numeric text in Inter.",
+      "Do build depth from a 1px slate-200 border on a slate-50 canvas; add a shadow only for hover, focus, or overlay.",
+      "Do keep indigo to <=10% of an operational screen: primary action + active nav + brand mark.",
+      "Do pick radii from the --radius ladder (rounded-lg to 3xl), not ad hoc values.",
+      "Do ship a layout-matching animate-pulse skeleton for every async route, and honor reduced-motion.",
+      "Do use emerald/rose/amber strictly to encode gain, loss, and warning."
     ],
     "donts": [
-      "Don't use warm neutral/beige 'SaaS-cream' default background colors.",
-      "Don't apply border-radius values greater than 16px to cards or sections.",
-      "Don't pair a 1px solid border with a drop shadow of 16px or greater blur."
+      "Don't use warm neutral/beige SaaS-cream backgrounds; the neutral ramp is cool slate.",
+      "Don't apply a large blurred shadow to a resting bordered card (no ghost cards).",
+      "Don't use the #4f46e5 hex directly - emit it through the token (indigo-600) so dark-mode and theming stay viable.",
+      "Don't set numbers or table cells in Poppins, and don't set the brand in Inter.",
+      "Don't use gradient text (background-clip: text) for headings.",
+      "Don't round buttons, cards, or inputs to full pills; pills are for badges and status chips only.",
+      "Don't use saturated status colors as decorative fills or backgrounds.",
+      "Don't let table text overflow its cell; use truncation with a tooltip for long values.",
+      "Don't replace in-page skeletons with a blocking full-screen spinner."
     ]
   }
 }

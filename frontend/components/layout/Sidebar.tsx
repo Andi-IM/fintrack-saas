@@ -2,9 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { LayoutDashboard, FileText, Camera, Building2, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { getNavigationContext } from './navigation'
+import { getNavigationContext, NAV_ITEMS } from './navigation'
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -12,48 +11,30 @@ export function Sidebar() {
   const { activeSection } = getNavigationContext(pathname, searchParams)
 
   return (
-    <aside className="w-20 lg:w-64 bg-white border-r border-slate-200 shrink-0 flex flex-col p-4 z-10 md:flex transition-all duration-300">
-      <nav className="flex flex-col gap-2 flex-1">
-        <Link 
-          href="/" 
-          title="Dashboard"
-          className={cn("flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", activeSection === "dashboard" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700")}
-        >
-          <LayoutDashboard className="w-6 h-6 lg:w-5 lg:h-5" />
-          <span className="hidden lg:block">Dashboard</span>
-        </Link>
-        <Link 
-          href="/transactions" 
-          title="Transactions"
-          className={cn("flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", activeSection === "transactions" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700")}
-        >
-          <FileText className="w-6 h-6 lg:w-5 lg:h-5" />
-          <span className="hidden lg:block">Transactions</span>
-        </Link>
-        <Link 
-          href="/statements" 
-          title="Bank Statements"
-          className={cn("flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", activeSection === "statements" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700")}
-        >
-          <Building2 className="w-6 h-6 lg:w-5 lg:h-5" />
-          <span className="hidden lg:block">Bank Statements</span>
-        </Link>
-        <Link 
-          href="/investments" 
-          title="Investments"
-          className={cn("flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", activeSection === "investments" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700")}
-        >
-          <TrendingUp className="w-6 h-6 lg:w-5 lg:h-5" />
-          <span className="hidden lg:block">Investments</span>
-        </Link>
-        <Link 
-          href="/receipts" 
-          title="Receipts"
-          className={cn("flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all", activeSection === "receipts" ? "bg-indigo-50 text-indigo-700 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700")}
-        >
-          <Camera className="w-6 h-6 lg:w-5 lg:h-5" />
-          <span className="hidden lg:block">Receipts</span>
-        </Link>
+    <aside className="hidden md:flex w-20 lg:w-64 bg-white border-r border-slate-200 shrink-0 flex-col p-4 z-10 transition-all duration-300">
+      <nav aria-label="Navigasi utama" className="flex flex-col gap-2 flex-1">
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon
+          const active = item.section === activeSection
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-label={item.label}
+              aria-current={active ? 'page' : undefined}
+              title={item.label}
+              className={cn(
+                "flex items-center justify-center lg:justify-start gap-0 lg:gap-3 px-0 lg:px-4 py-3 rounded-xl text-sm font-bold transition-all",
+                active
+                  ? "bg-indigo-50 text-indigo-700 shadow-sm"
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+              )}
+            >
+              <Icon className="w-6 h-6 lg:w-5 lg:h-5" />
+              <span className="hidden lg:block">{item.label}</span>
+            </Link>
+          )
+        })}
       </nav>
     </aside>
   )
