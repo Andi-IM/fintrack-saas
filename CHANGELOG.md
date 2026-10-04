@@ -1,3 +1,10 @@
+## [1.30.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.30.3...v1.30.4) (2026-10-04)
+
+
+### Bug Fixes
+
+* **api:** truncate key_prefix to 16 chars to match VARCHAR(16) column ([8a1aa16](https://github.com/Andi-IM/fintrack-saas/commit/8a1aa166a23cca7e2c91b67794e789874830ef39))
+
 ## [1.30.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.30.2...v1.30.3) (2026-10-04)
 
 
