@@ -79,4 +79,5 @@ Setiap keputusan desain yang signifikan dan berpengaruh besar terhadap struktur 
 - [ADR-075](075-independent-investment-feature-and-extension-launcher.md) - Independent Investment Feature and Direct Extension Launcher
 - [ADR-076](076-bibit-portfolio-sync-via-extension.md) - Bibit Portfolio Sync via Browser Extension
 - [ADR-077](077-harden-bibit-extension-capture-security.md) - Harden Bibit Extension Data Capture Security
+- [ADR-078](078-cors-for-bibit-extension-sync-endpoint.md) - CORS Support for the Bibit Extension Sync Endpoint
 

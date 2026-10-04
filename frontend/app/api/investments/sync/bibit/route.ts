@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getInvestmentRepository } from '@/lib/repositories/investments'
 import { invalidateCache } from '@/lib/cache'
+import { buildCorsHeaders, corsPreflightResponse } from '@/lib/cors'
+
+export async function OPTIONS(req: Request) {
+  return corsPreflightResponse(req)
+}
 
 interface BibitResultItem {
   id: number
@@ -58,13 +63,14 @@ function isValidPayload(body: unknown): body is BibitSyncPayload {
 }
 
 export async function POST(req: Request) {
+  const corsHeaders = buildCorsHeaders(req.headers.get('origin'))
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized. Please login to FinTrack first.' },
-        { status: 401 }
+        { status: 401, headers: corsHeaders }
       )
     }
 
@@ -72,7 +78,7 @@ export async function POST(req: Request) {
     if (!isValidPayload(body)) {
       return NextResponse.json(
         { success: false, error: 'Invalid Bibit portfolio payload structure' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       )
     }
 
@@ -233,12 +239,12 @@ export async function POST(req: Request) {
         tradingBalance: body.data.trading_balance || 0,
         bucketsSynced: body.data.result.length,
       },
-    })
+    }, { headers: corsHeaders })
   } catch (error: any) {
     console.error('Error syncing Bibit portfolio:', error)
     return NextResponse.json(
       { success: false, error: error.message || 'Gagal menyinkronkan data Bibit' },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     )
   }
 }
