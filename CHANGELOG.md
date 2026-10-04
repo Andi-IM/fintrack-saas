@@ -1,3 +1,10 @@
+# [1.30.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.29.0...v1.30.0) (2026-10-04)
+
+
+### Features
+
+* **extension:** API key authentication for Bibit sync ([f7e13d6](https://github.com/Andi-IM/fintrack-saas/commit/f7e13d66fcdf2047032f5c0d5dc16cf3c95195b7))
+
 # [1.29.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.28.1...v1.29.0) (2026-10-04)
 
 
