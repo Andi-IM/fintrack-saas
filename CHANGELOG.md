@@ -1,3 +1,10 @@
+## [1.22.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.22.1...v1.22.2) (2026-10-04)
+
+
+### Bug Fixes
+
+* **extension:** add content.css for content script ([c85835a](https://github.com/Andi-IM/fintrack-saas/commit/c85835a92203831a45e170c8fd03d4b7a405ccda))
+
 ## [1.22.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.22.0...v1.22.1) (2026-10-04)
 
 
