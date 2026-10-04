@@ -1,3 +1,10 @@
+# [1.23.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.22.3...v1.23.0) (2026-10-04)
+
+
+### Features
+
+* **investments:** make investment independent feature and direct extension launcher ([de7e927](https://github.com/Andi-IM/fintrack-saas/commit/de7e927a41bb1d580f50f03a5ef48fa46de15257))
+
 ## [1.22.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.22.2...v1.22.3) (2026-10-04)
 
 
