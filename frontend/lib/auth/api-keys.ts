@@ -63,7 +63,7 @@ export async function generateApiKey(
   const entropy = crypto.randomBytes(32).toString('hex')
   const rawKey = `${API_KEY_PREFIX}${entropy}`
   const keyHash = hashApiKey(rawKey)
-  const keyPrefix = `${rawKey.slice(0, 16)}...`
+  const keyPrefix = rawKey.slice(0, 16) // VARCHAR(16) in DB
 
   const supabase = client || getFallbackClient()
   const { data, error } = await supabase
