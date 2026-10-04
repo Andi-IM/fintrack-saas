@@ -1,3 +1,10 @@
+## [1.22.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.22.2...v1.22.3) (2026-10-04)
+
+
+### Bug Fixes
+
+* **extension:** copy built popup.html to dist root ([5acd90e](https://github.com/Andi-IM/fintrack-saas/commit/5acd90e9839cf5fda15c1bed86306757557f1172))
+
 ## [1.22.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.22.1...v1.22.2) (2026-10-04)
 
 
