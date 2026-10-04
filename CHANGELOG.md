@@ -1,3 +1,10 @@
+## [1.26.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.26.0...v1.26.1) (2026-10-04)
+
+
+### Bug Fixes
+
+* **extension:** resolve DEFAULT_SETTINGS reference error in background worker ([5ec040a](https://github.com/Andi-IM/fintrack-saas/commit/5ec040af8641308e078cd5f2de0031bc291ee14b))
+
 # [1.26.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.25.0...v1.26.0) (2026-10-04)
 
 
