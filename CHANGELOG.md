@@ -1,3 +1,10 @@
+# [1.27.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.26.1...v1.27.0) (2026-10-04)
+
+
+### Features
+
+* **api:** add CORS support for Bibit extension sync endpoint ([91ea882](https://github.com/Andi-IM/fintrack-saas/commit/91ea8821376f23586be47a9fa4a57cdc2cede20e))
+
 ## [1.26.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.26.0...v1.26.1) (2026-10-04)
 
 
