@@ -1,3 +1,10 @@
+## [1.30.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.30.0...v1.30.1) (2026-10-04)
+
+
+### Bug Fixes
+
+* **nav:** redirect /settings to /investments/settings and update extension link ([ccb1e4c](https://github.com/Andi-IM/fintrack-saas/commit/ccb1e4c19efed7d373fe27d7f64b74626429d4ce))
+
 # [1.30.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.29.0...v1.30.0) (2026-10-04)
 
 
