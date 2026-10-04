@@ -4,6 +4,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 export const API_KEY_PREFIX = 'ft_sync_'
 export const DEFAULT_KEY_SCOPE = 'investments:sync'
+const API_KEY_HASH_ITERATIONS = 210_000
+const API_KEY_HASH_KEYLEN = 32
+const API_KEY_HASH_DIGEST = 'sha256'
+const API_KEY_HASH_PEPPER = process.env.API_KEY_HASH_PEPPER || 'fintrack_api_key_hash_v1'
 
 export interface ApiKeyRecord {
   id: string
@@ -29,7 +33,9 @@ export interface VerifyApiKeyResult {
 }
 
 export function hashApiKey(rawKey: string): string {
-  return crypto.createHash('sha256').update(rawKey).digest('hex')
+  return crypto
+    .pbkdf2Sync(rawKey, API_KEY_HASH_PEPPER, API_KEY_HASH_ITERATIONS, API_KEY_HASH_KEYLEN, API_KEY_HASH_DIGEST)
+    .toString('hex')
 }
 
 function getFallbackClient(): any {
