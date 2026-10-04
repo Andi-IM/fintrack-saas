@@ -1,3 +1,10 @@
+## [1.30.5](https://github.com/Andi-IM/fintrack-saas/compare/v1.30.4...v1.30.5) (2026-10-04)
+
+
+### Bug Fixes
+
+* **sync:** require service role key for RLS bypass and clarify admin client errors ([a74bbf6](https://github.com/Andi-IM/fintrack-saas/commit/a74bbf646ff679d39d45543a1b227be09ced75ad))
+
 ## [1.30.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.30.3...v1.30.4) (2026-10-04)
 
 
