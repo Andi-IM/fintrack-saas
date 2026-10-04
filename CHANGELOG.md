@@ -1,3 +1,10 @@
+# [1.26.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.25.0...v1.26.0) (2026-10-04)
+
+
+### Features
+
+* **investments:** capture and sync Bibit portfolio via browser extension ([0dc1129](https://github.com/Andi-IM/fintrack-saas/commit/0dc1129f4c98b0216d16c14fd5e64ac68b4734f5))
+
 # [1.25.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.24.0...v1.25.0) (2026-10-04)
 
 
