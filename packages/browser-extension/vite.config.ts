@@ -31,7 +31,6 @@ export default defineConfig({
       input: {
         popup: path.resolve(__dirname, 'src/popup/index.html'),
         background: path.resolve(__dirname, 'src/background/index.ts'),
-        content: path.resolve(__dirname, 'src/content/index.ts'),
         'bibit-interceptor': path.resolve(__dirname, 'src/content/bibit-interceptor.ts'),
         'bibit-content': path.resolve(__dirname, 'src/content/bibit-content.ts'),
       },

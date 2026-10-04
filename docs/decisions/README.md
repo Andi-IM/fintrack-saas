@@ -81,4 +81,5 @@ Setiap keputusan desain yang signifikan dan berpengaruh besar terhadap struktur 
 - [ADR-077](077-harden-bibit-extension-capture-security.md) - Harden Bibit Extension Data Capture Security
 - [ADR-078](078-cors-for-bibit-extension-sync-endpoint.md) - CORS Support for the Bibit Extension Sync Endpoint
 - [ADR-079](079-extension-auth-via-supabase-session-cookie.md) - Extension Auth via Supabase Session Cookie
+- [ADR-080](080-remove-dead-extension-portfolio-code.md) - Remove Dead Portfolio Popup and Background Code from the Extension
 

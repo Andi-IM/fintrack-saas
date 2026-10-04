@@ -38,8 +38,6 @@
   ],
   "permissions": [
     "storage",
-    "alarms",
-    "identity",
     "cookies"
   ],
   "host_permissions": [
