@@ -1,3 +1,10 @@
+# [1.22.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.21.0...v1.22.0) (2026-10-04)
+
+
+### Features
+
+* add investment portfolio tracking with browser extension ([2b7da13](https://github.com/Andi-IM/fintrack-saas/commit/2b7da13ff31dd76c97ba937b79e5db41f6dfad6f))
+
 # [1.21.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.20.1...v1.21.0) (2026-10-03)
 
 
