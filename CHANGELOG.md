@@ -1,3 +1,10 @@
+## [1.23.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.23.0...v1.23.1) (2026-10-04)
+
+
+### Bug Fixes
+
+* **extension:** replace error state with clean launcher and disable unauthenticated badge ([b3739e4](https://github.com/Andi-IM/fintrack-saas/commit/b3739e4e5419110b1b4bb6931da36ddbd33e72e0))
+
 # [1.23.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.22.3...v1.23.0) (2026-10-04)
 
 
