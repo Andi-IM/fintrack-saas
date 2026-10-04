@@ -41,6 +41,7 @@ export async function POST(req: Request) {
       // Body is optional
     }
 
+    // Pass the user's session client so RLS policy (auth.uid() = user_id) is satisfied
     const newKey = await generateApiKey(user.id, name, undefined, supabase)
 
     return NextResponse.json({
@@ -50,6 +51,7 @@ export async function POST(req: Request) {
     }, { status: 201 })
   } catch (error: any) {
     console.error('Error creating API key:', error)
+    // Return actual error message for debugging (remove in production if sensitive)
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to create API key' },
       { status: 500 }
