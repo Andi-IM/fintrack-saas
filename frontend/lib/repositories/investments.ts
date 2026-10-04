@@ -17,11 +17,11 @@ function toInvestmentAccount(row: Tables<'investment_accounts'>): InvestmentAcco
     id: row.id,
     user_id: row.user_id,
     name: row.name,
-    type: row.type,
+    type: row.type as InvestmentAccount['type'],
     broker: row.broker,
     currency: row.currency,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
+    created_at: row.created_at ?? new Date().toISOString(),
+    updated_at: row.updated_at ?? new Date().toISOString(),
   }
 }
 
@@ -32,13 +32,13 @@ function toInvestmentHolding(row: Tables<'investment_holdings'>): InvestmentHold
     user_id: row.user_id,
     symbol: row.symbol,
     name: row.name,
-    asset_class: row.asset_class,
+    asset_class: row.asset_class as InvestmentHolding['asset_class'],
     quantity: row.quantity,
     avg_buy_price: row.avg_buy_price,
     currency: row.currency,
     metadata: row.metadata,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
+    created_at: row.created_at ?? new Date().toISOString(),
+    updated_at: row.updated_at ?? new Date().toISOString(),
   }
 }
 
@@ -47,18 +47,18 @@ function toInvestmentTransaction(row: Tables<'investment_transactions'>): Invest
     id: row.id,
     holding_id: row.holding_id,
     user_id: row.user_id,
-    type: row.type,
+    type: row.type as InvestmentTransaction['type'],
     quantity: row.quantity,
     price: row.price,
-    fees: row.fees,
-    taxes: row.taxes,
-    total_amount: row.total_amount,
+    fees: row.fees ?? 0,
+    taxes: row.taxes ?? 0,
+    total_amount: row.total_amount ?? 0,
     transaction_date: row.transaction_date,
     settlement_date: row.settlement_date,
     notes: row.notes,
     external_id: row.external_id,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
+    created_at: row.created_at ?? new Date().toISOString(),
+    updated_at: row.updated_at ?? new Date().toISOString(),
   }
 }
 
@@ -66,7 +66,7 @@ function toInvestmentPriceSnapshot(row: Tables<'investment_price_snapshots'>): I
   return {
     id: row.id,
     symbol: row.symbol,
-    asset_class: row.asset_class,
+    asset_class: row.asset_class as InvestmentPriceSnapshot['asset_class'],
     price: row.price,
     currency: row.currency,
     source: row.source,
@@ -80,12 +80,12 @@ function toPortfolioSnapshot(row: Tables<'portfolio_snapshots'>): PortfolioSnaps
     user_id: row.user_id,
     total_value: row.total_value,
     total_cost: row.total_cost,
-    total_gain_loss: row.total_gain_loss,
-    total_gain_loss_pct: row.total_gain_loss_pct,
+    total_gain_loss: row.total_gain_loss ?? 0,
+    total_gain_loss_pct: row.total_gain_loss_pct ?? 0,
     day_change: row.day_change,
     day_change_pct: row.day_change_pct,
     snapshot_date: row.snapshot_date,
-    created_at: row.created_at,
+    created_at: row.created_at ?? new Date().toISOString(),
   }
 }
 
