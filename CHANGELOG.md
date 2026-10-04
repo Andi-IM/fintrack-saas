@@ -1,3 +1,10 @@
+# [1.29.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.28.1...v1.29.0) (2026-10-04)
+
+
+### Features
+
+* **extension:** resilient Bibit sync via refresh-token auth ([f1c5525](https://github.com/Andi-IM/fintrack-saas/commit/f1c5525a706008e025b36d8e470768672f1bb2e6))
+
 ## [1.28.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.28.0...v1.28.1) (2026-10-04)
 
 
