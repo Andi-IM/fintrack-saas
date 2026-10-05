@@ -6,6 +6,7 @@ import crypto from 'node:crypto';
 import { ServerConfig } from '../config.js';
 import { getSupabaseClient, ensureUserFilter, isValidUuid, resolveTargetUserId } from '../db/client.js';
 import { formatSuccessResponse, formatErrorResponse } from '../utils/errors.js';
+import { resolveFileOnDisk } from '../utils/image-path.js';
 
 function getMimeType(filePathOrExt: string): string {
   const ext = filePathOrExt.toLowerCase().split('.').pop() || '';
@@ -216,8 +217,8 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
       amount_paid: z.number().nonnegative().optional().describe('Amount handed over by customer'),
       change: z.number().nonnegative().optional().describe('Change returned to customer'),
       fee: z.number().nonnegative().optional().describe('Transaction fee if applicable'),
-      file_path: z.string().optional().describe('Local file path on disk to upload, OR existing Supabase Storage path. NOTE: when the MCP server runs in a container (Podman/Docker), host filesystem paths are NOT accessible — use image_base64 instead.'),
-      local_file_path: z.string().optional().describe('Explicit local filesystem path to upload to Supabase Storage. Only works when the MCP server process can read the path (stdio/local mode); use image_base64 for containerized deployments.'),
+      file_path: z.string().optional().describe('Local file path on disk to upload, OR existing Supabase Storage path. When the MCP server runs in a container, a host path from the mounted agent cache is mapped automatically via MCP_HOST_IMAGE_DIR/MCP_CONTAINER_IMAGE_DIR; otherwise use image_base64.'),
+      local_file_path: z.string().optional().describe('Explicit local filesystem path to upload to Supabase Storage. Host paths under MCP_HOST_IMAGE_DIR are mapped to MCP_CONTAINER_IMAGE_DIR automatically; use image_base64 for fully remote deployments.'),
       storage_path: z.string().optional().describe('Existing Supabase Storage path (e.g. 5c64ceab-.../store/image.jpg) if already in storage'),
       image_base64: z.string().optional().describe('Base64-encoded image data string to upload to Supabase Storage. PREFERRED when running via container/remote agent where host paths are inaccessible. Accepts raw base64 or a data: URL.'),
       image_filename: z.string().optional().describe('Filename hint when using image_base64 (e.g. slip_gaji.jpg)'),
@@ -292,8 +293,8 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
 
           supabaseStoragePath = storagePath;
         } else if (!supabaseStoragePath && candidateLocalPath) {
-          const resolvedPath = path.resolve(candidateLocalPath);
-          if (fs.existsSync(resolvedPath)) {
+          const resolvedPath = resolveFileOnDisk(candidateLocalPath);
+          if (resolvedPath) {
             // Local file exists on disk -> upload to Supabase Storage
             const fileBuffer = await fs.promises.readFile(resolvedPath);
             const filename = path.basename(resolvedPath);
@@ -323,7 +324,7 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
           } else {
             const looksLikeHostPath = /^\/|^[A-Za-z]:\\/.test(candidateLocalPath);
             const containerHint = looksLikeHostPath
-              ? ` This looks like a host filesystem path (${candidateLocalPath}), which the containerized MCP server cannot read. Copy the file into the container first, run the MCP server with that directory mounted, or send the image as "image_base64".`
+              ? ` This looks like a host filesystem path (${candidateLocalPath}), which the containerized MCP server cannot read directly. Mount the host image directory and set MCP_HOST_IMAGE_DIR/MCP_CONTAINER_IMAGE_DIR so the path is mapped automatically, copy the file into the container, or send the image as "image_base64".`
               : ' Provide image data via "image_base64" or an existing Supabase "storage_path".';
             throw new Error(
               `Receipt image file "${candidateLocalPath}" was not found on local disk.${containerHint}`

@@ -59,6 +59,21 @@ FINTRACK_USER_ID=00000000-0000-0000-0000-000000000000
 # SUPABASE_ACCESS_TOKEN=eyJh...
 ```
 
+### Mapping path gambar agen (deployment container)
+
+Saat MCP berjalan dalam container sedangkan agen (mis. Hermes) menyimpan gambar ke disk
+host, mount direktori cache ke container dan set env berikut agar path host otomatis
+dipetakan:
+
+```env
+MCP_HOST_IMAGE_DIR=/home/ubuntu/.hermes/cache/images
+MCP_CONTAINER_IMAGE_DIR=/app/hermes-images
+```
+
+Agen tetap boleh mengirim `file_path`/`local_file_path` berupa path host
+(`/home/ubuntu/.hermes/cache/images/xxx.jpg`); server menulis-ulang ke path container
+lalu membacanya. Tanpa env ini, gunakan `image_base64`.
+
 ---
 
 ## Cara Menjalankan

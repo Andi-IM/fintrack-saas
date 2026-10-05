@@ -6,6 +6,7 @@ import crypto from 'node:crypto';
 import { ServerConfig } from '../config.js';
 import { getSupabaseClient, ensureUserFilter, resolveTargetUserId } from '../db/client.js';
 import { formatSuccessResponse, formatErrorResponse } from '../utils/errors.js';
+import { resolveFileOnDisk } from '../utils/image-path.js';
 
 function normalizeStatementPeriod(input: string): string {
   const trimmed = input.trim();
@@ -193,8 +194,8 @@ export function registerStatementTools(server: McpServer, config: ServerConfig) 
           supabaseStoragePath = storagePath;
           uploadedToStorage = true;
         } else if (!supabaseStoragePath && candidateLocalPath) {
-          const resolvedPath = path.resolve(candidateLocalPath);
-          if (fs.existsSync(resolvedPath)) {
+          const resolvedPath = resolveFileOnDisk(candidateLocalPath);
+          if (resolvedPath) {
             // Local file exists on disk -> upload to Supabase Storage
             const fileBuffer = await fs.promises.readFile(resolvedPath);
             const filename = path.basename(resolvedPath);

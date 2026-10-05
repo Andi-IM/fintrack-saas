@@ -5,9 +5,11 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    # Optional: If you need to mount a host directory for local receipt files:
-    # volumes:
-    #   - ./receipts-storage:/app/receipts
+    # Mount the agent's image cache read-only so host file paths (e.g. the
+    # Hermes Telegram cache) can be read inside the container. Pair with
+    # MCP_HOST_IMAGE_DIR / MCP_CONTAINER_IMAGE_DIR in .env to auto-map paths.
+    volumes:
+      - /home/ubuntu/.hermes/cache/images:/app/hermes-images:ro
     stdin_open: true
     tty: true
     logging:

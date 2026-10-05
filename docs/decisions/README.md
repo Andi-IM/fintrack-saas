@@ -84,4 +84,5 @@ Setiap keputusan desain yang signifikan dan berpengaruh besar terhadap struktur 
 - [ADR-080](080-remove-dead-extension-portfolio-code.md) - Remove Dead Portfolio Popup and Background Code from the Extension
 
 - [ADR-085](085-client-timezone-receipt-entry-and-quantity-parsing.md) - Client-Timezone Receipt Entry Normalization and Robust Quantity Parsing
+- [ADR-086](086-container-image-path-mapping-for-agent-files.md) - Container Image Path Mapping for Agent-Supplied Receipt Files
 
