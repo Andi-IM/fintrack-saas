@@ -177,20 +177,23 @@ export class ShoppingReceiptParser implements IReceiptParser {
 
   /**
    * Format A: "ITEM PRICE xQTY" — e.g. "LEMONIA 130G 9.000 x1"
+   * Also handles qty-after-multiplier with optional unit: "DAY BUTTERCOTCH 226R × 5 pcs"
    */
   private parseFormatA(lines: string[]): ReceiptItem[] {
     const items: ReceiptItem[] = []
+    const unitSuffix = '(?:\\s*(?:pcs|pc|btl|bks|pak|kg|gr|ltr|ml|buah|unit|lembar|roll|set|box|sachet|sct|dus))?'
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]
 
-      // Support both 'x' and multiplication sign '×'
+      // Support both 'x' and multiplication sign '×', with optional trailing unit
       const qtyMatch = line.match(/(?:\bx|[×])\s*(\d+)\b/i)
       if (!qtyMatch) continue
       const qty = parseInt(qtyMatch[1], 10)
+      if (qty <= 0) continue
 
-      // Try: "NAME PRICE xQTY"
-      const fullMatch = line.match(/^(.*?)\s*(\d{1,3}(?:\.\d{3})+|\d+)\s*(?:x|[×])\s*(\d+)/i)
+      // Try: "NAME PRICE xQTY[ unit]" — a unit price precedes the multiplier
+      const fullMatch = line.match(new RegExp(`^(.*?)\\s*(\\d{1,3}(?:\\.\\d{3})+|\\d+)\\s*(?:x|[×])\\s*(\\d+)${unitSuffix}`, 'i'))
       if (fullMatch) {
         let name = fullMatch[1].trim()
         const priceStr = fullMatch[2].replace(/\./g, '')
@@ -200,6 +203,22 @@ export class ShoppingReceiptParser implements IReceiptParser {
         if (name) {
           items.push({ name, amount: price * qty, quantity: qty, price })
           continue
+        }
+      }
+
+      // Try: "NAME xQTY[ unit]" — no unit price before the multiplier.
+      // The total amount is expected on the next line (the current line ends after the unit).
+      const nameQtyMatch = line.match(new RegExp(`^(.*?)\\s*(?:x|[×])\\s*(\\d+)${unitSuffix}\\s*$`, 'i'))
+      if (nameQtyMatch) {
+        const name = nameQtyMatch[1].trim()
+        if (name) {
+          let amount = i + 1 < lines.length ? this.extractNumber(lines[i + 1]) : null
+          if (amount && amount > 0) {
+            const price = Math.round(amount / qty)
+            items.push({ name, amount, quantity: qty, price })
+            i++ // skip the amount line
+            continue
+          }
         }
       }
 

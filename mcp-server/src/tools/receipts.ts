@@ -36,33 +36,73 @@ function buildStoragePath(userId: string, storeName: string, originalName: strin
   return `${userId}/${folder}/${uniqueName}`;
 }
 
-function resolveReceiptTime(transactionTime?: string, dateStr?: string): string {
+/**
+ * Returns true when the string carries an explicit timezone designator
+ * (trailing `Z` or a `±HH:MM` / `±HHMM` offset). Offset-less strings are otherwise
+ * interpreted using the server process timezone, which is UTC inside containers.
+ */
+function hasExplicitTimezone(value: string): boolean {
+  const trimmed = value.trim();
+  return /(?:Z|[+-]\d{2}:?\d{2})$/.test(trimmed);
+}
+
+/**
+ * Parse an incoming ISO-ish timestamp into UTC.
+ *
+ * The MCP server typically runs inside a container whose clock/timezone is UTC.
+ * A naive value like "2026-10-05T17:07:00" therefore would be stored as 17:07 UTC
+ * instead of 17:07 in the client's local time. When no explicit offset is present,
+ * we append the provided `timezoneOffset` (default +07:00 WIB) so the wall-clock
+ * time is anchored to the client's timezone before conversion to UTC.
+ */
+function parseToUtc(value: string, timezoneOffset: string): string | null {
+  const trimmed = value.trim();
+  const candidate = hasExplicitTimezone(trimmed) ? trimmed : `${trimmed}${timezoneOffset}`;
+  const parsed = new Date(candidate);
+  return isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
+function resolveReceiptTime(transactionTime?: string, dateStr?: string, timezoneOffset = '+07:00'): string {
   const now = new Date();
   if (transactionTime) {
-    const parsed = new Date(transactionTime.trim());
-    if (!isNaN(parsed.getTime())) {
-      return parsed.toISOString();
-    }
+    const parsed = parseToUtc(transactionTime, timezoneOffset);
+    if (parsed) return parsed;
   }
   if (dateStr) {
     const trimmed = dateStr.trim();
     if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-      // Preserve current hour, minute, second instead of truncating to midnight
-      const hours = String(now.getHours()).padStart(2, '0');
-      const mins = String(now.getMinutes()).padStart(2, '0');
-      const secs = String(now.getSeconds()).padStart(2, '0');
-      const resolved = new Date(`${trimmed}T${hours}:${mins}:${secs}`);
-      if (!isNaN(resolved.getTime())) {
-        return resolved.toISOString();
-      }
+      // Preserve current hour, minute, second (in the client timezone) instead of truncating to midnight
+      const clientNow = new Date(new Date().toLocaleString('en-US', { timeZone: offsetToIana(timezoneOffset) }));
+      const hours = String(clientNow.getHours()).padStart(2, '0');
+      const mins = String(clientNow.getMinutes()).padStart(2, '0');
+      const secs = String(clientNow.getSeconds()).padStart(2, '0');
+      const parsed = parseToUtc(`${trimmed}T${hours}:${mins}:${secs}`, timezoneOffset);
+      if (parsed) return parsed;
     } else {
-      const parsed = new Date(trimmed);
-      if (!isNaN(parsed.getTime())) {
-        return parsed.toISOString();
-      }
+      const parsed = parseToUtc(trimmed, timezoneOffset);
+      if (parsed) return parsed;
     }
   }
   return now.toISOString();
+}
+
+/**
+ * Best-effort mapping of a fixed UTC offset like "+07:00" to an IANA zone.
+ * Falls back to UTC for unknown offsets. Only used to read the current wall-clock
+ * hour in the client's timezone when only a date (YYYY-MM-DD) is supplied.
+ */
+function offsetToIana(offset: string): string {
+  const match = offset.match(/^([+-])(\d{2}):?(\d{2})$/);
+  if (!match) return 'UTC';
+  const sign = match[1] === '-' ? -1 : 1;
+  const totalMinutes = sign * (parseInt(match[2], 10) * 60 + parseInt(match[3], 10));
+  const ianaOffsets: Record<number, string> = {
+    420: 'Asia/Jakarta',
+    480: 'Asia/Makassar',
+    540: 'Asia/Jayapura',
+    0: 'UTC',
+  };
+  return ianaOffsets[totalMinutes] || 'UTC';
 }
 
 export function registerReceiptTools(server: McpServer, config: ServerConfig) {
@@ -160,21 +200,26 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
       transaction_time: z
         .string()
         .optional()
-        .describe('Exact receipt transaction time with hour, minute, and second (ISO format e.g. "2026-10-03T14:30:00+07:00" or "2026-10-03T07:30:00Z"). Defaults to now() if omitted.'),
+        .describe('Exact receipt transaction time with hour, minute, and second (ISO format e.g. "2026-10-03T14:30:00+07:00" or "2026-10-03T07:30:00Z"). Defaults to now() if omitted. IMPORTANT: always include an explicit timezone offset (e.g. +07:00); if omitted, timezone_offset is appended so wall-clock time is not misinterpreted as UTC.'),
+      timezone_offset: z
+        .string()
+        .regex(/^[+-]\d{2}:\d{2}$/)
+        .optional()
+        .describe('Client timezone offset (e.g. "+07:00") applied to offset-less transaction_time/date values. Defaults to "+07:00" (WIB).'),
       date: z
         .string()
         .optional()
-        .describe('Receipt date or timestamp (YYYY-MM-DD or ISO timestamp e.g. "2026-10-03T14:30:00+07:00"). If provided without time, current time is preserved.'),
+        .describe('Receipt date or timestamp (YYYY-MM-DD or ISO timestamp e.g. "2026-10-03T14:30:00+07:00"). If provided without time, current time is preserved. Offset-less timestamps use timezone_offset (default +07:00).'),
       type: z.enum(['shopping', 'atm', 'salary', 'other']).default('shopping').describe('Type of receipt record'),
       payment_method: z.string().optional().describe('Payment method (e.g. Cash, BCA, Mandiri, Transfer, QRIS)'),
       store_address: z.string().optional().describe('Store or issuer address'),
       amount_paid: z.number().nonnegative().optional().describe('Amount handed over by customer'),
       change: z.number().nonnegative().optional().describe('Change returned to customer'),
       fee: z.number().nonnegative().optional().describe('Transaction fee if applicable'),
-      file_path: z.string().optional().describe('Local file path on disk to upload, OR existing Supabase Storage path'),
-      local_file_path: z.string().optional().describe('Explicit local filesystem path to upload to Supabase Storage'),
+      file_path: z.string().optional().describe('Local file path on disk to upload, OR existing Supabase Storage path. NOTE: when the MCP server runs in a container (Podman/Docker), host filesystem paths are NOT accessible — use image_base64 instead.'),
+      local_file_path: z.string().optional().describe('Explicit local filesystem path to upload to Supabase Storage. Only works when the MCP server process can read the path (stdio/local mode); use image_base64 for containerized deployments.'),
       storage_path: z.string().optional().describe('Existing Supabase Storage path (e.g. 5c64ceab-.../store/image.jpg) if already in storage'),
-      image_base64: z.string().optional().describe('Base64-encoded image data string to upload to Supabase Storage'),
+      image_base64: z.string().optional().describe('Base64-encoded image data string to upload to Supabase Storage. PREFERRED when running via container/remote agent where host paths are inaccessible. Accepts raw base64 or a data: URL.'),
       image_filename: z.string().optional().describe('Filename hint when using image_base64 (e.g. slip_gaji.jpg)'),
       items: z
         .array(
@@ -276,8 +321,12 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
             // Already an existing storage path in the user's bucket folder
             supabaseStoragePath = candidateLocalPath;
           } else {
+            const looksLikeHostPath = /^\/|^[A-Za-z]:\\/.test(candidateLocalPath);
+            const containerHint = looksLikeHostPath
+              ? ` This looks like a host filesystem path (${candidateLocalPath}), which the containerized MCP server cannot read. Copy the file into the container first, run the MCP server with that directory mounted, or send the image as "image_base64".`
+              : ' Provide image data via "image_base64" or an existing Supabase "storage_path".';
             throw new Error(
-              `Receipt image file "${candidateLocalPath}" was not found on local disk. When running via container or remote agent, provide image data via "image_base64" instead of a host filesystem path.`
+              `Receipt image file "${candidateLocalPath}" was not found on local disk.${containerHint}`
             );
           }
         }
@@ -293,7 +342,7 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
         }
 
         // 2. Insert receipt into database with file_path pointing to Supabase Storage
-        const resolvedTimestamp = resolveReceiptTime(args.transaction_time, args.date);
+        const resolvedTimestamp = resolveReceiptTime(args.transaction_time, args.date, args.timezone_offset);
         const oneDayAhead = new Date(Date.now() + 24 * 60 * 60 * 1000);
         if (new Date(resolvedTimestamp).getTime() > oneDayAhead.getTime()) {
           throw new Error(`Receipt date/time cannot be more than 1 day in the future (received: ${resolvedTimestamp})`);
@@ -461,11 +510,16 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
       transaction_time: z
         .string()
         .optional()
-        .describe('New exact receipt transaction time with hour, minute, second in ISO format (e.g. "2026-10-03T14:30:00+07:00")'),
+        .describe('New exact receipt transaction time with hour, minute, second in ISO format (e.g. "2026-10-03T14:30:00+07:00"). If no explicit offset is given, timezone_offset is applied.'),
+      timezone_offset: z
+        .string()
+        .regex(/^[+-]\d{2}:\d{2}$/)
+        .optional()
+        .describe('Client timezone offset (e.g. "+07:00") applied to offset-less transaction_time/date values. Defaults to "+07:00" (WIB).'),
       date: z
         .string()
         .optional()
-        .describe('New receipt date or ISO timestamp (e.g. "2026-10-03T14:30:00+07:00" or "2026-10-03")'),
+        .describe('New receipt date or ISO timestamp (e.g. "2026-10-03T14:30:00+07:00" or "2026-10-03"). Offset-less timestamps use timezone_offset (default +07:00).'),
       total_price: z.number().nonnegative().optional().describe('New total amount in IDR'),
       type: z.enum(['shopping', 'atm', 'salary', 'other']).optional().describe('New receipt type'),
       payment_method: z.string().nullable().optional().describe('New payment method or null to clear'),
@@ -499,7 +553,7 @@ export function registerReceiptTools(server: McpServer, config: ServerConfig) {
 
         let resolvedTime: string | undefined = undefined;
         if (args.transaction_time !== undefined || args.date !== undefined) {
-          resolvedTime = resolveReceiptTime(args.transaction_time, args.date);
+          resolvedTime = resolveReceiptTime(args.transaction_time, args.date, args.timezone_offset);
           const oneDayAhead = new Date(Date.now() + 24 * 60 * 60 * 1000);
           if (new Date(resolvedTime).getTime() > oneDayAhead.getTime()) {
             throw new Error(`Receipt date/time cannot be more than 1 day in the future (received: ${resolvedTime})`);
