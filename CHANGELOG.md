@@ -1,3 +1,10 @@
+## [1.30.6](https://github.com/Andi-IM/fintrack-saas/compare/v1.30.5...v1.30.6) (2026-10-05)
+
+
+### Bug Fixes
+
+* **db:** harden security definer search paths and optimize rls policies ([3411666](https://github.com/Andi-IM/fintrack-saas/commit/34116665cb64d6f38ac9cd4a86ee5b0cb06b01ef))
+
 ## [1.30.5](https://github.com/Andi-IM/fintrack-saas/compare/v1.30.4...v1.30.5) (2026-10-04)
 
 
