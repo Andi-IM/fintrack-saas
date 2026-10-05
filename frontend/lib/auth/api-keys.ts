@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { createAnonClient } from '@/lib/supabase/admin'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const API_KEY_PREFIX = 'ft_sync_'
 export const DEFAULT_KEY_SCOPE = 'investments:sync'
@@ -38,9 +38,10 @@ export function hashApiKey(rawKey: string): string {
 }
 
 function getFallbackClient(): any {
-  // Anon client can execute SECURITY DEFINER RPCs (verify_and_use_api_key).
+  // Use privileged admin client (service_role) to execute verify_and_use_api_key
+  // securely from server-side handlers without granting execute rights to public anon.
   // API key management routes always pass the user's session client explicitly.
-  return createAnonClient()
+  return createAdminClient()
 }
 
 /**
