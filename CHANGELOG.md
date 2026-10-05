@@ -1,3 +1,10 @@
+# [1.31.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.30.7...v1.31.0) (2026-10-05)
+
+
+### Features
+
+* **mcp:** map agent host image paths into container via mounted cache ([46f4b00](https://github.com/Andi-IM/fintrack-saas/commit/46f4b00e0e91e1a68d62b26cd5914d97cd62ed78))
+
 ## [1.30.7](https://github.com/Andi-IM/fintrack-saas/compare/v1.30.6...v1.30.7) (2026-10-05)
 
 
