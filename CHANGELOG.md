@@ -1,3 +1,10 @@
+## [1.31.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.31.0...v1.31.1) (2026-10-05)
+
+
+### Bug Fixes
+
+* **mcp:** keep-id userns so container reads mounted agent image cache ([ac934c3](https://github.com/Andi-IM/fintrack-saas/commit/ac934c361a10c4116f2a71f004d190bea41d2279))
+
 # [1.31.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.30.7...v1.31.0) (2026-10-05)
 
 
