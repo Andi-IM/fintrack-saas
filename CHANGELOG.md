@@ -1,3 +1,10 @@
+## [1.30.7](https://github.com/Andi-IM/fintrack-saas/compare/v1.30.6...v1.30.7) (2026-10-05)
+
+
+### Bug Fixes
+
+* **receipts:** anchor client timezone on input and parse multi-quantity items ([300a49a](https://github.com/Andi-IM/fintrack-saas/commit/300a49ae7d707f8795ccfbcd6b2ed3cf038a0560))
+
 ## [1.30.6](https://github.com/Andi-IM/fintrack-saas/compare/v1.30.5...v1.30.6) (2026-10-05)
 
 
