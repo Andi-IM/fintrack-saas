@@ -1,3 +1,10 @@
+# [1.32.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.31.1...v1.32.0) (2026-10-06)
+
+
+### Features
+
+* **cash-wallets:** track cash wallets with derived balances ([06bf4d7](https://github.com/Andi-IM/fintrack-saas/commit/06bf4d7415dbad57834e0c649a8fee85948501d6))
+
 ## [1.31.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.31.0...v1.31.1) (2026-10-05)
 
 
