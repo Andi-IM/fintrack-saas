@@ -7,6 +7,7 @@ export interface MockDatabase {
   statements: Tables<'bank_statements'>[]
   statementItems: Tables<'bank_statement_items'>[]
   receipts: Tables<'receipts'>[]
+  cashWallets: Tables<'cash_wallets'>[]
 }
 
 const DB_PATH = path.join(process.cwd(), '.e2e-db.json')
@@ -99,7 +100,8 @@ export const DEFAULT_MOCK_DATA: MockDatabase = {
       file_path: null,
       user_id: MOCK_USER_ID,
     }
-  ]
+  ],
+  cashWallets: []
 }
 
 export function readDB(): MockDatabase {

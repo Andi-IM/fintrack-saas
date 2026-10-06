@@ -85,4 +85,5 @@ Setiap keputusan desain yang signifikan dan berpengaruh besar terhadap struktur 
 
 - [ADR-085](085-client-timezone-receipt-entry-and-quantity-parsing.md) - Client-Timezone Receipt Entry Normalization and Robust Quantity Parsing
 - [ADR-086](086-container-image-path-mapping-for-agent-files.md) - Container Image Path Mapping for Agent-Supplied Receipt Files
+- [ADR-087](087-cash-wallet-tracking.md) - Manual Cash Wallet Tracking
 

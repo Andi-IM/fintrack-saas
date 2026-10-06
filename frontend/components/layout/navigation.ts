@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
-import { LayoutDashboard, FileText, Camera, Building2, TrendingUp } from 'lucide-react'
+import { LayoutDashboard, FileText, Camera, Building2, TrendingUp, Wallet } from 'lucide-react'
 
-export type NavigationSection = 'dashboard' | 'transactions' | 'statements' | 'investments' | 'receipts'
+export type NavigationSection = 'dashboard' | 'transactions' | 'statements' | 'investments' | 'receipts' | 'cash-wallets'
 
 export interface NavigationItem {
   section: NavigationSection
@@ -13,6 +13,7 @@ export interface NavigationItem {
 export const NAV_ITEMS: NavigationItem[] = [
   { section: 'dashboard', label: 'Dashboard', href: '/', icon: LayoutDashboard },
   { section: 'transactions', label: 'Transaksi', href: '/transactions', icon: FileText },
+  { section: 'cash-wallets', label: 'Tunai', href: '/cash-wallets', icon: Wallet },
   { section: 'statements', label: 'Bank', href: '/statements', icon: Building2 },
   { section: 'investments', label: 'Investasi', href: '/investments', icon: TrendingUp },
   { section: 'receipts', label: 'Struk', href: '/receipts', icon: Camera },
@@ -57,6 +58,13 @@ export function getNavigationContext(
     return {
       activeSection: 'statements',
       breadcrumbs: [root, { label: 'Bank' }],
+    }
+  }
+
+  if (pathname?.startsWith('/cash-wallets')) {
+    return {
+      activeSection: 'cash-wallets',
+      breadcrumbs: [root, { label: 'Dompet Tunai' }],
     }
   }
 

@@ -11,6 +11,10 @@
 /logs/
 /coverage/
 
+# Local tool config
+.opencode/
+opencode.json.local
+
 # OS and Editor files
 .DS_Store
 .vscode/

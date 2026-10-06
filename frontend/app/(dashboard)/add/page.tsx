@@ -1,6 +1,7 @@
 import { getCashFlowById } from '@/features/cash-flow/actions/cash_flow'
 import { CashFlowForm } from '@/features/cash-flow/components/CashFlowForm'
 import { ScanDialog } from '@/features/receipts/components/ScanDialog'
+import { getCashWallets } from '@/features/cash-wallets/actions/cash-wallets'
 
 export default async function AddTransactionPage({
   searchParams,
@@ -14,6 +15,8 @@ export default async function AddTransactionPage({
     initialData = await getCashFlowById(edit)
   }
 
+  const cashWallets = await getCashWallets()
+
   return (
     <>
       <div className="flex items-center justify-between mb-2">
@@ -26,7 +29,7 @@ export default async function AddTransactionPage({
         {scan ? (
           <ScanDialog scanContext={scan as 'BankStatement' | 'Receipt'} />
         ) : (
-          <CashFlowForm initialData={initialData} />
+          <CashFlowForm initialData={initialData} cashWallets={cashWallets.map((w) => w.name)} />
         )}
       </div>
     </>

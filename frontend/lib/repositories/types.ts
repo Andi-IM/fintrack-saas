@@ -107,6 +107,31 @@ export interface StatementRepository {
   checkExistingForBank(bankName: string): Promise<Pick<Tables<'bank_statements'>, 'id' | 'statement_period' | 'file_path'>[]>
 }
 
+export interface CashWallet {
+  id: string
+  user_id: string
+  name: string
+  currency: string
+  opening_balance: number
+  metadata: Json | null
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface CashWalletWithBalance extends CashWallet {
+  income: number
+  expense: number
+  balance: number
+}
+
+export interface CashWalletRepository {
+  findAll(): Promise<CashWalletWithBalance[]>
+  findById(id: string): Promise<CashWallet | null>
+  create(data: { name: string; currency?: string; opening_balance?: number }): Promise<CashWallet>
+  update(id: string, data: { name?: string; currency?: string; opening_balance?: number }): Promise<void>
+  delete(id: string): Promise<void>
+}
+
 export interface InvestmentAccount {
   id: string
   user_id: string

@@ -37,8 +37,10 @@ type CashFlowFormValues = z.infer<typeof cashFlowFormSchema>
 
 export function CashFlowForm({ 
   initialData, 
+  cashWallets = [],
 }: { 
   initialData?: Tables<'cash_flow'> | null
+  cashWallets?: string[]
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -250,6 +252,9 @@ export function CashFlowForm({
                 className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
               >
                 <option value="Tunai">Tunai</option>
+                {cashWallets.map((wallet) => (
+                  <option key={wallet} value={wallet}>{wallet}</option>
+                ))}
                 <option value="Bank JAGO">Bank JAGO</option>
                 <option value="Bank BSI">Bank BSI</option>
                 <option value="Bank BNI">Bank BNI</option>

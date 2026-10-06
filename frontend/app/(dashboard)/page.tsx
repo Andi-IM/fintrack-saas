@@ -1,17 +1,20 @@
 import { Suspense } from 'react'
 import { getDashboardCashFlow } from '@/features/cash-flow/actions/cash_flow'
 import { getInvestmentOverview } from '@/features/investments/actions/investments'
+import { getCashWallets } from '@/features/cash-wallets/actions/cash-wallets'
 import { OverviewCards } from '@/components/dashboard/OverviewCards'
 import { DashboardInvestmentCard } from '@/components/dashboard/DashboardInvestmentCard'
+import { DashboardCashCard } from '@/components/dashboard/DashboardCashCard'
 import { TransactionChartLazy, FinancialInsightsLazy } from '@/components/dashboard/DynamicCharts'
 import { DashboardSkeleton } from '@/components/ui/dashboard-skeleton'
 import Link from 'next/link'
 
 async function DashboardData({ range }: { range: string }) {
-  const [transactions, previousTransactions, investmentRes] = await Promise.all([
+  const [transactions, previousTransactions, investmentRes, cashWallets] = await Promise.all([
     getDashboardCashFlow({ range }),
     getDashboardCashFlow({ range, previous: true }),
     getInvestmentOverview().catch(() => ({ success: false as const, data: null })),
+    getCashWallets().catch(() => []),
   ])
 
   const investmentOverview = investmentRes?.success ? investmentRes.data : null
@@ -22,6 +25,9 @@ async function DashboardData({ range }: { range: string }) {
         transactions={transactions} 
         previousTransactions={previousTransactions} 
       />
+      <section aria-label="Uang Tunai">
+        <DashboardCashCard wallets={cashWallets} />
+      </section>
       <section aria-label="Portofolio Investasi">
         <DashboardInvestmentCard overview={investmentOverview} />
       </section>

@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -218,6 +218,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cash_wallets: {
+        Row: {
+          created_at: string | null
+          currency: string
+          id: string
+          metadata: Json | null
+          name: string
+          opening_balance: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          name: string
+          opening_balance?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          name?: string
+          opening_balance?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       investment_accounts: {
         Row: {
