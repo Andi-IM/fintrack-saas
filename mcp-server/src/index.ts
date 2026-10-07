@@ -3,6 +3,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { loadConfig } from './config.js';
 import { registerCashFlowTools } from './tools/cashflow.js';
+import { registerCashWalletTools } from './tools/cash-wallets.js';
 import { registerStatementTools } from './tools/statements.js';
 import { registerReceiptTools } from './tools/receipts.js';
 import { registerAnalyticsTools } from './tools/analytics.js';
@@ -18,6 +19,7 @@ async function main() {
 
   registerSystemTools(server, config);
   registerCashFlowTools(server, config);
+  registerCashWalletTools(server, config);
   registerStatementTools(server, config);
   registerReceiptTools(server, config);
   registerAnalyticsTools(server, config);

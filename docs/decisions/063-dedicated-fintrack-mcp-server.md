@@ -27,8 +27,12 @@ Key architectural choices:
    - `list_bank_statements`: List uploaded bank statements and parsing status.
    - `get_statement_mutations`: Retrieve mutation line items for a given statement.
    - `list_receipts`: List uploaded receipts and merchants.
-   - `get_receipt_details`: Retrieve receipt details and itemized products.
-   - `get_financial_analytics`: Retrieve financial analytics matching the dashboard ranges.
+    - `get_receipt_details`: Retrieve receipt details and itemized products.
+    - `get_financial_analytics`: Retrieve financial analytics matching the dashboard ranges.
+    - `list_cash_wallets`: List cash wallets (dompet tunai) with derived current balance.
+    - `create_cash_wallet`: Create a new cash wallet with opening balance.
+    - `update_cash_wallet`: Update wallet name, opening balance, or currency.
+    - `delete_cash_wallet`: Delete a cash wallet by UUID.
 
 ## Alternatives Considered
 
