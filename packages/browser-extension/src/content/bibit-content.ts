@@ -1,11 +1,21 @@
 // Content script running in ISOLATED world on https://app.bibit.id/*
 // Receives intercepted portfolio data from bibit-interceptor.ts
 
-import { isValidBibitPayload, type BibitPayload } from '../shared/validation'
+import {
+  normalizeBibitPayload,
+  normalizeRdnBalance,
+  type BibitPayload,
+} from '../shared/validation'
 
 const TARGET_ORIGIN = 'https://app.bibit.id'
 
 let toastElement: HTMLElement | null = null
+
+// Latest normalized portfolio payload and RDN cash balance captured this session.
+// Bibit now serves the portfolio (/portfolios/category/<id>) and the RDN cash
+// balance (/rdn) from separate endpoints, so we merge them before syncing.
+let latestPortfolio: BibitPayload | null = null
+let latestRdnBalance: number | null = null
 
 function formatRupiah(amount: number): string {
   return new Intl.NumberFormat('id-ID', {
@@ -21,6 +31,20 @@ function isExtensionContextValid(): boolean {
   } catch {
     return false
   }
+}
+
+function buildSyncPayload(): BibitPayload | null {
+  if (!latestPortfolio) return null
+  if (latestRdnBalance !== null) {
+    return {
+      ...latestPortfolio,
+      data: {
+        ...latestPortfolio.data,
+        trading_balance: latestRdnBalance,
+      },
+    }
+  }
+  return latestPortfolio
 }
 
 function showToast(payload: BibitPayload) {
@@ -115,6 +139,11 @@ function showToast(payload: BibitPayload) {
         throw new Error('Extension baru saja di-reload. Halaman Bibit perlu di-refresh agar terhubung kembali.')
       }
 
+      const syncPayload = buildSyncPayload()
+      if (!syncPayload) {
+        throw new Error('Data portofolio belum tertangkap. Muat ulang halaman portofolio Bibit lalu coba lagi.')
+      }
+
       console.log('[FinTrack Sync] Meminta token auth dari extension background...')
       const tokenResult = await chrome.runtime.sendMessage({ type: 'GET_AUTH_TOKEN' })
       console.log('[FinTrack Sync] Respon auth token:', tokenResult)
@@ -126,9 +155,10 @@ function showToast(payload: BibitPayload) {
       const syncUrl = tokenResult.apiUrl || 'https://fintrek.web.id/api/investments/sync/bibit'
       statusEl.textContent = 'Mengirim data ke FinTrack...'
       console.log('[FinTrack Sync] Mengirim payload ke:', syncUrl, {
-        marketValue,
-        profitLoss,
-        itemCount: payload.data?.result?.length,
+        marketValue: syncPayload.data?.marketvalue,
+        profitLoss: syncPayload.data?.profitloss,
+        itemCount: syncPayload.data?.result?.length,
+        tradingBalance: syncPayload.data?.trading_balance,
         authType: tokenResult.authType || 'cookie',
       })
 
@@ -149,7 +179,7 @@ function showToast(payload: BibitPayload) {
       const response = await fetch(syncUrl, {
         method: 'POST',
         headers,
-        body: JSON.stringify(payload),
+        body: JSON.stringify(syncPayload),
       })
 
       console.log('[FinTrack Sync] HTTP response status:', response.status)
@@ -224,24 +254,42 @@ window.addEventListener('message', (event) => {
   if (!event.data) return
 
   if (event.data.type === 'FINTRACK_BIBIT_PORTFOLIO_CAPTURED') {
-    const payload = event.data.payload as BibitPayload
-    if (!isValidBibitPayload(payload)) {
+    const source = event.data.source
+
+    if (source === 'bibit_rdn') {
+      const rdnBalance = normalizeRdnBalance(event.data.payload)
+      if (rdnBalance === null) return
+      latestRdnBalance = rdnBalance
+      console.log('[FinTrack Sync] Saldo RDN Bibit terdeteksi:', rdnBalance)
+      return
+    }
+
+    const payload = normalizeBibitPayload(event.data.payload)
+    if (!payload) {
       console.warn('[FinTrack Sync] Payload Bibit tidak valid atau tidak lengkap:', event.data.payload)
       return
     }
 
+    latestPortfolio = payload
+
     console.log('[FinTrack Sync] Portofolio Bibit terdeteksi & tervalidasi:', {
       marketValue: payload.data?.marketvalue,
       profitLoss: payload.data?.profitloss,
-      portfoliosCount: payload.data?.result?.length,
+      holdingsCount: payload.data?.result?.length,
     })
+
+    const mergeRdn = latestRdnBalance
+    const syncPayload: BibitPayload =
+      mergeRdn !== null
+        ? { ...payload, data: { ...payload.data, trading_balance: mergeRdn } }
+        : payload
 
     // Save locally in extension session storage (cleared when browser closes)
     try {
       if (chrome?.storage?.session) {
         chrome.storage.session.set({
           fintrack_bibit_portfolio: {
-            payload,
+            payload: syncPayload,
             capturedAt: Date.now(),
           },
         })
@@ -249,7 +297,7 @@ window.addEventListener('message', (event) => {
       if (chrome?.runtime?.sendMessage) {
         chrome.runtime.sendMessage({
           type: 'BIBIT_PORTFOLIO_CAPTURED',
-          data: payload,
+          data: syncPayload,
         }).catch(() => {})
       }
     } catch {
@@ -257,6 +305,6 @@ window.addEventListener('message', (event) => {
     }
 
     // Display sync toast
-    showToast(payload)
+    showToast(syncPayload)
   }
 })

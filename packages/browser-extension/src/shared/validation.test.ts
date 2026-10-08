@@ -1,11 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import {
   isValidBibitPayload,
+  normalizeBibitPayload,
+  normalizeRdnBalance,
+  isValidRdnPayload,
   MAX_RESULT_ITEMS,
   MAX_AMOUNT,
 } from '../shared/validation'
 
-function validPayload(overrides: Record<string, unknown> = {}) {
+function legacyPayload(overrides: Record<string, unknown> = {}) {
   return {
     message: 'Berhasil',
     data: {
@@ -28,83 +31,189 @@ function validPayload(overrides: Record<string, unknown> = {}) {
   }
 }
 
-describe('isValidBibitPayload', () => {
-  it('accepts a well-formed payload', () => {
-    expect(isValidBibitPayload(validPayload())).toBe(true)
+function v4Payload(overrides: Record<string, unknown> = {}) {
+  return {
+    message: 'Success retrieve your portfolio',
+    data: {
+      marketvalue: 559327.83,
+      invested: 551477.03,
+      profitloss: 7850.8,
+      trading_balance: 0,
+      results: [
+        {
+          name: 'Pasar Uang',
+          robocategory: 'moneymarket',
+          items: [
+            {
+              invested: 551477.03,
+              marketvalue: 559327.83,
+              profitloss: 7850.8,
+              product: {
+                product_id: 832,
+                symbol: 'RD832',
+                name: 'Majoris Pasar Uang Syariah Indonesia',
+                group: 'MUTUAL_FUND',
+              },
+            },
+          ],
+        },
+      ],
+      ...overrides,
+    },
+  }
+}
+
+describe('normalizeBibitPayload', () => {
+  it('normalizes the legacy flat schema', () => {
+    const result = normalizeBibitPayload(legacyPayload())
+    expect(result).not.toBeNull()
+    expect(result!.data.marketvalue).toBe(1000000)
+    expect(result!.data.result).toHaveLength(1)
+    expect(result!.data.result[0]).toMatchObject({ id: 1, name: 'Dana Tabungan', marketvalue: 500000 })
   })
 
-  it('accepts payload without trading_balance', () => {
-    const payload = validPayload({ trading_balance: undefined })
-    expect(isValidBibitPayload(payload)).toBe(true)
+  it('normalizes the v4 nested schema', () => {
+    const result = normalizeBibitPayload(v4Payload())
+    expect(result).not.toBeNull()
+    expect(result!.data.marketvalue).toBeCloseTo(559327.83)
+    expect(result!.data.result).toHaveLength(1)
+    expect(result!.data.result[0]).toMatchObject({
+      id: 832,
+      symbol: 'RD832',
+      name: 'Majoris Pasar Uang Syariah Indonesia',
+      group: 'MUTUAL_FUND',
+      marketvalue: 559327.83,
+    })
+  })
+
+  it('flattens multiple categories and items', () => {
+    const payload = v4Payload({
+      results: [
+        {
+          name: 'Pasar Uang',
+          items: [
+            { invested: 100, marketvalue: 110, profitloss: 10, product: { product_id: 1, symbol: 'RD1', name: 'Fund A' } },
+            { invested: 200, marketvalue: 220, profitloss: 20, product: { product_id: 2, symbol: 'RD2', name: 'Fund B' } },
+          ],
+        },
+        {
+          name: 'Saham',
+          items: [
+            { invested: 300, marketvalue: 330, profitloss: 30, product: { product_id: 3, symbol: 'STK1', name: 'Stock A', group: 'STOCK' } },
+          ],
+        },
+      ],
+    })
+    const result = normalizeBibitPayload(payload)
+    expect(result!.data.result).toHaveLength(3)
+    expect(result!.data.result.map((h) => h.symbol)).toEqual(['RD1', 'RD2', 'STK1'])
+  })
+
+  it('falls back to symbol id when product_id missing', () => {
+    const payload = v4Payload({
+      results: [
+        {
+          name: 'Pasar Uang',
+          items: [
+            {
+              invested: 100,
+              marketvalue: 110,
+              profitloss: 10,
+              product: { symbol: 'RD99', name: 'X' },
+            },
+          ],
+        },
+      ],
+    })
+    const result = normalizeBibitPayload(payload)
+    expect(result!.data.result[0].id).toBe('RD99')
   })
 
   it('rejects null / non-objects', () => {
-    expect(isValidBibitPayload(null)).toBe(false)
-    expect(isValidBibitPayload(undefined)).toBe(false)
-    expect(isValidBibitPayload('str')).toBe(false)
-    expect(isValidBibitPayload(42)).toBe(false)
+    expect(normalizeBibitPayload(null)).toBeNull()
+    expect(normalizeBibitPayload(undefined)).toBeNull()
+    expect(normalizeBibitPayload('str')).toBeNull()
+    expect(normalizeBibitPayload(42)).toBeNull()
   })
 
   it('rejects missing data', () => {
-    expect(isValidBibitPayload({})).toBe(false)
-    expect(isValidBibitPayload({ data: null })).toBe(false)
-  })
-
-  it('rejects non-array result', () => {
-    expect(isValidBibitPayload(validPayload({ result: 'nope' }))).toBe(false)
-    expect(isValidBibitPayload(validPayload({ result: {} }))).toBe(false)
-  })
-
-  it('rejects result longer than MAX_RESULT_ITEMS', () => {
-    const item = { id: 1, name: 'x', marketvalue: 1, invested: 1, profitloss: 0 }
-    const payload = validPayload({ result: Array(MAX_RESULT_ITEMS + 1).fill(item) })
-    expect(isValidBibitPayload(payload)).toBe(false)
-  })
-
-  it('accepts result exactly at MAX_RESULT_ITEMS', () => {
-    const item = { id: 1, name: 'x', marketvalue: 1, invested: 1, profitloss: 0 }
-    const payload = validPayload({ result: Array(MAX_RESULT_ITEMS).fill(item) })
-    expect(isValidBibitPayload(payload)).toBe(true)
+    expect(normalizeBibitPayload({})).toBeNull()
+    expect(normalizeBibitPayload({ data: null })).toBeNull()
+    expect(normalizeBibitPayload({ data: {} })).toBeNull()
   })
 
   it('rejects non-finite top-level amounts', () => {
-    expect(isValidBibitPayload(validPayload({ marketvalue: NaN }))).toBe(false)
-    expect(isValidBibitPayload(validPayload({ invested: Infinity }))).toBe(false)
-    expect(isValidBibitPayload(validPayload({ profitloss: '100' }))).toBe(false)
+    expect(normalizeBibitPayload(v4Payload({ marketvalue: NaN }))).toBeNull()
+    expect(normalizeBibitPayload(v4Payload({ invested: Infinity }))).toBeNull()
+    expect(normalizeBibitPayload(v4Payload({ profitloss: '100' }))).toBeNull()
   })
 
   it('rejects amounts beyond MAX_AMOUNT', () => {
-    expect(isValidBibitPayload(validPayload({ marketvalue: MAX_AMOUNT + 1 }))).toBe(false)
+    expect(normalizeBibitPayload(v4Payload({ marketvalue: MAX_AMOUNT + 1 }))).toBeNull()
   })
 
-  it('rejects non-finite trading_balance when present', () => {
-    expect(isValidBibitPayload(validPayload({ trading_balance: NaN }))).toBe(false)
+  it('rejects legacy result longer than MAX_RESULT_ITEMS', () => {
+    const item = { id: 1, name: 'x', marketvalue: 1, invested: 1, profitloss: 0 }
+    const payload = legacyPayload({ result: Array(MAX_RESULT_ITEMS + 1).fill(item) })
+    expect(normalizeBibitPayload(payload)).toBeNull()
   })
 
-  it('rejects malformed result items', () => {
-    const payload = validPayload({
+  it('rejects malformed legacy result items', () => {
+    const payload = legacyPayload({
       result: [{ id: 1, name: 'x', marketvalue: 'y', invested: 1, profitloss: 0 }],
     })
-    expect(isValidBibitPayload(payload)).toBe(false)
+    expect(normalizeBibitPayload(payload)).toBeNull()
   })
 
-  it('rejects result item with non-numeric id', () => {
-    const payload = validPayload({
+  it('rejects legacy result item with non-numeric id', () => {
+    const payload = legacyPayload({
       result: [{ id: 'a', name: 'x', marketvalue: 1, invested: 1, profitloss: 0 }],
     })
-    expect(isValidBibitPayload(payload)).toBe(false)
+    expect(normalizeBibitPayload(payload)).toBeNull()
   })
 
-  it('rejects result item with overly long name', () => {
-    const payload = validPayload({
-      result: [
-        { id: 1, name: 'x'.repeat(201), marketvalue: 1, invested: 1, profitloss: 0 },
-      ],
+  it('rejects legacy result item with overly long name', () => {
+    const payload = legacyPayload({
+      result: [{ id: 1, name: 'x'.repeat(201), marketvalue: 1, invested: 1, profitloss: 0 }],
     })
-    expect(isValidBibitPayload(payload)).toBe(false)
+    expect(normalizeBibitPayload(payload)).toBeNull()
+  })
+})
+
+describe('isValidBibitPayload', () => {
+  it('accepts legacy and v4 payloads', () => {
+    expect(isValidBibitPayload(legacyPayload())).toBe(true)
+    expect(isValidBibitPayload(v4Payload())).toBe(true)
   })
 
-  it('rejects negative amounts beyond magnitude limit', () => {
-    expect(isValidBibitPayload(validPayload({ marketvalue: -(MAX_AMOUNT + 1) }))).toBe(false)
+  it('rejects unrecognizable payloads', () => {
+    expect(isValidBibitPayload({ data: { marketvalue: 1, invested: 1, profitloss: 0 }})).toBe(false)
+  })
+})
+
+describe('normalizeRdnBalance', () => {
+  it('reads trading_balance from the RDN response', () => {
+    expect(normalizeRdnBalance({ data: { trading_balance: 98380 }})).toBe(98380)
+  })
+
+  it('falls back to cash_on_hand then withdrawal_balance', () => {
+    expect(normalizeRdnBalance({ data: { cash_on_hand: 111 }})).toBe(111)
+    expect(normalizeRdnBalance({ data: { withdrawal_balance: 222 }})).toBe(222)
+  })
+
+  it('prefers trading_balance when multiple present', () => {
+    expect(normalizeRdnBalance({ data: { trading_balance: 1, cash_on_hand: 2 }})).toBe(1)
+  })
+
+  it('returns null for unrecognizable payloads', () => {
+    expect(normalizeRdnBalance(null)).toBeNull()
+    expect(normalizeRdnBalance({})).toBeNull()
+    expect(normalizeRdnBalance({ data: {} })).toBeNull()
+    expect(normalizeRdnBalance({ data: { trading_balance: 'x' }})).toBeNull()
+  })
+
+  it('isValidRdnPayload mirrors normalizeRdnBalance', () => {
+    expect(isValidRdnPayload({ data: { trading_balance: 5 }})).toBe(true)
+    expect(isValidRdnPayload({ data: {} })).toBe(false)
   })
 })

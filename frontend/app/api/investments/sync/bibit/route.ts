@@ -8,17 +8,14 @@ export async function OPTIONS(req: Request) {
   return corsPreflightResponse(req)
 }
 
-interface BibitResultItem {
-  id: number
+interface BibitHolding {
+  id: number | string
   name: string
+  symbol?: string
+  group?: string
   marketvalue: number
   invested: number
   profitloss: number
-  trading_balance?: number
-  type?: {
-    id?: number
-    name?: string
-  }
 }
 
 interface BibitSyncPayload {
@@ -28,7 +25,7 @@ interface BibitSyncPayload {
     invested: number
     profitloss: number
     trading_balance?: number
-    result: BibitResultItem[]
+    result: BibitHolding[]
   }
 }
 
@@ -39,27 +36,121 @@ function isFiniteAmount(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value) && Math.abs(value) <= MAX_AMOUNT
 }
 
-function isValidPayload(body: unknown): body is BibitSyncPayload {
-  if (!body || typeof body !== 'object') return false
-  const data = (body as BibitSyncPayload).data
-  if (!data || typeof data !== 'object') return false
-  if (!Array.isArray(data.result) || data.result.length > MAX_RESULT_ITEMS) return false
-  if (!isFiniteAmount(data.marketvalue)) return false
-  if (!isFiniteAmount(data.invested)) return false
-  if (!isFiniteAmount(data.profitloss)) return false
-  if (data.trading_balance !== undefined && !isFiniteAmount(data.trading_balance)) return false
+function asString(value: unknown, maxLen = 200): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  if (trimmed.length === 0 || trimmed.length > maxLen) return null
+  return trimmed
+}
 
-  return data.result.every(
-    (item) =>
-      item &&
-      typeof item === 'object' &&
-      Number.isFinite(item.id) &&
-      typeof item.name === 'string' &&
-      item.name.length <= 200 &&
-      isFiniteAmount(item.marketvalue) &&
-      isFiniteAmount(item.invested) &&
-      isFiniteAmount(item.profitloss)
-  )
+interface RawV4Item {
+  invested?: unknown
+  marketvalue?: unknown
+  profitloss?: unknown
+  product?: { product_id?: unknown; symbol?: unknown; name?: unknown; group?: unknown }
+}
+
+interface RawV4Category {
+  name?: unknown
+  items?: unknown
+}
+
+/**
+ * Bibit changed its portfolio API (v4). The portfolio response at
+ * `/portfolios/category/<id>` now nests holdings under `data.results[].items[]`
+ * and the RDN cash balance moved to a separate `/rdn` endpoint. Normalize the
+ * new shape into the flat `data.result[]` structure the rest of this handler
+ * already understands, while still accepting the legacy flat shape.
+ */
+function normalizePayload(body: unknown): BibitSyncPayload | null {
+  if (!body || typeof body !== 'object') return null
+  const raw = body as { message?: unknown; data?: unknown }
+  const data = raw.data
+  if (!data || typeof data !== 'object') return null
+  const record = data as Record<string, unknown>
+  const message = asString(raw.message) || undefined
+
+  // Already-normalized (extension sends this) or legacy flat shape
+  if (Array.isArray(record.result)) {
+    if (!isFiniteAmount(record.marketvalue) || !isFiniteAmount(record.invested) || !isFiniteAmount(record.profitloss)) {
+      return null
+    }
+    if (record.result.length > MAX_RESULT_ITEMS) return null
+    const holdings: BibitHolding[] = []
+    for (const item of record.result as Record<string, unknown>[]) {
+      if (!item || typeof item !== 'object') return null
+      const name = asString(item.name)
+      const id = item.id
+      if (!name) return null
+      if (typeof id !== 'number' && typeof id !== 'string') return null
+      if (!isFiniteAmount(item.marketvalue) || !isFiniteAmount(item.invested) || !isFiniteAmount(item.profitloss)) {
+        return null
+      }
+      holdings.push({
+        id: id as number | string,
+        name,
+        symbol: asString(item.symbol, 40) || undefined,
+        group: asString(item.group, 40) || undefined,
+        marketvalue: item.marketvalue,
+        invested: item.invested,
+        profitloss: item.profitloss,
+      })
+    }
+    return {
+      message,
+      data: {
+        marketvalue: record.marketvalue,
+        invested: record.invested,
+        profitloss: record.profitloss,
+        trading_balance: isFiniteAmount(record.trading_balance) ? record.trading_balance : undefined,
+        result: holdings,
+      },
+    }
+  }
+
+  // Raw v4: data.results[].items[]
+  if (Array.isArray(record.results)) {
+    if (!isFiniteAmount(record.marketvalue) || !isFiniteAmount(record.invested) || !isFiniteAmount(record.profitloss)) {
+      return null
+    }
+    const holdings: BibitHolding[] = []
+    for (const category of record.results as RawV4Category[]) {
+      const categoryName = asString(category?.name) || 'Portofolio'
+      const items = Array.isArray(category?.items) ? (category.items as RawV4Item[]) : []
+      for (const item of items) {
+        const product = item?.product || {}
+        if (!isFiniteAmount(item?.marketvalue)) continue
+        const symbol = asString(product.symbol, 40)
+        const productId = product.product_id
+        const id =
+          typeof productId === 'number' && Number.isFinite(productId)
+            ? productId
+            : symbol || `${categoryName}-${holdings.length}`
+        holdings.push({
+          id,
+          name: asString(product.name) || symbol || categoryName,
+          symbol: symbol || undefined,
+          group: asString(product.group, 40) || undefined,
+          marketvalue: item.marketvalue,
+          invested: isFiniteAmount(item.invested) ? item.invested : 0,
+          profitloss: isFiniteAmount(item.profitloss) ? item.profitloss : 0,
+        })
+      }
+    }
+    if (holdings.length > MAX_RESULT_ITEMS) return null
+    return {
+      message,
+      data: {
+        marketvalue: record.marketvalue,
+        invested: record.invested,
+        profitloss: record.profitloss,
+        trading_balance: isFiniteAmount(record.trading_balance) ? record.trading_balance : undefined,
+        result: holdings,
+      },
+    }
+  }
+
+  return null
 }
 
 import { verifyApiKey } from '@/lib/auth/api-keys'
@@ -126,8 +217,8 @@ export async function POST(req: Request) {
       )
     }
 
-    const body: unknown = await req.json()
-    if (!isValidPayload(body)) {
+    const body = normalizePayload(await req.json())
+    if (!body) {
       return NextResponse.json(
         { success: false, error: 'Invalid Bibit portfolio payload structure' },
         { status: 400, headers: corsHeaders }
@@ -136,10 +227,10 @@ export async function POST(req: Request) {
 
     const existingAccounts = await repo.findAccounts()
 
-    // 1. Process each portfolio bucket in result
+    // 1. Process each portfolio holding in result
     for (const item of body.data.result) {
       const accountName = `Bibit - ${item.name}`
-      const isStock = item.type?.name?.toLowerCase().includes('saham') || item.name.toLowerCase().includes('saham')
+      const isStock = item.group?.toLowerCase() === 'stock' || item.name.toLowerCase().includes('saham')
       const accountType = isStock ? 'stock' : 'mutual_fund'
 
       let account = existingAccounts.find(
@@ -159,18 +250,19 @@ export async function POST(req: Request) {
 
       // Upsert holding for this portfolio bucket
       const existingHoldings = await repo.findHoldingsByAccount(account.id)
-      const symbol = `BIBIT-${item.id}`
+      const symbol = item.symbol ? `BIBIT-${item.symbol}` : `BIBIT-${item.id}`
       const holding = existingHoldings.find((h) => h.symbol === symbol)
 
       const assetClass = isStock ? 'equity' : 'fixed_income'
       const avgBuyPrice = item.invested > 0 ? item.invested : null
+      const holdingName = item.group ? `${item.name} (${item.group})` : item.name
 
       if (!holding) {
         if (item.marketvalue > 0 || item.invested > 0) {
           await repo.createHolding({
             account_id: account.id,
             symbol,
-            name: `${item.name} (${item.type?.name || 'Bibit'})`,
+            name: holdingName,
             asset_class: assetClass,
             quantity: 1,
             avg_buy_price: avgBuyPrice,
@@ -195,7 +287,7 @@ export async function POST(req: Request) {
         await repo.updateHolding(holding.id, {
           account_id: account.id,
           symbol,
-          name: `${item.name} (${item.type?.name || 'Bibit'})`,
+          name: holdingName,
           asset_class: assetClass,
           quantity: 1,
           avg_buy_price: avgBuyPrice,

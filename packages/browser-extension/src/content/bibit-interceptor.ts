@@ -6,28 +6,55 @@
 
   const TARGET_ORIGIN = 'https://app.bibit.id'
 
+  function classify(url: string): 'portfolio' | 'rdn' | null {
+    if (!url.includes('bibit.id')) return null
+    // Current API: /portfolios/category/<id>?v=4 ; legacy: /portfolios?v=4
+    if (/\/portfolios(\/|\?|$)/.test(url)) return 'portfolio'
+    // RDN cash balance: /rdn?v=3
+    if (/\/rdn(\/|\?|$)/.test(url)) return 'rdn'
+    return null
+  }
+
+  function isRecognizable(kind: 'portfolio' | 'rdn', data: any): boolean {
+    if (!data || typeof data !== 'object' || !data.data || typeof data.data !== 'object') return false
+    const payload = data.data
+    if (kind === 'portfolio') {
+      return Array.isArray(payload.results) || Array.isArray(payload.result)
+    }
+    return (
+      typeof payload.trading_balance === 'number' ||
+      typeof payload.cash_on_hand === 'number' ||
+      typeof payload.withdrawal_balance === 'number'
+    )
+  }
+
+  function relay(kind: 'portfolio' | 'rdn', url: string, data: any) {
+    if (!isRecognizable(kind, data)) return
+    console.log(`[FinTrack Interceptor] Intercepted Bibit ${kind} response:`, url)
+    window.postMessage(
+      {
+        type: 'FINTRACK_BIBIT_PORTFOLIO_CAPTURED',
+        source: kind === 'rdn' ? 'bibit_rdn' : 'bibit_api',
+        payload: data,
+        timestamp: Date.now(),
+      },
+      TARGET_ORIGIN
+    )
+  }
+
   // Intercept window.fetch
   const originalFetch = window.fetch
   window.fetch = async function (...args) {
     const response = await originalFetch.apply(this, args)
     try {
       const url = typeof args[0] === 'string' ? args[0] : (args[0] as Request)?.url || ''
-      if (url.includes('/portfolios') && url.includes('bibit.id')) {
+      const kind = classify(url)
+      if (kind) {
         const clone = response.clone()
-        clone.json().then((data) => {
-          if (data && data.data && Array.isArray(data.data.result)) {
-            console.log('[FinTrack Interceptor] Intercepted Bibit portfolios from fetch:', url)
-            window.postMessage(
-              {
-                type: 'FINTRACK_BIBIT_PORTFOLIO_CAPTURED',
-                source: 'bibit_api',
-                payload: data,
-                timestamp: Date.now(),
-              },
-              TARGET_ORIGIN
-            )
-          }
-        }).catch(() => {})
+        clone
+          .json()
+          .then((data) => relay(kind, url, data))
+          .catch(() => {})
       }
     } catch {
       // Passive interception should never break host app
@@ -48,20 +75,9 @@
     this.addEventListener('load', function () {
       try {
         const url = (this as any)._fintrack_url || ''
-        if (url.includes('/portfolios') && url.includes('bibit.id')) {
-          const data = JSON.parse(this.responseText)
-          if (data && data.data && Array.isArray(data.data.result)) {
-            console.log('[FinTrack Interceptor] Intercepted Bibit portfolios from XHR:', url)
-            window.postMessage(
-              {
-                type: 'FINTRACK_BIBIT_PORTFOLIO_CAPTURED',
-                source: 'bibit_api',
-                payload: data,
-                timestamp: Date.now(),
-              },
-              TARGET_ORIGIN
-            )
-          }
+        const kind = classify(url)
+        if (kind) {
+          relay(kind, url, JSON.parse(this.responseText))
         }
       } catch {
         // Passive
