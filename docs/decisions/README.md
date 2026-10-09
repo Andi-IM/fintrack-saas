@@ -82,8 +82,14 @@ Setiap keputusan desain yang signifikan dan berpengaruh besar terhadap struktur 
 - [ADR-078](078-cors-for-bibit-extension-sync-endpoint.md) - CORS Support for the Bibit Extension Sync Endpoint
 - [ADR-079](079-extension-auth-via-supabase-session-cookie.md) - Extension Auth via Supabase Session Cookie
 - [ADR-080](080-remove-dead-extension-portfolio-code.md) - Remove Dead Portfolio Popup and Background Code from the Extension
-
+- [ADR-081](081-supabase-ssr-base64url-cookie-decoding-and-extension-logging.md) - Supabase SSR Base64URL Cookie Decoding and Extension Logging
+- [ADR-082](082-resilient-extension-sync-via-refresh-token.md) - Resilient Extension Sync via Refresh Token
+- [ADR-083](083-api-key-authentication-for-extension-sync.md) - API Key Authentication for Extension Sync
+- [ADR-084](084-supabase-advisor-security-and-rls-performance-hardening.md) - Supabase Advisor Security and RLS Performance Hardening
 - [ADR-085](085-client-timezone-receipt-entry-and-quantity-parsing.md) - Client-Timezone Receipt Entry Normalization and Robust Quantity Parsing
 - [ADR-086](086-container-image-path-mapping-for-agent-files.md) - Container Image Path Mapping for Agent-Supplied Receipt Files
 - [ADR-087](087-cash-wallet-tracking.md) - Manual Cash Wallet Tracking
+- [ADR-088](088-bibit-portfolio-api-v4-schema-migration.md) - Bibit Portfolio API v4 Schema Migration
+- [ADR-089](089-add-cash-wallet-tools-to-mcp-server.md) - Add Cash Wallet Tools to MCP Server
+- [ADR-090](090-link-cash-flow-to-wallet-id.md) - Link Cash Flow Entries to Wallets via wallet_id Foreign Key
 
