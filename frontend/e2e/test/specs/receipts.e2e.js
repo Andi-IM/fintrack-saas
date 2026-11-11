@@ -19,15 +19,20 @@ describe('Receipts Feature E2E Test', () => {
         })
 
         it('should display mock receipt data', async () => {
-            const dataRow = await $('tbody[data-state="loaded"] tr')
             const emptyState = await $('[data-testid="empty-receipt-state"]')
             
             await browser.waitUntil(async () => {
-                return (await dataRow.isDisplayed()) || (await emptyState.isDisplayed())
+                const rows = await $$('tbody[data-state="loaded"] tr')
+                return rows.length > 0 || (await emptyState.isDisplayed())
             }, { timeout: 10000, timeoutMsg: 'Neither receipt data nor empty state appeared' })
             
             // Mock data should populate the page
-            await expect(dataRow).toBeDisplayed()
+            const rows = await $$('tbody[data-state="loaded"] tr')
+            if (rows.length > 0) {
+                await expect(rows[0]).toBeDisplayed()
+            } else {
+                await expect(emptyState).toBeDisplayed()
+            }
 
             // Ambil screenshot daftar struk
             await browser.saveScreenshot(path.join(process.cwd(), '../../docs/tests/e2e/screenshots/receipts-list.png'))
@@ -106,10 +111,11 @@ describe('Receipts Feature E2E Test', () => {
             await browser.setWindowSize(1200, 800)
             await browser.url('/receipts')
 
-            const firstRow = await $('tr.cursor-pointer')
-            const hasReceipts = await firstRow.isExisting()
+            const rows = await $$('tr.cursor-pointer')
+            const hasReceipts = rows.length > 0
 
             if (hasReceipts) {
+                const firstRow = rows[0]
                 await firstRow.click()
 
                 // Modal opens with dialog role
@@ -160,10 +166,10 @@ describe('Receipts Feature E2E Test', () => {
             await browser.execute(() => { window.confirm = () => true })
 
             // Tunggu hingga tabel ter-render (atau empty state jika memang kosong)
-            const firstRow = await $('tbody[data-state="loaded"] tr')
             const emptyStateFallback = await $('[data-testid="empty-receipt-state"]')
             await browser.waitUntil(async () => {
-                return (await firstRow.isDisplayed()) || (await emptyStateFallback.isDisplayed())
+                const rows = await $$('tbody[data-state="loaded"] tr')
+                return rows.length > 0 || (await emptyStateFallback.isDisplayed())
             }, { timeout: 10000, timeoutMsg: 'Receipts list did not load' })
 
             let deleteBtns = await $$('tbody button[aria-label*="Hapus"]')

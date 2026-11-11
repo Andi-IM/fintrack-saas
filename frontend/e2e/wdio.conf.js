@@ -57,6 +57,7 @@ async function waitPort(port, host, timeoutMs) {
 export const config = {
     runner: 'local',
     autoXvfb: false,
+    strictSelectors: false,
     specs: [
         './test/specs/**/*.js'
     ],

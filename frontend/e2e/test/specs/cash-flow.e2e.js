@@ -229,7 +229,8 @@ describe('Cash Flow (Transactions) E2E Test', () => {
         })
 
         it('CF-14: should navigate to /add?edit={id} when clicking Edit button', async () => {
-            const firstRow = await $('tbody tr')
+            const rows = await $$('tbody tr')
+            const firstRow = rows[0]
 
             // B4: Force hover dengan mouse move ke tengah elemen
             await browser.action('pointer')
@@ -238,7 +239,7 @@ describe('Cash Flow (Transactions) E2E Test', () => {
                 .perform()
 
             // B4: Klik edit via JavaScript untuk bypass opacity:0
-            const editBtn = await $('button[aria-label*="Edit"]')
+            const editBtn = await firstRow.$('button[aria-label*="Edit"]')
             await browser.execute((el) => el.click(), editBtn)
 
             await browser.waitUntil(
