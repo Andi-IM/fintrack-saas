@@ -1,3 +1,10 @@
+## [1.33.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.33.2...v1.33.3) (2026-11-11)
+
+
+### Bug Fixes
+
+* **e2e:** disable strictSelectors and refine table row selectors in e2e specs ([2002813](https://github.com/Andi-IM/fintrack-saas/commit/2002813ca903359f1c303b8e3427e945d87a426d))
+
 ## [1.33.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.33.1...v1.33.2) (2026-11-11)
 
 
