@@ -1,3 +1,10 @@
+## [1.33.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.33.0...v1.33.1) (2026-11-11)
+
+
+### Bug Fixes
+
+* **cash-wallets:** force dynamic rendering to prevent dynamic server usage build error ([adc80da](https://github.com/Andi-IM/fintrack-saas/commit/adc80da5e665469c745d93fafb43a590e228f602))
+
 # [1.33.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.32.0...v1.33.0) (2026-11-11)
 
 
