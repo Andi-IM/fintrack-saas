@@ -1,3 +1,16 @@
+# [1.33.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.32.0...v1.33.0) (2026-11-11)
+
+
+### Bug Fixes
+
+* **e2e:** add @wdio/globals to devDependencies for module resolution ([afe4b8d](https://github.com/Andi-IM/fintrack-saas/commit/afe4b8d6f90bf30f42bb4832212c1c783ff5a5d6))
+
+
+### Features
+
+* **extension:** support Bibit v4 portfolio schema and separate RDN endpoint ([1bb2b20](https://github.com/Andi-IM/fintrack-saas/commit/1bb2b20262e15a989d694bb4a8663eceb0543e2a))
+* **mcp:** add cash wallet tools for dompet tunai tracking ([43c2950](https://github.com/Andi-IM/fintrack-saas/commit/43c295058d534075cb5e0560bda43c104bec22e4))
+
 # [1.32.0](https://github.com/Andi-IM/fintrack-saas/compare/v1.31.1...v1.32.0) (2026-10-06)
 
 
