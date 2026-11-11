@@ -1,3 +1,10 @@
+## [1.33.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.33.3...v1.33.4) (2026-11-11)
+
+
+### Bug Fixes
+
+* **e2e:** handle missing browser.uploadFile gracefully in receipts spec ([1bf3f8c](https://github.com/Andi-IM/fintrack-saas/commit/1bf3f8cbd813543fc615787efe95954fed388e6b))
+
 ## [1.33.3](https://github.com/Andi-IM/fintrack-saas/compare/v1.33.2...v1.33.3) (2026-11-11)
 
 
