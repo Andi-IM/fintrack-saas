@@ -1,5 +1,6 @@
 import { expect } from '@wdio/globals'
 import path from 'path'
+import fs from 'fs'
 
 describe('Receipts Feature E2E Test', () => {
     describe('View List - Empty / Filled State', () => {
@@ -71,9 +72,13 @@ describe('Receipts Feature E2E Test', () => {
         })
 
         it('should upload the mock receipt image', async () => {
-            const filePath = path.join(process.cwd(), 'test', 'mock', 'receipt.jpg')
-            const remoteFilePath = await browser.uploadFile(filePath)
-            
+            let filePath = path.join(process.cwd(), 'test', 'mock', 'receipt.jpg')
+            if (!fs.existsSync(filePath)) {
+                filePath = path.resolve(process.cwd(), 'frontend/e2e/test/mock/receipt.jpg')
+            }
+            const remoteFilePath = typeof browser.uploadFile === 'function'
+                ? await browser.uploadFile(filePath)
+                : filePath
             // 1. Tunggu input file dari dropzone dipasang ke DOM
             const fileInput = await $('input[type="file"]')
             await fileInput.waitForExist({ timeout: 5000 })
