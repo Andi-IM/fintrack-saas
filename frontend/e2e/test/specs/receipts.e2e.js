@@ -83,29 +83,27 @@ describe('Receipts Feature E2E Test', () => {
             const fileInput = await $('input[type="file"]')
             await fileInput.waitForExist({ timeout: 5000 })
 
-            // 2. Hilangkan status "hidden" yang dibuat oleh react-dropzone
+            // 2. Hilangkan status hidden / styling tersembunyi dari react-dropzone agar elemen sepenuhnya interactable
             await browser.execute((el) => {
                 if (el) {
-                    el.style.display = 'block';
-                    el.style.visibility = 'visible';
-                    el.style.opacity = '1';
-                    el.style.width = '100px';
-                    el.style.height = '50px';
-                    el.style.position = 'relative';
-                    el.style.zIndex = '9999';
+                    el.removeAttribute('hidden')
+                    el.removeAttribute('style')
+                    el.className = ''
+                    el.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; width: 200px !important; height: 100px !important; position: fixed !important; top: 0 !important; left: 0 !important; z-index: 999999 !important; max-width: none !important; max-height: none !important; min-width: 200px !important; min-height: 100px !important; clip: auto !important; clip-path: none !important; overflow: visible !important;'
                 }
             }, fileInput)
+            await fileInput.waitForDisplayed({ timeout: 5000 })
 
             // 3. Masukkan file ke elemen input Dropzone
             await fileInput.setValue(remoteFilePath)
-            
-            // Tunggu sebentar agar state React berubah
-            await browser.pause(2000)
+            await browser.execute((el) => {
+                if (el) el.dispatchEvent(new Event('change', { bubbles: true }))
+            }, fileInput)
             
             // 4. Validasi bahwa file berhasil masuk dengan mengecek munculnya tombol "Extract with AI"
-            const extractBtn = await $('button[type="submit"]')
+            const extractBtn = await $('button*=Extract with AI')
+            await extractBtn.waitForDisplayed({ timeout: 10000 })
             await expect(extractBtn).toBeDisplayed()
-            
             // Ambil screenshot scan
             await browser.saveScreenshot(path.join(process.cwd(), '../../docs/tests/e2e/screenshots/receipts-scan.png'))
         })
