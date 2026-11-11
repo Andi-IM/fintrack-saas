@@ -1,3 +1,10 @@
+## [1.33.2](https://github.com/Andi-IM/fintrack-saas/compare/v1.33.1...v1.33.2) (2026-11-11)
+
+
+### Bug Fixes
+
+* **e2e:** disable autoXvfb in wdio config to resolve worker IPC EINVAL error ([ab2933b](https://github.com/Andi-IM/fintrack-saas/commit/ab2933babe6504ef70986a93e91e936b651d624a))
+
 ## [1.33.1](https://github.com/Andi-IM/fintrack-saas/compare/v1.33.0...v1.33.1) (2026-11-11)
 
 
