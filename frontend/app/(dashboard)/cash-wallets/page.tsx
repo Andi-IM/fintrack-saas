@@ -4,6 +4,7 @@ import { CashWalletList } from '@/features/cash-wallets/components/CashWalletLis
 export const metadata = {
   title: 'Dompet Tunai | FinTrack',
 }
+export const dynamic = 'force-dynamic'
 
 export default async function CashWalletsPage() {
   const wallets = await getCashWallets()
