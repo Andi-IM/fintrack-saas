@@ -1,3 +1,10 @@
+## [1.33.5](https://github.com/Andi-IM/fintrack-saas/compare/v1.33.4...v1.33.5) (2026-11-11)
+
+
+### Bug Fixes
+
+* **e2e:** make dropzone file input interactable and refine scan button selector ([aae3a06](https://github.com/Andi-IM/fintrack-saas/commit/aae3a06adf0e611f773adeb5c4c46b1ea586bcee))
+
 ## [1.33.4](https://github.com/Andi-IM/fintrack-saas/compare/v1.33.3...v1.33.4) (2026-11-11)
 
 
